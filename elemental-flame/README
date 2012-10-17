@@ -1,0 +1,121 @@
+Elemental
+=========
+
+Elemental is a high-level high-performance framework for distributed-memory 
+dense linear algebra that is inspired by [PLAPACK][1] and, more recently, 
+[FLAME][2].
+
+License
+=======
+New BSD License
+
+Build
+=====
+There is now a CMake [http://www.cmake.org] build script which supports building
+with and without PMRRR and attempts to search for the appropriate BLAS/LAPACK 
+configurations. The four build-modes are:
+- HybridDebug
+- HybridRelease
+- PureDebug
+- PureRelease
+Each should be built within its own separate build directory. For instance, 
+to build the pure-MPI release library:
+      cd elemental-flame
+      mkdir -p build/PureRelease
+      cd build/PureRelease
+      cmake -DCMAKE_BUILD_TYPE=PureRelease \
+            -DCMAKE_CXX_COMPILER=/path/to/mpi/cxx/compiler \
+            -DCMAKE_C_COMPILER=/path/to/mpi/c/compiler \
+            ../..
+      make
+If the correct BLAS/LAPACK libraries are not found, try specifying them using
+by appending the additional cmake flags of the form:
+  -DMATH_LIBS="-L/path/to/first/lib -lfirst_lib etc."
+where the math libs should be optimized for single core usage for pure-MPI 
+builds and threaded for the hybrid builds.
+
+On BlueGene/P, one should instead run
+      cd elemental-flame
+      mkdir -p build/PureRelease
+      cd build/PureRelease
+      cmake -DCMAKE_BUILD_TYPE=PureRelease \
+            -DCMAKE_TOOLCHAIN_FILE=../../cmake/toolchains/BGP-xl_aug2010-essl_4.3.1-1.cmake \
+            ../..
+      make
+
+On Ranger, one can similarly pick from the toolchain files:
+      cmake/toolchains/Ranger-gcc_4.4-mvapich_1.0.1-mkl_10.0.1.014.cmake
+      cmake/toolchains/Ranger-gcc_4.4-mvapich2_1.2-mkl_10.0.1.014.cmake
+      cmake/toolchains/Ranger-intel_10.1-mvapich_1.0.1-mkl_10.0.1.014.cmake
+      cmake/toolchains/Ranger-intel_10.1-mvapich2_1.2-mkl_10.0.1.014.cmake
+
+The CMake build system is still new, so please email jack.poulson@gmail.com with
+any build problems or comments.
+
+Tuning
+======
+There are a few categories of parameters that can be tuned for better 
+performance:
+
+- The algorithmic blocksize can be adjusted at any time with the function 
+
+  void elemental::SetBlocksize( int blocksize );
+
+- The process grid dimensions should typically be square, but they can be 
+  manually chosen to build an r x c grid using the extended process grid 
+  constructor:
+
+  elemental::Grid::Grid( MPI_Comm comm, int r, int c );
+
+- The Householder tridiagonalization approach may be chosen using the routine:
+
+    void elemental::advanced::internal::SetTridiagApproach
+    ( elemental::advanced::internal::TridiagApproach approach );
+
+  The choices are:
+    elemental::advanced::internal::TRIDIAG_NORMAL
+    elemental::advanced::internal::TRIDIAG_SQUARE
+    elemental::advanced::internal::TRIDIAG_DEFAULT
+  The first always uses the general nonsquare grid algorithm, even when
+  running on a square grid. The second drops down to the largest perfect square
+  number of processors less than or equal to the number available in order to
+  lower communication costs. However, in order to do so, we must choose how to
+  order the perfect square number of processes into a grid, and the choice is
+  often important for performance. One can choose between row-major and 
+  column-major ordering via the routine
+
+    void elemental::advanced::internal::SetTridiagSquareGridOrder
+    ( elemental::advanced::internal::GridOrder order );
+
+  The choices are:
+    elemental::advanced::internal::COL_MAJOR
+    elemental::advanced::internal::ROW_MAJOR
+  Finally, the default option uses the square grid algorithm if the input matrix
+  is already distributed over a square grid, otherwise, the normal nonsquare 
+  grid algorithm is used.
+
+- The local blocksizes for Hemv and Symv may be set for single-precision, 
+  double-precision, single-precision complex, and double-precision complex 
+  using:
+
+  void elemental::basic::SetLocalHemvBlocksize<T>( int blocksize ); 
+  void elemental::basic::SetLocalSymvBlocksize<T>( int blocksize ); 
+
+  These interfaces were exposed because they play an important role in the
+  speed of the parallel Householder tridiagonalization routine,
+  elemental::advanced::Tridiag on non-square process grids.
+
+- The local blocksizes for local triangular rank-k and rank-2k updates may be 
+  set using:
+
+  void elemental::basic::SetLocalTriangularRankKBlocksize<T>( int blocksize );
+  void elemental::basic::SetLocalTriangularRank2KBlocksize<T>( int blocksize );
+
+  These blocksizes are not nearly as important, but they do effect the 
+  performance of parallel Syrk/Herk, Syr2k/Her2k, and Cholesky. The generalized
+  Hermitian eigensolvers do perform a Cholesky factorization, but it is only a 
+  small part of the overall runtime.
+
+[1]: http://www.cs.utexas.edu/users/plapack/new/using.html
+[2]: http://z.cs.utexas.edu/wiki/flame.wiki/FrontPage
+
