@@ -6,7 +6,9 @@ int main(){
   FLA_Init();
 
 //  test_ttm_single();
-  test_symm_tlash();
+//  test_symm_tlash();
+
+  test_sttsm();
 
   FLA_Finalize();
   return 0;

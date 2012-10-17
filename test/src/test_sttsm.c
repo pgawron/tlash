@@ -1,13 +1,13 @@
 #include "FLAME.h"
 #include "stdio.h"
 
-dim_t tOrder = 3;
-dim_t tSize[] = {4, 4, 4};
-dim_t mOrder = 2;
-dim_t mSize[] = {8, 4};
-dim_t cOrder = 3;
-dim_t cSize[] = {8, 8, 8};
-dim_t blksize = 2;
+dim_t stOrder = 3;
+dim_t stSize[] = {4, 4, 4};
+dim_t smOrder = 2;
+dim_t smSize[] = {8, 4};
+dim_t scOrder = 3;
+dim_t scSize[] = {8, 8, 8};
+dim_t sblkSize = 2;
 
 void initSymmTensor(dim_t order, dim_t size[order], dim_t b, FLA_Obj* obj){
   FLA_Obj_create_symm_tensor_without_buffer(FLA_DOUBLE, order, size, b, obj);
@@ -15,11 +15,11 @@ void initSymmTensor(dim_t order, dim_t size[order], dim_t b, FLA_Obj* obj){
 }
 
 void initMatrix(FLA_Obj* obj){
-  FLA_Obj_create(FLA_DOUBLE, mSize[0], mSize[1], 1, mSize[0], obj);
+  FLA_Obj_create(FLA_DOUBLE, smSize[0], smSize[1], 1, smSize[0], obj);
   FLA_Random_matrix(*obj);
 }
 
-void printObj(FLA_Obj obj){
+void printSymmObj(FLA_Obj obj){
 	dim_t i;
 	dim_t order = FLA_Obj_order(obj);
 	dim_t* idx = &((obj.base)->index[0]);
@@ -36,7 +36,7 @@ void printObj(FLA_Obj obj){
 			n_elem *= FLA_Obj_dimsize(obj, i);
 		FLA_Obj* buf = FLA_Obj_base_buffer(obj);
 		for(i = 0; i < n_elem; i++)
-			printObj(buf[i]);
+			printSymmObj(buf[i]);
 	}
 	else{
 		printf("data:");
@@ -72,11 +72,13 @@ void test_sttsm(){
 
   FLA_Obj t, m, c;
 
-  initSymmTensor(tOrder, tSize, blkSize);
-  initMatrix(m);
-  initSymmTensor(cOrder, cSize, blkSize);
+  initSymmTensor(stOrder, stSize, sblkSize, &t);
+  initMatrix(&m);
+  initSymmTensor(scOrder, scSize, sblkSize, &c);
   setSymmTensorToZero(c);
 
-  FLA_Ttm_single(alpha, t, mode_mult, beta, m, c);
-  double* res = (double*)((c.base)->buffer);
+  FLA_Sttsm(alpha, t, beta, m, c);
+
+  printSymmObj(t);
+  printSymmObj(c);
 }
