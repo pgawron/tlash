@@ -382,7 +382,37 @@ FLA_Error FLA_Obj_fshow( FILE* file, char *s1, FLA_Obj A, char *format, char *s2
   return FLA_SUCCESS;
 }
 
+FLA_Error FLA_Obj_print_tensor(FLA_Obj A){
+    dim_t i;
+    dim_t order = FLA_Obj_order(A);
+    dim_t* idx = &((A.base)->index[0]);
+    dim_t n_elem;
 
+    if(FLA_Obj_elemtype(A) == FLA_TENSOR || FLA_Obj_elemtype(A) == FLA_MATRIX){
+        printf("block idx:");
+        for(i = 0; i < order; i++)
+            printf(" %d", idx[i]);
+        printf("\n");
+
+        n_elem = 1;
+        for(i = 0; i < order; i++)
+            n_elem *= FLA_Obj_dimsize(A, i);
+        FLA_Obj* buf = FLA_Obj_base_buffer(A);
+        for(i = 0; i < n_elem; i++)
+            FLA_Obj_print_tensor(buf[i]);
+    }
+    else{
+        printf("data:");
+        n_elem = 1;
+        for(i = 0; i < order; i++)
+            n_elem *= FLA_Obj_dimsize(A, i);
+        double* buf = (double*)FLA_Obj_base_buffer(A);
+        for(i = 0; i < n_elem; i++)
+            printf(" %.3f", buf[i]);
+        printf("\n");
+    }
+    return FLA_SUCCESS;
+}
 
 FLA_Error FLA_Obj_show( char *s1, FLA_Obj A, char *format, char *s2 )
 {

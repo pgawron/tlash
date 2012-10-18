@@ -389,6 +389,10 @@ FLA_Error FLA_Repart_1xmode2_to_1xmode3( FLA_Obj AT,   FLA_Obj *A0,
                               A2,    mode, b, FLA_TOP );
   }
 
+	FLA_Adjust_2D_info(A0);
+	FLA_Adjust_2D_info(A1);
+	FLA_Adjust_2D_info(A2);
+	
   return FLA_SUCCESS;
 }
 
@@ -648,8 +652,9 @@ FLA_Error FLA_Cont_with_1xmode3_to_1xmode2( FLA_Obj *AT,  FLA_Obj A0,
     memcpy(&((AB->offset)[0]), &(A1.offset[0]), A1.order * sizeof(dim_t));
     AB->base = A1.base;
   }
-
-  return FLA_SUCCESS;
+	FLA_Adjust_2D_info(AT);
+	FLA_Adjust_2D_info(AB);
+	return FLA_SUCCESS;
 }
 
 

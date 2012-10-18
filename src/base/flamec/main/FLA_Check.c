@@ -844,7 +844,8 @@ FLA_Error FLA_Check_valid_elemtype( FLA_Elemtype elemtype )
   FLA_Error e_val = FLA_SUCCESS;
 
   if ( elemtype != FLA_SCALAR &&
-       elemtype != FLA_MATRIX )
+       elemtype != FLA_MATRIX && 
+	   elemtype != FLA_TENSOR )
     e_val = FLA_INVALID_ELEMTYPE;
 
   return e_val;

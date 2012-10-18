@@ -34,7 +34,8 @@
 
 FLA_Error FLA_Ttm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C )
 {
-
+	printf("res in:\n");
+	FLA_Obj_print_tensor(C);
 	dim_t order = A.order;
     dim_t permutation[order];
 	dim_t ipermutation[order];
@@ -50,12 +51,27 @@ FLA_Error FLA_Ttm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FL
 	FLA_Permute_single(A, permutation, &P);
 	FLA_Permute_single(C, permutation, &tmpC);
 
-	FLA_Gemm(FLA_NO_TRANSPOSE, FLA_NO_TRANSPOSE, beta, B, P, alpha, tmpC);
+	printf("A precomp:\n");
+	FLA_Obj_print_tensor(A);
+	
+	printf("B precomp:\n");
+	FLA_Obj_print_tensor(B);
 
+	printf("P precomp:\n");
+	FLA_Obj_print_tensor(P);
+
+	printf("tmp precomp:\n");
+	FLA_Obj_print_tensor(tmpC);
+	FLA_Gemm(FLA_NO_TRANSPOSE, FLA_NO_TRANSPOSE, beta, B, P, alpha, tmpC);
+	printf("tmp postcomp:\n");
+	FLA_Obj_print_tensor(tmpC);
+	
 	for(i = 0; i < order; i++)
 		ipermutation[permutation[i]] = i;
 
 	FLA_Permute_single(tmpC, ipermutation, &C);
+	printf("res out:\n");
+	FLA_Obj_print_tensor(C);
 	return FLA_SUCCESS;
 }
 

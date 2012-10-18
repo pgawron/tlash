@@ -5,6 +5,7 @@ dim_t stOrder = 3;
 dim_t stSize[] = {4, 4, 4};
 dim_t smOrder = 2;
 dim_t smSize[] = {8, 4};
+dim_t smStride[] = {1, 8};
 dim_t scOrder = 3;
 dim_t scSize[] = {8, 8, 8};
 dim_t sblkSize = 2;
@@ -15,8 +16,24 @@ void initSymmTensor(dim_t order, dim_t size[order], dim_t b, FLA_Obj* obj){
 }
 
 void initMatrix(FLA_Obj* obj){
-  FLA_Obj_create(FLA_DOUBLE, smSize[0], smSize[1], 1, smSize[0], obj);
-  FLA_Random_matrix(*obj);
+  dim_t i,j;
+  dim_t sizeObj[] = {smSize[0] / sblkSize, smSize[1] / sblkSize};
+  dim_t strideObj[] = {1, sizeObj[0]};
+  dim_t sizeBlk[] = {sblkSize, sblkSize};
+  dim_t strideBlk[] = {1, sblkSize};
+
+  FLA_Obj_create_tensor_without_buffer(FLA_DOUBLE, smOrder, sizeObj, obj);
+  obj->base->elemtype = FLA_MATRIX;
+
+  FLA_Obj* buf = (FLA_Obj*)FLA_malloc(sizeObj[0] * sizeObj[1] * sizeof(FLA_Obj));
+  FLA_Obj_attach_buffer_to_tensor(buf, smOrder, strideObj, obj);
+
+  for(i = 0; i < sizeObj[1]; i++)
+	for(j = 0; j < sizeObj[0]; j++){
+		FLA_Obj* curObj = FLA_Obj_base_buffer(*obj);
+		FLA_Obj_create_tensor(FLA_DOUBLE, smOrder, sizeBlk, strideBlk, &(curObj[j + (sizeObj[0]*i)]));
+		FLA_Random_matrix(curObj[j+ (sizeObj[0]*i)]);
+	}
 }
 
 void printSymmObj(FLA_Obj obj){
@@ -25,7 +42,7 @@ void printSymmObj(FLA_Obj obj){
 	dim_t* idx = &((obj.base)->index[0]);
 	dim_t n_elem;
 
-	if(FLA_Obj_elemtype(obj) == FLA_TENSOR){
+	if(FLA_Obj_elemtype(obj) == FLA_TENSOR || FLA_Obj_elemtype(obj) == FLA_MATRIX){
 		printf("block idx:");
 		for(i = 0; i < order; i++)
 			printf(" %d", idx[i]);
@@ -60,7 +77,7 @@ void setSymmTensorToZero(FLA_Obj obj){
 	FLA_Obj* obj_buf = (FLA_Obj*)FLA_Obj_base_buffer(obj);
 	for(i = 0; i < numel; i++){
 		dim_t inner_numel = 1;
-		for(j = 0; j < inner_numel; j++)
+		for(j = 0; j < order; j++)
 			inner_numel *= FLA_Obj_dimsize(obj_buf[i], j);
 		memset(&(((double*)FLA_Obj_base_buffer(obj_buf[i]))[0]), 0, inner_numel * sizeof(double));
 	}
@@ -74,8 +91,11 @@ void test_sttsm(){
 
   initSymmTensor(stOrder, stSize, sblkSize, &t);
   initMatrix(&m);
+	printSymmObj(m);
   initSymmTensor(scOrder, scSize, sblkSize, &c);
   setSymmTensorToZero(c);
+
+  printSymmObj(c);
 
   FLA_Sttsm(alpha, t, beta, m, c);
 

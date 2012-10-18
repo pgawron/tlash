@@ -121,7 +121,11 @@ dim_t FLA_Obj_elem_size( FLA_Obj obj )
   if ( FLA_Check_error_level() >= FLA_MIN_ERROR_CHECKING )
     FLA_Obj_elem_size_check( obj );
 
-  if ( FLA_Obj_elemtype( obj ) == FLA_MATRIX )
+  if ( FLA_Obj_elemtype( obj ) == FLA_TENSOR )
+  {
+    elem_size = sizeof( FLA_Obj );
+  }
+  else if ( FLA_Obj_elemtype( obj ) == FLA_MATRIX )
   {
     elem_size = sizeof( FLA_Obj );
   }

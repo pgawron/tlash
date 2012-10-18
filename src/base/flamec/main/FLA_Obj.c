@@ -60,6 +60,13 @@ FLA_Bool FLA_is_owner( void )
 }
 #endif
 
+FLA_Error FLA_Obj_create_blocked_tensor( FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t stride[order], dim_t blkSize[order], FLA_Obj *obj){
+
+  FLA_Obj_create_blocked_tensor_ext( datatype, FLA_SCALAR, order, size, size, stride, blkSize, obj);
+
+  return FLA_SUCCESS;
+}
+
 FLA_Error FLA_Obj_create_tensor( FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t stride[order], FLA_Obj *obj)
 {
 
@@ -75,6 +82,37 @@ FLA_Error FLA_Obj_create( FLA_Datatype datatype, dim_t m, dim_t n, dim_t rs, dim
   return FLA_SUCCESS;
 }
 
+FLA_Error FLA_Obj_create_blocked_tensor_ext( FLA_Datatype datatype, FLA_Elemtype elemtype, dim_t order, dim_t size[order], dim_t size_inner[order], dim_t stride[order], dim_t blkSize[order], FLA_Obj *obj )
+{
+  dim_t i,j;
+  dim_t sizeObj[order];
+  dim_t strideObj[order];
+  dim_t nBlks = 1;
+  strideObj[0] = 1;
+  sizeObj[0] = size[0] / blkSize[0];
+
+  for(i = 1; i < order; i++){
+	sizeObj[i] = size[i] / blkSize[i];
+	strideObj[i] = strideObj[i-1] * sizeObj[i-1];
+  }
+  //First set up the obj to store the FLA_Objs
+  FLA_Obj_create_tensor_ext( datatype, FLA_TENSOR, order, sizeObj, sizeObj, strideObj, obj);
+
+  FLA_Obj* buf = (FLA_Obj*)FLA_Obj_base_buffer(*obj);
+
+  for(i = 0; i < order; i++)
+	nBlks *= sizeObj[i];
+
+  //Create the blocks of obj
+  for(i = 0; i < nBlks; i++){
+    dim_t strideBlk[order];
+    strideBlk[0] = 1;
+    for(j = 1; j < order; j++)
+		strideBlk[j] = strideBlk[j-1] * blkSize[j-1];
+	FLA_Obj_create_tensor( datatype, order, blkSize, strideBlk, &(buf[i]));
+  }
+  return FLA_SUCCESS;
+}
 
 FLA_Error FLA_Obj_create_tensor_ext( FLA_Datatype datatype, FLA_Elemtype elemtype, dim_t order, dim_t size[order], dim_t size_inner[order], dim_t stride[order], FLA_Obj *obj )
 {
