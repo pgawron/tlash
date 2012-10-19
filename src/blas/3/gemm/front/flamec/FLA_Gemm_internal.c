@@ -43,7 +43,7 @@ FLA_Error FLA_Gemm_internal( FLA_Trans transa, FLA_Trans transb, FLA_Obj alpha, 
 		FLA_Gemm_internal_check( transa, transb, alpha, A, B, beta, C, cntl );
 
 	if      ( FLA_Cntl_matrix_type( cntl ) == FLA_HIER &&
-	          FLA_Obj_elemtype( A ) == FLA_MATRIX &&
+	          (FLA_Obj_elemtype( A ) == FLA_TENSOR || FLA_Obj_elemtype( A ) == FLA_MATRIX) &&
 	          FLA_Cntl_variant( cntl ) == FLA_SUBPROBLEM )
 	{
 		// Recurse

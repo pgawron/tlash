@@ -898,6 +898,10 @@ FLA_Error FLA_Obj_attach_buffer_to_symm_tensor( void *buffer[], dim_t order, dim
 		}
 		if(uniqueIndex){
 			(buffer_obj[objLinIndex].base)->buffer = buffer[countBuffer];
+			//Update stride - TODO: MOVE THIS ELSEWHERE
+			((buffer_obj[objLinIndex].base)->stride)[0] = 1;
+			for(i = 1; i < order; i++)
+				((buffer_obj[objLinIndex].base)->stride)[i] = ((buffer_obj[objLinIndex].base)->stride)[i-1] * ((buffer_obj[objLinIndex].base)->size)[i-1];
 			countBuffer++;
 		}else{
 			dim_t newLinIndex = 0;
@@ -906,8 +910,10 @@ FLA_Error FLA_Obj_attach_buffer_to_symm_tensor( void *buffer[], dim_t order, dim
 			((buffer_obj[objLinIndex]).base)->buffer = FLA_Obj_base_buffer(buffer_obj[newLinIndex]);
 			for(i = 0; i < order; i++)
 				(((buffer_obj[objLinIndex]).base)->stride)[i] = (((buffer_obj[newLinIndex]).base)->stride)[permutation[i]];
+			//Update stride
+			memcpy(&((((buffer_obj[objLinIndex]).base)->stride)[0]), &((((buffer_obj[newLinIndex]).base)->stride)[0]), order * sizeof(dim_t));
 		}
-
+		FLA_Adjust_2D_info(&(buffer_obj[objLinIndex]));
 		//Loop update
 		//Update current index
 		curIndex[updateIndex]++;

@@ -132,7 +132,7 @@ echo ""
 echo "Enable memory leak counter...................... : no"
 
 echo ""
-echo "Enable level-3 BLAS front-end control trees..... : no"
+echo "Enable level-3 BLAS front-end control trees..... : yes"
 
 echo ""
 echo "Enable BLIS use of FLA_malloc()................. : yes"

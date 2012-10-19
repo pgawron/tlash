@@ -23,7 +23,7 @@ void initMatrix(FLA_Obj* obj){
   dim_t strideBlk[] = {1, sblkSize};
 
   FLA_Obj_create_tensor_without_buffer(FLA_DOUBLE, smOrder, sizeObj, obj);
-  obj->base->elemtype = FLA_MATRIX;
+  obj->base->elemtype = FLA_TENSOR;
 
   FLA_Obj* buf = (FLA_Obj*)FLA_malloc(sizeObj[0] * sizeObj[1] * sizeof(FLA_Obj));
   FLA_Obj_attach_buffer_to_tensor(buf, smOrder, strideObj, obj);

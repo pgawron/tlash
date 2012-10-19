@@ -68,8 +68,8 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 							&CB, mode, 0, FLA_TOP);	
 		//Only symmetric part touched
 		//Ponder this
-		i = 0;
-		while(i < maxIndex){
+		dim_t loopCount = 0;
+		while(loopCount < maxIndex){
 			//Check this mathc out.  I think it is correct, Mode-1 of B matches mode-n of A
 			//Mode-0 of B matches Mode-n of C
 			dim_t b = 1;
@@ -109,7 +109,7 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 			FLA_Ttm_single(alpha, A, mode, beta, B1, X);
 			printf("mode mult: %d res:\n", mode);
 			FLA_Obj_print_tensor(X);
-			FLA_Sttsm_single(alpha, X, mode-1, beta, B, C1, i);
+			FLA_Sttsm_single(alpha, X, mode-1, beta, B, C1, loopCount+1);
 
 			FLA_Cont_with_1xmode3_to_1xmode2( &CT, C0,
 												   C1,
@@ -119,7 +119,7 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 												   B1,
 											/********/
 											  &BB, B2, 0, FLA_TOP);
-			i++;
+			loopCount++;
 		}
 	}
 
