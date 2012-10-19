@@ -67,6 +67,61 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 	return FLA_SUCCESS;
 }
 
+FLA_Error FLA_Permute_hier( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
+
+	if(FLA_Obj_elemtype(A) == FLA_MATRIX || FLA_Obj_elemtype(A) == FLA_TENSOR){
+		//Permute the hier's then permute inner layer
+		dim_t i;
+		dim_t order;
+		dim_t* stride_A;
+		dim_t* size_A;
+		dim_t* offset_A;
+		dim_t nElem = 1;
+		FLA_Elemtype elemtype;
+
+		order = FLA_Obj_order(A);
+		stride_A = FLA_Obj_stride(A);
+		offset_A = FLA_Obj_offset(A);
+		size_A = FLA_Obj_size(A);
+	
+		for(i = 0; i < order; i++)
+			nElem *= FLA_Obj_dimsize(A, i);
+
+	    FLA_Obj_create_tensor_without_buffer(FLA_Obj_datatype(A), order, size_A, B);
+		B->base->elemtype = FLA_Obj_elemtype(A);
+		void* buf = FLA_malloc(nElem * sizeof(FLA_Obj));
+		memcpy(&(((FLA_Obj*)buf)[0]), &(((FLA_Obj*)FLA_Obj_base_buffer(A))[0]), nElem * sizeof(FLA_Obj));
+
+		FLA_Obj_attach_buffer_to_tensor(buf, order, stride_A, B);
+
+		//Permute tensor info
+		for(dim_t i = 0; i < order; i++){
+			(B->offset)[i] = offset_A[permutation[i]];
+			(B->size)[i] = size_A[permutation[i]];
+			(B->size_inner)[i] = size_A[permutation[i]];
+		}
+		B->base->order = order;
+		for(dim_t i = 0; i < order; i++){
+			(B->base->size)[i] = size_A[permutation[i]];
+			(B->base->stride)[i] = stride_A[permutation[i]];
+			(B->base->size_inner)[i] = size_A[permutation[i]];
+		}
+
+		FLA_Adjust_2D_info(B);
+
+		//Permute inner FLA_Obj info
+		FLA_Obj* buf_A = (FLA_Obj*)FLA_Obj_base_buffer(A);
+		FLA_Obj* buf_B = (FLA_Obj*)FLA_Obj_base_buffer(*B);
+		for(i = 0; i < nElem; i++)
+			FLA_Permute_single(buf_A[i], permutation, &(buf_B[i]));		
+	}
+	else{
+		FLA_Permute_single(A, permutation, B);
+	}
+
+	return FLA_SUCCESS;
+}
+
 FLA_Error FLA_Permute( dim_t permutation[], dim_t order, dim_t size[], FLA_Obj A[], dim_t* B_order, dim_t (*B_size)[], FLA_Obj (*B)[] )
 {
   dim_t nElem = 1;
