@@ -28,11 +28,14 @@ void initMatrix(FLA_Obj* obj){
   FLA_Obj* buf = (FLA_Obj*)FLA_malloc(sizeObj[0] * sizeObj[1] * sizeof(FLA_Obj));
   FLA_Obj_attach_buffer_to_tensor(buf, smOrder, strideObj, obj);
 
+  FLA_Adjust_2D_info(obj);
+
   for(i = 0; i < sizeObj[1]; i++)
 	for(j = 0; j < sizeObj[0]; j++){
 		FLA_Obj* curObj = FLA_Obj_base_buffer(*obj);
 		FLA_Obj_create_tensor(FLA_DOUBLE, smOrder, sizeBlk, strideBlk, &(curObj[j + (sizeObj[0]*i)]));
 		FLA_Random_matrix(curObj[j+ (sizeObj[0]*i)]);
+		FLA_Adjust_2D_info(&(curObj[j+(sizeObj[0]*i)]));
 	}
 }
 
