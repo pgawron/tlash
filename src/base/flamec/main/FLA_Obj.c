@@ -833,7 +833,9 @@ FLA_Error FLA_Obj_create_symm_tensor_without_buffer(FLA_Datatype datatype, dim_t
 	(obj->base->stride)[0] = 1;
 	for(i = 1; i < order; i++)
 		(obj->base->stride)[i] = (obj->size)[i-1] * (obj->base->stride)[i-1];
-	
+
+	FLA_Adjust_2D_info(obj);
+
 	return FLA_SUCCESS;
 }
 

@@ -188,6 +188,10 @@ FLA_Error FLA_Part_1xmode2( FLA_Obj A,  FLA_Obj *A1,
   (A2->offset)[mode] += b;
   A2->base = A.base;
 
+
+  FLA_Adjust_2D_info(A1);
+  FLA_Adjust_2D_info(A2);
+
   return FLA_SUCCESS;
 }
 
@@ -735,6 +739,8 @@ FLA_Error FLA_Merge_1xmode2( FLA_Obj AT,
   memcpy(&((A->offset)[0]), &(AT.offset[0]), AT.order * sizeof(dim_t));
   A->base = AT.base;
 
+
+  FLA_Adjust_2D_info(A);
   return FLA_SUCCESS;
 }
 
