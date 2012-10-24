@@ -94,10 +94,15 @@ void test_sttsm(){
 
   initSymmTensor(stOrder, stSize, sblkSize, &t);
   initMatrix(&m);
-	printSymmObj(m);
+
   initSymmTensor(scOrder, scSize, sblkSize, &c);
   setSymmTensorToZero(c);
 
+	printf("t tensor\n");
+	printSymmObj(t);
+	printf("m matrix\n");
+	printSymmObj(m);
+		printf("c tensor\n");
   printSymmObj(c);
 
   FLA_Sttsm(alpha, t, beta, m, c);

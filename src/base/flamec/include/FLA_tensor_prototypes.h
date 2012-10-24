@@ -50,6 +50,7 @@ dim_t          FLA_Obj_order( FLA_Obj obj );
 dim_t*         FLA_Obj_stride( FLA_Obj obj );
 dim_t*         FLA_Obj_offset( FLA_Obj obj );
 dim_t*         FLA_Obj_size( FLA_Obj obj );
+dim_t*         FLA_Obj_permutation( FLA_Obj obj );
 dim_t          FLA_Obj_dimsize( FLA_Obj obj, dim_t mode );
 dim_t          FLA_Obj_base_dimstride( FLA_Obj obj, dim_t dim );
 dim_t          FLA_Obj_dimstride( FLA_Obj obj, dim_t dim );
@@ -102,6 +103,7 @@ FLA_Error FLA_Check_adjacent_objects_1xmode2( FLA_Obj AT,
 
 FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permtuation[], FLA_Obj* B);
 FLA_Error FLA_Permute_hier( FLA_Obj A, dim_t permtuation[], FLA_Obj* B);
+FLA_Error FLA_Permute_single_inplace( FLA_Obj* A, dim_t permutation[]);
 FLA_Error FLA_Permute( dim_t permutation[], dim_t order, dim_t size[], FLA_Obj A[], dim_t* B_order, dim_t (*B_size)[], FLA_Obj (*B)[] );
 FLA_Error FLA_Ttm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C );
 FLA_Error FLA_Ttm( FLA_Obj alpha, FLA_Obj A, dim_t nModes, dim_t mode[nModes], FLA_Obj beta, FLA_Obj B[nModes], FLA_Obj C );
@@ -111,9 +113,16 @@ FLA_Error FLA_Sttsm( FLA_Obj alpha, FLA_Obj A, FLA_Obj beta, FLA_Obj B, FLA_Obj 
 //---  Util functions ---------------
 FLA_Error FLA_Set_zero_tensor( FLA_Obj A );
 FLA_Error FLA_Adjust_2D_info( FLA_Obj *A );
-int compare_pairwise_sort(const void* a, const void* b);
-dim_t binomial(dim_t n, dim_t k);
 FLA_Error FLA_Obj_create_Random_symm_tensor_data(dim_t b, FLA_Obj obj);
+
+//---  Non-FLA utils ---------------
+int compare_pairwise_sort(const void* a, const void* b);
+FLA_Error FLA_get_unique_info( dim_t order, dim_t index[order], dim_t* sortedIndex, dim_t* permutation);
+dim_t binomial(dim_t n, dim_t k);
+FLA_Error FLA_Set_tensor_stride( dim_t order, dim_t size[order], dim_t* stride);
+FLA_Error FLA_Set_tensor_permutation( dim_t order, dim_t permutation[order], FLA_Obj* A);
+FLA_Error FLA_TIndex_to_LinIndex( dim_t order, dim_t stride[order], dim_t index[order], dim_t* linIndex);
+FLA_Error FLA_Permute_array( dim_t order, dim_t arrfrom[order], dim_t permutation[order], dim_t* arrto);
 
 //---  Needed sorting items ---------------
 typedef struct pairwise_sort_struct{

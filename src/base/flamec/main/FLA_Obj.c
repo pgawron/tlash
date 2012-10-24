@@ -111,6 +111,7 @@ FLA_Error FLA_Obj_create_blocked_tensor_ext( FLA_Datatype datatype, FLA_Elemtype
 		strideBlk[j] = strideBlk[j-1] * blkSize[j-1];
 	FLA_Obj_create_tensor( datatype, order, blkSize, strideBlk, &(buf[i]));
   }
+
   return FLA_SUCCESS;
 }
 
@@ -136,6 +137,10 @@ FLA_Error FLA_Obj_create_tensor_ext( FLA_Datatype datatype, FLA_Elemtype elemtyp
   memcpy(&((obj->base->stride)[0]), &(stride[0]), order * sizeof( dim_t ) );
   memset(&((obj->base->index)[0]), 0, order * sizeof( dim_t ) );
 
+  obj->base->n_elem_alloc = size[0] * nSecondDim;
+
+  for(i = 0; i < order; i++)
+	obj->permutation[i] = i;
   return FLA_SUCCESS;
 }
 
@@ -457,6 +462,10 @@ FLA_Error FLA_Obj_create_tensor_without_buffer( FLA_Datatype datatype, dim_t ord
     memcpy(&((obj->base->size_inner)[0]), &(size[0]), order * sizeof( dim_t ) );
     memset(&((obj->base->index)[0]), 0, order * sizeof( dim_t ) );
     memset(&((obj->base->stride)[0]), 0, order * sizeof( dim_t ) );
+
+	obj->base->n_elem_alloc = size[0] * nSecondDim;
+	for(i = 0; i < order; i++)
+		(obj->permutation)[i] = i;
 
 	return FLA_SUCCESS;
 }

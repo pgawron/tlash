@@ -164,6 +164,13 @@ dim_t FLA_Obj_dimsize( FLA_Obj obj, dim_t mode )
   return obj.size[mode];
 }
 
+dim_t* FLA_Obj_permutation( FLA_Obj obj )
+{
+  dim_t* tmp = FLA_malloc(FLA_MAX_ORDER * sizeof(dim_t));
+  memcpy(&(tmp[0]), &(obj.permutation[0]), FLA_Obj_order( obj ) * sizeof( dim_t ) );
+  return tmp;
+}
+
 FLA_Uplo FLA_Obj_structure( FLA_Obj obj )
 {
   return obj.base->uplo;

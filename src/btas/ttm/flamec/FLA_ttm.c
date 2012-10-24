@@ -36,19 +36,37 @@ FLA_Error FLA_Ttm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FL
 {
 //	printf("res in:\n");
 //	FLA_Obj_print_tensor(C);
-
+	FLA_Datatype datatype = FLA_Obj_datatype(A);
 	dim_t order = A.order;
     dim_t permutation[order];
 	dim_t ipermutation[order];
     dim_t i;
 	permutation[0] = mode;
+	dim_t* size_A;
+	dim_t size_P[order];
+	dim_t stride_P[order];
+	dim_t* size_C;
+	dim_t size_tmpC[order];
+	dim_t stride_tmpC[order];
+	
+	size_A = FLA_Obj_size(A);
+	size_C = FLA_Obj_size(C);
+	
     for(i = 0; i < mode; i++)
 		permutation[i+1] = i;
     for(i = mode+1; i < order; i++)
 		permutation[i] = i;
 
 	FLA_Obj P, tmpC;
-
+	FLA_Permute_array(order, size_A, permutation, &(size_P[0]));
+	FLA_Permute_array(order, size_C, permutation, &(size_tmpC[0]));
+	
+	FLA_Set_tensor_stride(order, size_P, &(stride_P[0]));
+	FLA_Set_tensor_stride(order, size_tmpC, &(stride_tmpC[0]));
+	
+	FLA_Obj_create_tensor(datatype, order, size_P, stride_P, &P);
+	FLA_Obj_create_tensor(datatype, order, size_tmpC, stride_tmpC, &tmpC);
+	
 	FLA_Permute_hier(A, permutation, &P);
 	FLA_Permute_hier(C, permutation, &tmpC);
 
@@ -124,12 +142,23 @@ FLA_Error FLA_Ttm( FLA_Obj alpha, FLA_Obj A, dim_t nModes, dim_t mode[nModes], F
 
 		//All objects setup, now perform computation
 		//Probably should remove alpha + beta after first compute
+		printf("\nPerforming TTM:\n");
+		printf("tmpA:\n");
+		FLA_Obj_print_tensor(tmpA);
+		printf("mode:%d\n", mode[i]);
+		printf("B:\n");
+		FLA_Obj_show("", B[i], "%.3f", "");
+		printf("tmpC:\n");
+		FLA_Obj_print_tensor(tmpC);
+		printf("\n\n");
+		
 		FLA_Ttm_single(alpha, tmpA, mode[i], beta, B[i], tmpC);
 
 		//Make tmpA = tmpC and clear tmpC for next iteration
 		memcpy(&(tmpA.size[0]), &(tmpC.size[0]), order * sizeof(dim_t));
 		memcpy(&(((tmpA.base)->stride)[0]), &(((tmpC.base)->stride)[0]), order * sizeof(dim_t));
 		(tmpA.base)->buffer = (tmpC.base)->buffer;
+		tmpA.base->n_elem_alloc = tmpC.base->n_elem_alloc;
 		FLA_Adjust_2D_info(&tmpA);
 	}
 
