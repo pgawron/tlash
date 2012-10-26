@@ -32,28 +32,48 @@
 
 #include "FLAME.h"
 
-FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C, dim_t maxIndex )
+FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C, dim_t startIndex )
 {
 	dim_t j;
-	printf("size_A:");
-	for(j = 0; j < FLA_Obj_order(A); j++)
-		printf(" %d", FLA_Obj_dimsize(A, j));
-	printf("\n");
-	printf("size_B:");
-	for(j = 0; j < FLA_Obj_order(B); j++)
-		printf(" %d", FLA_Obj_dimsize(B, j));
-	printf("\n");
-	printf("size_C:");
-	for(j = 0; j < FLA_Obj_order(C); j++)
-		printf(" %d", FLA_Obj_dimsize(C, j));
-	printf("\n");
+	dim_t order = FLA_Obj_order( A );
 	
-	if(mode == 0){
-		FLA_Ttm_single(alpha, A, mode, beta, B, C);
+	if(mode == order - 1){
+		FLA_Obj BT, BB;
+		FLA_Obj B0, B1, B2;
+		FLA_Obj CT, CB;
+		FLA_Obj C0, C1, C2;
+		
+		FLA_Part_1xmode2(B, &BT,
+						 &BB, 0, startIndex, FLA_TOP);	
+		FLA_Part_1xmode2(C, &CT,
+						 &CB, mode, startIndex, FLA_TOP);	
+		dim_t loopCount = startIndex;
+		while(loopCount < FLA_Obj_dimsize(C, mode)){
+			dim_t b = 1;
+			FLA_Repart_1xmode2_to_1xmode3(BT, &B0,
+										  /**/ /**/
+										  &B1,
+										  BB, &B2, 0, b, FLA_BOTTOM); 
+			FLA_Repart_1xmode2_to_1xmode3(CT, &C0,
+										  /**/ /**/
+										  &C1,
+										  CB, &C2, mode, b, FLA_BOTTOM);
+
+			FLA_Ttm_single_mode(alpha, A, mode, beta, B1, C1);
+
+			FLA_Cont_with_1xmode3_to_1xmode2( &CT, C0,
+											 C1,
+											 /********/
+											 &CB, C2, mode, FLA_TOP);
+			FLA_Cont_with_1xmode3_to_1xmode2( &BT, B0,
+											 B1,
+											 /********/
+											 &BB, B2, 0, FLA_TOP);
+			loopCount++;
+		}
 	}else{
 		dim_t i;
 		FLA_Obj X;
-		dim_t order = FLA_Obj_order( A );
 
 		
 		//FOR
@@ -63,13 +83,13 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 		FLA_Obj C0, C1, C2;
 		
 		FLA_Part_1xmode2(B, &BT,
-							&BB, 0, 0, FLA_TOP);	
+							&BB, 0, startIndex, FLA_TOP);	
 		FLA_Part_1xmode2(C, &CT,
-							&CB, mode, 0, FLA_TOP);	
+							&CB, mode, startIndex, FLA_TOP);	
 		//Only symmetric part touched
 		//Ponder this
-		dim_t loopCount = 0;
-		while(loopCount < maxIndex){
+		dim_t loopCount = startIndex;
+		while(loopCount < FLA_Obj_dimsize(C, mode)){
 			//Check this mathc out.  I think it is correct, Mode-1 of B matches mode-n of A
 			//Mode-0 of B matches Mode-n of C
 			dim_t b = 1;
@@ -103,14 +123,10 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 			FLA_Set_zero_tensor(X);
 			//End X setup
 
-			printf("mode mult: %d input:\n", mode);
-			FLA_Obj_print_tensor(A);
-			FLA_Obj_print_tensor(B1);
-			FLA_Ttm_single(alpha, A, mode, beta, B1, X);
-			printf("mode mult: %d res:\n", mode);
-			FLA_Obj_print_tensor(X);
-			FLA_Sttsm_single(alpha, X, mode-1, beta, B, C1, loopCount+1);
+			FLA_Ttm_single_mode(alpha, A, mode, beta, B1, X);
 
+			FLA_Sttsm_single(alpha, X, mode+1, beta, B, C1, loopCount);
+			
 			FLA_Cont_with_1xmode3_to_1xmode2( &CT, C0,
 												   C1,
 											/********/
@@ -129,7 +145,7 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 FLA_Error FLA_Sttsm( FLA_Obj alpha, FLA_Obj A, FLA_Obj beta, FLA_Obj B, FLA_Obj C )
 {
 	dim_t order = FLA_Obj_order(A);
-	FLA_Sttsm_single( alpha, A, order-1, beta, B, C, order);
+	FLA_Sttsm_single( alpha, A, 0, beta, B, C, 0);
 
 	return FLA_SUCCESS;
 }

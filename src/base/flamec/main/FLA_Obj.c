@@ -835,13 +835,13 @@ FLA_Error FLA_Obj_create_symm_tensor_without_buffer(FLA_Datatype datatype, dim_t
 	FLA_Obj_create_tensor_without_buffer( datatype, order, endIndex, obj);
 	obj->base->elemtype = FLA_TENSOR;
 
-	//Must attach buffer here...
-	obj->base->buffer = (void*) t_blks;
-	
-	//Adjust the stride of object
-	(obj->base->stride)[0] = 1;
+	dim_t* size_obj = FLA_Obj_size(*obj);
+	dim_t stride_obj[order];
+	stride_obj[0] = 1;
 	for(i = 1; i < order; i++)
-		(obj->base->stride)[i] = (obj->size)[i-1] * (obj->base->stride)[i-1];
+		stride_obj[i] = stride_obj[i-1]*size_obj[i-1];
+	
+	FLA_Obj_attach_buffer_to_tensor(t_blks, order, stride_obj, obj);
 
 	FLA_Adjust_2D_info(obj);
 
@@ -886,7 +886,7 @@ FLA_Error FLA_Obj_attach_buffer_to_symm_tensor( void *buffer[], dim_t order, dim
 		objLinIndex = 0;
 		for(i = 0; i < order; i++)
 			objLinIndex += curIndex[i] * stride_obj[i];
-		
+		printf("linIndex: %d\n", objLinIndex);
 		for(i = 0; i < order; i++){
 			index_pairs[i].index = i;
 			index_pairs[i].val = curIndex[i];
@@ -915,14 +915,13 @@ FLA_Error FLA_Obj_attach_buffer_to_symm_tensor( void *buffer[], dim_t order, dim
 				((buffer_obj[objLinIndex].base)->stride)[i] = ((buffer_obj[objLinIndex].base)->stride)[i-1] * ((buffer_obj[objLinIndex].base)->size)[i-1];
 			countBuffer++;
 		}else{
-			dim_t newLinIndex = 0;
-			for(i = 0; i < order; i++)
-				newLinIndex += stride_obj[i] * sortedIndex[i];
-			((buffer_obj[objLinIndex]).base)->buffer = FLA_Obj_base_buffer(buffer_obj[newLinIndex]);
-			for(i = 0; i < order; i++)
-				(((buffer_obj[objLinIndex]).base)->stride)[i] = (((buffer_obj[newLinIndex]).base)->stride)[permutation[i]];
-			//Update stride
-			memcpy(&((((buffer_obj[objLinIndex]).base)->stride)[0]), &((((buffer_obj[newLinIndex]).base)->stride)[0]), order * sizeof(dim_t));
+			dim_t uniqueLinIndex;
+			FLA_TIndex_to_LinIndex(order, stride_obj, sortedIndex, &(uniqueLinIndex));
+
+			//point this non-unique FLA_Obj to the correct base
+			(buffer_obj[objLinIndex]).base = (buffer_obj[uniqueLinIndex]).base;
+			//Set the right permutation
+			memcpy(&(((buffer_obj[objLinIndex]).permutation)[0]), &(permutation[0]), order * sizeof(dim_t));
 		}
 		FLA_Adjust_2D_info(&(buffer_obj[objLinIndex]));
 		//Loop update
@@ -942,8 +941,6 @@ FLA_Error FLA_Obj_attach_buffer_to_symm_tensor( void *buffer[], dim_t order, dim
 			curIndex[i] = 0;
 		updateIndex = order - 1;
 	}
-
-	//Set all non-uniques (requires getting correct permutation)
 
 	//Omitting some things attach_buffer does because not sure how to extend yet
 	//obj->base->buffer = buffer;

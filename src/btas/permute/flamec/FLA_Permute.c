@@ -62,13 +62,14 @@ FLA_Error FLA_Permute_single_inplace( FLA_Obj* A, dim_t permutation[]){
 		nElem *= (A->base->size)[i];
 	
 	void* buffer;
-	if(FLA_Obj_elemtype(*A) == FLA_DOUBLE)
+	if(FLA_Obj_elemtype(*A) == FLA_SCALAR)
 		buffer = FLA_malloc(nElem * sizeof(double));
 	else
 		buffer = FLA_malloc(nElem * sizeof(FLA_Obj));	
 	
     //Explicitely permute the data as well
 	void* buf_A = FLA_Obj_base_buffer(*A);
+	dim_t* newStride = FLA_Obj_stride(*A);
 	dim_t curIndex[order];
 	memset(&(curIndex[0]), 0, order * sizeof(dim_t));
 	dim_t* endIndex = FLA_Obj_size(*A);
@@ -77,13 +78,14 @@ FLA_Error FLA_Permute_single_inplace( FLA_Obj* A, dim_t permutation[]){
 		//Calculate linear index fro and to
 		dim_t linIndexFro = 0;
 		dim_t linIndexTo = 0;
-		for(dim_t i = 0; i < order;i++){
-			linIndexFro = stride_A_old[i] * curIndex[i];
-			//Check this works (not sure where permutation goes)
-			linIndexTo = stride_A_old[i] * curIndex[permutation[i]];
-		}
 		
-		if(FLA_Obj_elemtype(*A) == FLA_DOUBLE)
+		dim_t permutedIndex[order];
+		FLA_Permute_array(order, curIndex, permutation, &(permutedIndex[0]));
+		
+		FLA_TIndex_to_LinIndex(order, curIndex, stride_A_old, &linIndexFro);
+		FLA_TIndex_to_LinIndex(order, permutedIndex, newStride, &linIndexTo);
+		
+		if(FLA_Obj_elemtype(*A) == FLA_SCALAR)
 			((double*)buffer)[linIndexTo] = ((double*)buf_A)[linIndexFro];
 		else
 			((FLA_Obj*)buffer)[linIndexTo] = ((FLA_Obj*)buf_A)[linIndexFro];
@@ -101,8 +103,17 @@ FLA_Error FLA_Permute_single_inplace( FLA_Obj* A, dim_t permutation[]){
 			curIndex[i] = 0;
 		updatePtr = order - 1;
 	}
+
+	//Copy the data from temporary buffer to A's buffer
+	dim_t numElem = FLA_Obj_num_elem_alloc(*A);
+	for (dim_t i = 0; i < numElem; i++) {
+		if(FLA_Obj_elemtype(*A) == FLA_SCALAR)
+			((double*)FLA_Obj_base_buffer(*A))[i] = ((double*)buffer)[i];
+		else
+			((FLA_Obj*)FLA_Obj_base_buffer(*A))[i] = ((FLA_Obj*)buffer)[i];
+	}
 	
-	FLA_Obj_attach_buffer_to_tensor(buffer, order, A->base->stride, A);
+//	FLA_Obj_attach_buffer_to_tensor(buffer, order, A->base->stride, A);
 	
 	FLA_Adjust_2D_info(A);
 	
@@ -113,6 +124,7 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 	
 	dim_t i;
 	FLA_Datatype datatype = FLA_Obj_datatype(A);
+	FLA_Datatype x = FLA_Obj_datatype(A);
 	dim_t order;
 	dim_t* stride_A;
 	dim_t* size_A;
@@ -122,7 +134,8 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 	dim_t offset_B[order];
 	dim_t nElem_A;
 
-	order = FLA_Obj_order(A);
+	order = A.order;
+//	order = FLA_Obj_order(A);
 	stride_A = FLA_Obj_stride(A);
 	offset_A = FLA_Obj_offset(A);
 	size_A = FLA_Obj_size(A);
@@ -174,8 +187,19 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 		updatePtr = order - 1;
 	}
 
-	FLA_Obj_attach_buffer_to_tensor(buffer, order, stride_B, B);
-
+	dim_t nElemB = 1;
+	for(i = 0; i < order; i++)
+		nElemB *= FLA_Obj_dimsize(*B, i);
+	
+	if(FLA_Obj_elemtype(A) == FLA_SCALAR){
+		double* buf_B = FLA_Obj_base_buffer(*B);
+		memcpy(&(buf_B[0]), &(((double*)buffer)[0]), nElemB * sizeof(double));
+	}else{
+		FLA_Obj* buf_B = FLA_Obj_base_buffer(*B);
+		memcpy(&(buf_B[0]), &(((double*)buffer)[0]), nElemB * sizeof(FLA_Obj*));
+	}
+	memcpy(&((B->permutation)[0]), &(A.permutation[0]), order * sizeof(dim_t));
+	
 	FLA_Adjust_2D_info(B);
 
 	return FLA_SUCCESS;
@@ -183,6 +207,12 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 
 FLA_Error FLA_Permute_hier( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 
+	printf("A pre permute_single in hier:\n");
+	FLA_Obj_print_tensor(A);
+
+//	printf("B pre permute_single in hier:\n");
+//	FLA_Obj_print_tensor(*B);
+	
 	FLA_Permute_single(A, permutation, B);
 
 	if(FLA_Obj_elemtype(A) == FLA_MATRIX || FLA_Obj_elemtype(A) == FLA_TENSOR){
@@ -191,8 +221,25 @@ FLA_Error FLA_Permute_hier( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 		for(dim_t i = 0; i < FLA_Obj_order(A); i++)
 			nElem *= FLA_Obj_dimsize(A, i);
 		FLA_Obj* buf_B = (FLA_Obj*)FLA_Obj_base_buffer(*B);
-		for(dim_t i = 0; i < nElem; i++)
-			FLA_Permute_single_inplace(&(buf_B[i]), permutation);
+		for(dim_t i = 0; i < nElem; i++){
+			//Only permute the unique entries
+			//Othersize just adjust the permutation field
+			dim_t order = FLA_Obj_order(A);
+			dim_t isUnique = TRUE;
+			for(dim_t j = 0; j < order; j++)
+				if(A.permutation[j] != j){
+					isUnique = FALSE;
+					break;
+				}
+			if(isUnique)
+				FLA_Permute_single_inplace(&(buf_B[i]), permutation);
+			else{
+				dim_t newPerm[order];
+				FLA_Permute_array(order, &(A.permutation[0]), permutation, &(newPerm[0]));
+				for(dim_t j = 0; j < order; j++)
+					A.permutation[j] = newPerm[j];
+			}
+		}
 	}
 
 	return FLA_SUCCESS;

@@ -180,6 +180,7 @@ FLA_Error FLA_Part_1xmode2( FLA_Obj A,  FLA_Obj *A1,
   (A1->size)[mode] = b;
   memcpy(&((A1->offset)[0]), &(A.offset[0]), A.order * sizeof(dim_t));
   A1->base = A.base;
+  memcpy(&((A1->permutation)[0]), &(A.permutation[0]), A.order * sizeof(dim_t));
 
   A2->order = A.order;
   memcpy(&((A2->size)[0]), &(A.size[0]), A.order * sizeof(dim_t));
@@ -187,7 +188,7 @@ FLA_Error FLA_Part_1xmode2( FLA_Obj A,  FLA_Obj *A1,
   memcpy(&((A2->offset)[0]), &(A.offset[0]), A.order * sizeof(dim_t));
   (A2->offset)[mode] += b;
   A2->base = A.base;
-
+  memcpy(&((A2->permutation)[0]), &(A.permutation[0]), A.order * sizeof(dim_t));
 
   FLA_Adjust_2D_info(A1);
   FLA_Adjust_2D_info(A2);
@@ -380,6 +381,7 @@ FLA_Error FLA_Repart_1xmode2_to_1xmode3( FLA_Obj AT,   FLA_Obj *A0,
     A2->order = AB.order;
     memcpy(&((A2->size)[0]), &(AB.size[0]), AB.order * sizeof(dim_t));
     memcpy(&((A2->offset)[0]), &(AB.offset[0]), AB.order * sizeof(dim_t));
+	memcpy(&((A2->permutation)[0]), &(AB.permutation[0]), AB.order * sizeof(dim_t));
     A2->base = AB.base;
   }
   else
@@ -387,6 +389,7 @@ FLA_Error FLA_Repart_1xmode2_to_1xmode3( FLA_Obj AT,   FLA_Obj *A0,
     A0->order = AT.order;
     memcpy(&((A0->size)[0]), &(AT.size[0]), AT.order * sizeof(dim_t));
     memcpy(&((A0->offset)[0]), &(AT.offset[0]), AT.order * sizeof(dim_t));
+	memcpy(&((A0->permutation)[0]), &(AT.permutation[0]), AT.order * sizeof(dim_t));
     A0->base = AT.base;
 
     FLA_Part_1xmode2 ( AB,    A1,
@@ -637,11 +640,13 @@ FLA_Error FLA_Cont_with_1xmode3_to_1xmode2( FLA_Obj *AT,  FLA_Obj A0,
     AT->size[mode] += A1.size[mode];
     memcpy(&((AT->offset)[0]), &(A0.offset[0]), A0.order * sizeof(dim_t));
     AT->base = A0.base;
+    memcpy(&((AT->permutation)[0]), &(A0.permutation[0]), A0.order * sizeof(dim_t));
 
     AB->order = A2.order;
     memcpy(&((AB->size)[0]), &(A2.size[0]), A2.order * sizeof(dim_t));
     memcpy(&((AB->offset)[0]), &(A2.offset[0]), A2.order * sizeof(dim_t));
     AB->base = A2.base;
+    memcpy(&((AB->permutation)[0]), &(A2.permutation[0]), A2.order * sizeof(dim_t));
   }
   else
   {
@@ -649,12 +654,14 @@ FLA_Error FLA_Cont_with_1xmode3_to_1xmode2( FLA_Obj *AT,  FLA_Obj A0,
     memcpy(&((AT->size)[0]), &(A0.size[0]), A0.order * sizeof(dim_t));
     memcpy(&((AT->offset)[0]), &(A0.offset[0]), A0.order * sizeof(dim_t));
     AT->base = A0.base;
+    memcpy(&((AT->permutation)[0]), &(A0.permutation[0]), A0.order * sizeof(dim_t));
 
     AB->order = A1.order;
     memcpy(&((AB->size)[0]), &(A1.size[0]), A1.order * sizeof(dim_t));
     AB->size[mode] += A2.size[mode];
     memcpy(&((AB->offset)[0]), &(A1.offset[0]), A1.order * sizeof(dim_t));
     AB->base = A1.base;
+    memcpy(&((AB->permutation)[0]), &(A1.permutation[0]), A1.order * sizeof(dim_t));
   }
 	FLA_Adjust_2D_info(AT);
 	FLA_Adjust_2D_info(AB);
@@ -738,6 +745,7 @@ FLA_Error FLA_Merge_1xmode2( FLA_Obj AT,
   (A->size)[mode] += AB.size[mode];
   memcpy(&((A->offset)[0]), &(AT.offset[0]), AT.order * sizeof(dim_t));
   A->base = AT.base;
+  memcpy(&((A->permutation)[0]), &(AT.permutation[0]), AT.order * sizeof(dim_t));
 
 
   FLA_Adjust_2D_info(A);
