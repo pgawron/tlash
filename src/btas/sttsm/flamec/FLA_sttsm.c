@@ -127,6 +127,9 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 
 			FLA_Sttsm_single(alpha, X, mode+1, beta, B, C1, loopCount);
 			
+			printf("C after update\n");
+			FLA_Obj_print_tensor(C);
+			
 			FLA_Cont_with_1xmode3_to_1xmode2( &CT, C0,
 												   C1,
 											/********/

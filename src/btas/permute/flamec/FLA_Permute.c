@@ -130,8 +130,6 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 	dim_t* size_A;
 	dim_t* offset_A;
 	dim_t* size_B;
-	dim_t stride_B[order];
-	dim_t offset_B[order];
 	dim_t nElem_A;
 
 	order = A.order;
@@ -141,6 +139,8 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 	size_A = FLA_Obj_size(A);
 	nElem_A = FLA_Obj_num_elem_alloc(A);
 	size_B = FLA_Obj_size(*B);
+	dim_t stride_B[order];
+	dim_t offset_B[order];
 	
 	FLA_Set_tensor_stride(order, size_B, &(stride_B[0]));
 	
