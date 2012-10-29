@@ -120,6 +120,16 @@ FLA_Error FLA_Permute_single_inplace( FLA_Obj* A, dim_t permutation[]){
 	return FLA_SUCCESS;	
 }
 
+
+/***
+ *
+ *	TODO: Need consistency between what a View is.  Right now, I need to permute
+ *  data first based on the permutation array in the View, then based on the
+ *  permutation given in the parameter.
+ *  Does this mean that the FLA_View size value should reflect the already
+ *  permuted data? (same with other associated fields.
+ *
+ ***/
 FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 	
 	dim_t i;
@@ -163,8 +173,13 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 		
 		FLA_TIndex_to_LinIndex(order, stride_A, curIndex, &(linIndexFro));
 
+		//Since the View might have a permutation on underlying data, we must
+		//permute the permutation array and then the data
+		dim_t full_permutation[order];
+		FLA_Permute_array(order, &(A.permutation[0]), permutation, &(full_permutation[0]));
+		
 		dim_t permutedIndex[order];
-		FLA_Permute_array(order, curIndex, permutation, &(permutedIndex[0]));
+		FLA_Permute_array(order, curIndex, full_permutation, &(permutedIndex[0]));
 		//Check if this math is right.
 		FLA_TIndex_to_LinIndex(order, stride_B, permutedIndex, &(linIndexTo));
 
