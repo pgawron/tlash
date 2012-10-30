@@ -102,7 +102,7 @@ void test_ttm_single(){
 
 
   printf("calling ttm\n");
-  FLA_Ttm_single(alpha, t, mode_mult, beta, m, c);
+  FLA_Ttm_single_mode(alpha, t, mode_mult, beta, m, c);
 
 	printf("t tensor\n");
 	FLA_Obj_print_tensor(t);

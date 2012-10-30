@@ -36,7 +36,7 @@ FLA_Error FLA_Ttm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FL
 {
 	FLA_Datatype datatype = FLA_Obj_datatype(A);
 	FLA_Elemtype elemtype = FLA_Obj_elemtype(A);
-	dim_t order = A.order;
+	dim_t order = FLA_Obj_order(A);
     dim_t permutation[order];
 	dim_t ipermutation[order];
     dim_t i;
@@ -352,17 +352,17 @@ FLA_Error FLA_Ttm_single_mode( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj bet
 				break;
 			}
 
-		if(singleElemA){
+		if(singleElemA && elemtype_A != FLA_SCALAR){
 			dim_t linIndex = 0;
 			dim_t order = FLA_Obj_order(A);
 			FLA_TIndex_to_LinIndex(order, &(((A.base)->stride)[0]), &(A.offset[0]), &linIndex);
 			FLA_Ttm_single_mode(alpha, ((FLA_Obj*)buf_A)[linIndex], mode, beta, B, C);
-		}else if(singleElemB){
+		}else if(singleElemB && elemtype_B != FLA_SCALAR){
 			dim_t linIndex = 0;
 			dim_t order = FLA_Obj_order(B);
 			FLA_TIndex_to_LinIndex(order, &(((B.base)->stride)[0]), &(B.offset[0]), &linIndex);
 			FLA_Ttm_single_mode(alpha, A, mode, beta, ((FLA_Obj*)buf_B)[linIndex], C);
-		}else if(singleElemC){
+		}else if(singleElemC && elemtype_C != FLA_SCALAR){
 			dim_t linIndex = 0;
 			dim_t order = FLA_Obj_order(C);
 			FLA_TIndex_to_LinIndex(order, &(((C.base)->stride)[0]), &(C.offset[0]), &linIndex);

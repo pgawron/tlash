@@ -397,7 +397,7 @@ FLA_Error FLA_Obj_print_tensor_under_permutation(FLA_Obj A, dim_t permutation[])
         FLA_Obj* buf = FLA_Obj_base_buffer(A);
 
 		dim_t curIndex[order];
-		dim_t updatePtr = order - 1;
+		dim_t updatePtr = 0;
 		memset(&(curIndex[0]), 0, order * sizeof(dim_t));
 		while(TRUE){
 			dim_t linIndex;
@@ -412,15 +412,15 @@ FLA_Error FLA_Obj_print_tensor_under_permutation(FLA_Obj A, dim_t permutation[])
 			//update
 			curIndex[updatePtr]++;
 			while(updatePtr < order && curIndex[updatePtr] == size[updatePtr]){
-				updatePtr--;
+				updatePtr++;
 				if(updatePtr < order)
 					curIndex[updatePtr]++;
 			}
 			if(updatePtr >= order)
 				break;
-			for(i = updatePtr + 1; i < order; i++)
+			for(i = updatePtr - 1; i < order; i--)
 				curIndex[i] = 0;
-			updatePtr = order - 1;
+			updatePtr = 0;
 		}
 		
     }
@@ -428,7 +428,7 @@ FLA_Error FLA_Obj_print_tensor_under_permutation(FLA_Obj A, dim_t permutation[])
         double* buf = (double*)FLA_Obj_base_buffer(A);
 
 		dim_t curIndex[order];
-		dim_t updatePtr = order - 1;
+		dim_t updatePtr = 0;
 		memset(&(curIndex[0]), 0, order * sizeof(dim_t));
 		while(TRUE){
 			dim_t linIndex;
@@ -441,15 +441,15 @@ FLA_Error FLA_Obj_print_tensor_under_permutation(FLA_Obj A, dim_t permutation[])
 			//update
 			curIndex[updatePtr]++;
 			while(updatePtr < order && curIndex[updatePtr] == size[updatePtr]){
-				updatePtr--;
+				updatePtr++;
 				if(updatePtr < order)
 					curIndex[updatePtr]++;
 			}
 			if(updatePtr >= order)
 				break;
-			for(i = updatePtr + 1; i < order; i++)
+			for(i = updatePtr - 1; i < order; i--)
 				curIndex[i] = 0;
-			updatePtr = order - 1;
+			updatePtr = 0;
 		}
         printf("\n");
     }
@@ -459,6 +459,7 @@ FLA_Error FLA_Obj_print_tensor_under_permutation(FLA_Obj A, dim_t permutation[])
 FLA_Error FLA_Obj_print_tensor(FLA_Obj A){
 	dim_t order = FLA_Obj_order(A);
 	dim_t* permutation = FLA_Obj_permutation(A);
+	printf("bling\n");
 	return FLA_Obj_print_tensor_under_permutation(A, permutation);
 }
 

@@ -635,6 +635,8 @@ FLA_Error FLA_Obj_attach_buffer_to_tensor( void *buffer, dim_t order, dim_t stri
 	obj->base->buffer = buffer;
 	memcpy(&((obj->base->stride)[0]), &(stride[0]), order * sizeof(dim_t));
 
+	FLA_Adjust_2D_info(obj);
+	
 	return FLA_SUCCESS;
 }
 
