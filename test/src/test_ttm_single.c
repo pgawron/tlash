@@ -1,14 +1,6 @@
 #include "FLAME.h"
 #include "stdio.h"
 
-dim_t mode_mult = 2;
-dim_t tOrder = 3;
-dim_t tSize[] = {4, 4, 4};
-dim_t mOrder = 2;
-dim_t mSize[] = {8, 4};
-dim_t cOrder = 3;
-dim_t cSize[] = {4, 4, 8};
-
 void* genRandomData(dim_t order, dim_t size[order]){
 	dim_t i;
 	dim_t numel = 1;
@@ -53,13 +45,8 @@ void initObj_ttm(dim_t order, dim_t size[order], dim_t isRandom, FLA_Obj* obj){
   else
 	data = genSequentialData(order, size);
 
-  if(order > 2){
   	FLA_Obj_create_tensor_without_buffer(FLA_DOUBLE, order, size, obj);
   	FLA_Obj_attach_buffer_to_tensor(data, order, stride, obj);
-  }else{
-  	FLA_Obj_create_without_buffer(FLA_DOUBLE, size[0], size[1], obj);
-  	FLA_Obj_attach_buffer(data, stride[0], stride[1], obj);
-  }	
 }
 
 void initObjZero_ttm(dim_t order, dim_t size[order], FLA_Obj* obj){
@@ -77,13 +64,8 @@ void initObjZero_ttm(dim_t order, dim_t size[order], FLA_Obj* obj){
   double* data = (double*)FLA_malloc(nData * sizeof(double));;
   memset(data, 0, nData * sizeof(double));
 
-  if(order > 2){
   	FLA_Obj_create_tensor_without_buffer(FLA_DOUBLE, order, size, obj);
   	FLA_Obj_attach_buffer_to_tensor(data, order, stride, obj);
-  }else{
-    FLA_Obj_create_without_buffer(FLA_DOUBLE, size[0], size[1], obj);
-    FLA_Obj_attach_buffer(data, stride[0], stride[1], obj);
-  }
 }
 
 void setToZero(FLA_Obj obj){
@@ -103,10 +85,32 @@ void test_ttm_single(){
 
   FLA_Obj t, m, c;
 
+	//Start setup params
+	dim_t mode_mult = 1;
+	dim_t tOrder = 2;
+	dim_t tSize[] = {2, 2};
+	dim_t mOrder = 2;
+	dim_t mSize[] = {4, 2};
+	dim_t cOrder = 2;
+	dim_t cSize[] = {2, 4};
+	//End setup
+
+  printf("got here\n");
   initObj_ttm(tOrder, tSize, 0, &t);
   initObj_ttm(mOrder, mSize, 0, &m);
   initObjZero_ttm(cOrder, cSize, &c);
 
+
+  printf("calling ttm\n");
   FLA_Ttm_single(alpha, t, mode_mult, beta, m, c);
+
+	printf("t tensor\n");
+	FLA_Obj_print_tensor(t);
+	
+	printf("m matrix\n");
+	FLA_Obj_print_tensor(m);
+
+	printf("c tensor\n");
+	FLA_Obj_print_tensor(c);
   double* res = (double*)((c.base)->buffer);
 }
