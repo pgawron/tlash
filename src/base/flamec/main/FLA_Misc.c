@@ -406,6 +406,10 @@ FLA_Error FLA_Obj_print_tensor_under_permutation(FLA_Obj A, dim_t permutation[])
 			FLA_Permute_array(order, curIndex, ipermutation, ipermutedIndex);
 			FLA_TIndex_to_LinIndex(order, stride, ipermutedIndex, &linIndex);
 
+			printf("blkIndex: ");
+			for(i = 0; i < order; i++)
+				printf(" %d", curIndex[i]);
+			printf(" ");
 			printf("datablk: ");
 			FLA_Obj_print_tensor_under_permutation(buf[linIndex], FLA_Obj_permutation(buf[linIndex]));
 
@@ -437,6 +441,9 @@ FLA_Error FLA_Obj_print_tensor_under_permutation(FLA_Obj A, dim_t permutation[])
 			FLA_Permute_array(order, curIndex, ipermutation, ipermutedIndex);
 			FLA_TIndex_to_LinIndex(order, stride, ipermutedIndex, &linIndex);
 
+			printf("\n\tcurIndex:");
+			for(i = 0; i < order; i++)
+				printf(" %d", curIndex[i]);
 			printf(" %.3f", buf[linIndex]);
 			//update
 			curIndex[updatePtr]++;

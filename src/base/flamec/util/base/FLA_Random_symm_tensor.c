@@ -143,13 +143,6 @@ FLA_Error FLA_Obj_create_Random_symm_tensor_data(dim_t b, FLA_Obj obj){
 	dim_t update_ptr = order - 1;
 	dim_t count = 0;
 	while(TRUE){
-		
-		/**///Unique branch
-		printf("creating blk:");
-		for (i=0; i < order; i++) {
-			printf(" %d", curIndex[i]);
-		}
-		printf("\n");
 		//Determine symm groups
 		dim_t nSymmGroups;
 		dim_t* symmGroupLens;
@@ -159,15 +152,6 @@ FLA_Error FLA_Obj_create_Random_symm_tensor_data(dim_t b, FLA_Obj obj){
 		//Create blk
 		FLA_Obj_create_tensor(FLA_DOUBLE, order, blkSize, blkStride, &tmpBlk);
 		FLA_Random_dense_symm_tensor(nSymmGroups, symmGroupLens, symmGroups, &tmpBlk);
-		printf("blk filled with:");
-		dim_t nElem = 1;
-		for (i=0; i < order; i++) {
-			nElem *= tmpBlk.size[i];
-		}
-		for (i=0; i < nElem; i++) {
-			printf(" %.3f", ((double*)tmpBlk.base->buffer)[i]);
-		}
-		printf("\n");
 		//Fill data
 		uniqueBuffers[count] = tmpBlk.base->buffer;
 //		FLA_Obj blk = ((FLA_Obj*) ((obj.base)->buffer))[count];

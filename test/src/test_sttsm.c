@@ -60,12 +60,12 @@ void test_sttsm(){
 	dim_t scSize[] = {8, 8, 8};
 	dim_t sblkSize = 2;
 */
-	dim_t tOrder = 2;
-	dim_t tSize[] = {2, 2};
-	dim_t mSize[] = {4, 2};
-	dim_t cOrder = 2;
-	dim_t cSize[] = {4, 4};
-	dim_t blkSize = 1;
+	dim_t tOrder = 3;
+	dim_t tSize[] = {4, 4, 4};
+	dim_t mSize[] = {8, 4};
+	dim_t cOrder = 3;
+	dim_t cSize[] = {8, 8, 8};
+	dim_t blkSize = 2;
 	//End setup parameters
 
   FLA_Obj alpha = FLA_ONE;
@@ -80,12 +80,13 @@ void test_sttsm(){
   setSymmTensorToZero(c);
 
     //check identity multiply
+/*
 	FLA_Obj* t_buf = (FLA_Obj*)FLA_Obj_base_buffer(t);
 	((double*)t_buf[0].base->buffer)[0] = 1.00;
 	((double*)t_buf[1].base->buffer)[0] = 0;
 	((double*)t_buf[2].base->buffer)[0] = 0;
 	((double*)t_buf[3].base->buffer)[0] = 1.00;
-
+*/
   
 	printf("t tensor\n");
 	FLA_Obj_print_tensor(t);

@@ -125,6 +125,10 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 
 			FLA_Ttm_single_mode(alpha, A, mode, beta, B1, X);
 
+			if(mode == 0){
+				printf("created temporary\n");
+				FLA_Obj_print_tensor(X);
+			}
 			FLA_Sttsm_single(alpha, X, mode+1, beta, B, C1, loopCount);
 			
 //			printf("C after update\n");

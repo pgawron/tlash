@@ -800,10 +800,6 @@ FLA_Error FLA_Obj_create_symm_tensor_without_buffer(FLA_Datatype datatype, dim_t
 	objLinIndex = 0;
 
 	while(TRUE){
-		printf("curIndex:");
-		for(i = 0; i < order; i++)
-			printf(" %d", curIndex[i]);
-		printf("\n");
 		//Set up the FLA_Obj at this index
 		FLA_Obj *curObj = &(t_blks[objLinIndex]);
 
@@ -879,16 +875,10 @@ FLA_Error FLA_Obj_attach_buffer_to_symm_tensor( void *buffer[], dim_t order, dim
 	//By looping correctly we will hit the unique before any dupes (I think)
 	updateIndex = order - 1;
 	while(TRUE){
-
-		printf("attaching buffer:");
-		for(i = 0; i < order; i++)
-			printf(" %d", curIndex[i]);
-		printf("\n");
-		
 		objLinIndex = 0;
 		for(i = 0; i < order; i++)
 			objLinIndex += curIndex[i] * stride_obj[i];
-		printf("linIndex: %d\n", objLinIndex);
+
 		for(i = 0; i < order; i++){
 			index_pairs[i].index = i;
 			index_pairs[i].val = curIndex[i];
