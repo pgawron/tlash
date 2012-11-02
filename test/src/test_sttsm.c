@@ -60,12 +60,12 @@ void test_sttsm(){
 	dim_t scSize[] = {8, 8, 8};
 	dim_t sblkSize = 2;
 */
-	dim_t tOrder = 3;
-	dim_t tSize[] = {4, 4, 4};
-	dim_t mSize[] = {8, 4};
-	dim_t cOrder = 3;
-	dim_t cSize[] = {8, 8, 8};
-	dim_t blkSize = 2;
+	dim_t tOrder = 4;
+	dim_t tSize[] = {2, 2, 2, 2};
+	dim_t mSize[] = {8, 2};
+	dim_t cOrder = 4;
+	dim_t cSize[] = {8, 8, 8, 8};
+	dim_t blkSize = 1;
 	//End setup parameters
 
   FLA_Obj alpha = FLA_ONE;

@@ -58,17 +58,9 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 										  /**/ /**/
 										  &C1,
 										  CB, &C2, mode, b, FLA_BOTTOM);
-			printf("final block loopCount: %d\n", loopCount);
-			printf("A:\n");
-			FLA_Obj_print_flat_tensor(A);
-			printf("B1:\n");
-			FLA_Obj_print_flat_tensor(B1);
 
 			FLA_Ttm_single_mode(alpha, A, mode, beta, B1, C1);
 
-			printf("C1:\n");
-			FLA_Obj_print_flat_tensor(C1);
-			printf("\n");
 
 			FLA_Cont_with_1xmode3_to_1xmode2( &CT, C0,
 											 C1,
@@ -131,17 +123,8 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 			FLA_Obj_create_blocked_tensor(FLA_DOUBLE, order, size_X, stride_X, blkSize, &X);
 			FLA_Set_zero_tensor(X);
 			//End X setup
-			printf("temporary mode: %d loopCount: %d\n", mode, loopCount);
-			printf("A\n");
-			FLA_Obj_print_flat_tensor(A);
-			printf("B1\n");
-			FLA_Obj_print_flat_tensor(B1);
 
 			FLA_Ttm_single_mode(alpha, A, mode, beta, B1, X);
-
-			printf("X\n");
-			FLA_Obj_print_flat_tensor(X);
-			printf("\n");
 
 			FLA_Sttsm_single(alpha, X, mode+1, beta, B, C1, loopCount);
 			
