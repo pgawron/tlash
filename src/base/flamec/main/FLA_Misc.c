@@ -560,3 +560,111 @@ FLA_Error FLA_Obj_print_tensor_in_mode(FLA_Obj A, dim_t mode){
 	dim_t* permutation = FLA_Obj_permutation(A);
 	return FLA_Obj_print_tensor_under_permutation_in_mode(A, permutation, mode);
 }
+
+FLA_Error FLA_Obj_print_flat_tensor(FLA_Obj A){
+	dim_t i;
+	FLA_Elemtype elemtype = FLA_Obj_elemtype(A);
+	dim_t order = FLA_Obj_order(A);
+	dim_t* size = FLA_Obj_size(A);
+	dim_t* stride = FLA_Obj_stride(A);
+
+	if(elemtype == FLA_TENSOR || elemtype == FLA_MATRIX){
+		printf("data:");
+		dim_t blkSize = FLA_Obj_dimsize(((FLA_Obj*)FLA_Obj_base_buffer(A))[0], 0);
+		dim_t* blkStride = FLA_Obj_stride(((FLA_Obj*)FLA_Obj_base_buffer(A))[0]);
+		dim_t flatSize[order];
+		for(i = 0; i < order; i++)
+			flatSize[i] = size[i] * blkSize;
+
+		dim_t curIndex[order];
+		memset(&(curIndex[0]), 0, order * sizeof(dim_t));
+
+		dim_t iblkPermutation[order];
+		dim_t ipermutedIndex[order];
+		dim_t blkIndex[order];
+		dim_t blkLinOffset = 0;
+		dim_t innerBlkIndex[order];
+		dim_t innerBlkLinOffset = 0;
+		dim_t update_ptr = 0;
+		while(TRUE){
+			for(i = 0; i < order; i++)
+				blkIndex[i] = curIndex[i] / blkSize;
+
+			FLA_TIndex_to_LinIndex(order, stride, blkIndex, &blkLinOffset);
+			FLA_Obj blk = ((FLA_Obj*)FLA_Obj_base_buffer(A))[blkLinOffset];
+
+			memcpy(&(iblkPermutation[0]), &(blk.permutation[0]), order * sizeof(dim_t));
+			for(i = 0; i < order; i++)
+				iblkPermutation[blk.permutation[i]] = i;
+
+			for(i = 0; i < order; i++)
+				innerBlkIndex[i] = curIndex[i] - (blkIndex[i] * blkSize);
+
+			FLA_Permute_array(order, innerBlkIndex, iblkPermutation, ipermutedIndex);
+//			FLA_Permute_array(order, innerBlkIndex, blk.permutation, ipermutedIndex);
+
+			FLA_TIndex_to_LinIndex(order, blkStride, ipermutedIndex, &innerBlkLinOffset);
+
+			printf(" %.6f", ((double*)FLA_Obj_base_buffer(blk))[innerBlkLinOffset]);
+			
+			//update
+			curIndex[update_ptr]++;
+			while(curIndex[update_ptr] == flatSize[update_ptr] && update_ptr < order){
+				update_ptr++;
+				if(update_ptr < order)
+					curIndex[update_ptr]++;
+			}
+			if(update_ptr >= order)
+				break;
+
+			for(i = update_ptr - 1; i < order; i--)
+				curIndex[i] = 0;
+			update_ptr = 0;
+		}
+		printf("\n");
+	}else{
+		printf("data:");
+
+		dim_t curIndex[order];
+		memset(&(curIndex[0]), 0, order * sizeof(dim_t));
+
+	dim_t ipermutation[order];
+	memcpy(&(ipermutation[0]), &(A.permutation[0]), order * sizeof(dim_t));
+
+	for(i = 0; i < order; i++)
+		ipermutation[A.permutation[i]] = i;
+
+
+		dim_t ipermutedSize[order];
+		FLA_Permute_array(order, size, ipermutation, ipermutedSize);
+		dim_t ipermutedStride[order];
+		FLA_Set_tensor_stride(order, ipermutedSize, ipermutedStride);
+		dim_t ipermutedIndex[order];
+		dim_t linIndex = 0;
+		dim_t update_ptr = 0;
+		while(TRUE){
+			FLA_Permute_array(order, curIndex, ipermutation, ipermutedIndex);
+			FLA_TIndex_to_LinIndex(order, ipermutedStride, ipermutedIndex, &linIndex);
+
+			printf(" %.6f", ((double*)FLA_Obj_base_buffer(A))[linIndex]);
+			
+			//update
+			curIndex[update_ptr]++;
+			while(curIndex[update_ptr] == size[update_ptr] && update_ptr < order){
+				update_ptr++;
+				if(update_ptr < order)
+					curIndex[update_ptr]++;
+			}
+			if(update_ptr >= order)
+				break;
+
+			for(i = update_ptr - 1; i < order; i--)
+				curIndex[i] = 0;
+			update_ptr = 0;
+		}
+		printf("\n");
+
+	}
+
+	return FLA_SUCCESS;
+}

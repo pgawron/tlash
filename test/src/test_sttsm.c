@@ -89,13 +89,13 @@ void test_sttsm(){
 */
   
 	printf("t tensor\n");
-	FLA_Obj_print_tensor(t);
+	FLA_Obj_print_flat_tensor(t);
 	
 	printf("m matrix\n");
-	FLA_Obj_print_tensor(m);
+	FLA_Obj_print_flat_tensor(m);
 
   FLA_Sttsm(alpha, t, beta, m, c);
 
 	printf("c tensor\n");
-	FLA_Obj_print_tensor(c);
+	FLA_Obj_print_flat_tensor(c);
 }

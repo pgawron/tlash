@@ -907,13 +907,19 @@ FLA_Error FLA_Obj_attach_buffer_to_symm_tensor( void *buffer[], dim_t order, dim
 				((buffer_obj[objLinIndex].base)->stride)[i] = ((buffer_obj[objLinIndex].base)->stride)[i-1] * ((buffer_obj[objLinIndex].base)->size)[i-1];
 			countBuffer++;
 		}else{
+			dim_t ipermutation[order];
 			dim_t uniqueLinIndex;
 			FLA_TIndex_to_LinIndex(order, stride_obj, sortedIndex, &(uniqueLinIndex));
 
 			//point this non-unique FLA_Obj to the correct base
 			(buffer_obj[objLinIndex]).base = (buffer_obj[uniqueLinIndex]).base;
 			//Set the right permutation
-			memcpy(&(((buffer_obj[objLinIndex]).permutation)[0]), &(permutation[0]), order * sizeof(dim_t));
+			memcpy(&(ipermutation[0]), &(permutation[0]), order * sizeof(dim_t));
+			for(i = 0; i < order; i++)
+				ipermutation[permutation[i]] = i;
+
+//			memcpy(&(((buffer_obj[objLinIndex]).permutation)[0]), &(permutation[0]), order * sizeof(dim_t));
+			memcpy(&(((buffer_obj[objLinIndex]).permutation)[0]), &(ipermutation[0]), order * sizeof(dim_t));
 		}
 		FLA_Adjust_2D_info(&(buffer_obj[objLinIndex]));
 		//Loop update

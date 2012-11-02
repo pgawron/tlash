@@ -31,7 +31,6 @@
 */
 
 #include "FLA_Permute.h"
-
 FLA_Error FLA_Permute_single_inplace( FLA_Obj* A, dim_t permutation[]){
 	
     FLA_Datatype datatype = FLA_Obj_datatype( *A );	
@@ -134,7 +133,6 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 	
 	dim_t i;
 	FLA_Datatype datatype = FLA_Obj_datatype(A);
-	FLA_Datatype x = FLA_Obj_datatype(A);
 	dim_t order;
 	dim_t* stride_A;
 	dim_t* size_A;
@@ -142,8 +140,7 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 	dim_t* size_B;
 	dim_t nElem_A;
 
-	order = A.order;
-//	order = FLA_Obj_order(A);
+	order = FLA_Obj_order(A);
 	stride_A = FLA_Obj_stride(A);
 	offset_A = FLA_Obj_offset(A);
 	size_A = FLA_Obj_size(A);
@@ -151,6 +148,40 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 	size_B = FLA_Obj_size(*B);
 	dim_t stride_B[order];
 	dim_t offset_B[order];
+	
+	dim_t viewPermuted = FALSE;
+	for(i = 0; i < order; i++){
+		if(A.permutation[i] != i){
+			viewPermuted = TRUE;
+			break;
+		}
+	}
+
+	if(viewPermuted){
+		FLA_Obj unpermA, tmp;
+		dim_t sizeTmp[order];
+		dim_t strideTmp[order];
+		FLA_Permute_array(order, size_A, A.permutation, &(sizeTmp[0]));
+		FLA_Set_tensor_stride(order, sizeTmp, &(strideTmp[0]));
+
+		FLA_Obj_create_tensor_without_buffer(datatype, order, size_A, &unpermA);
+		FLA_Obj_create_tensor_without_buffer(datatype, order, sizeTmp, &tmp);
+
+		dim_t numElemTmp = 1;
+		for(i = 0; i < order; i++)
+			numElemTmp *= sizeTmp[i];
+
+		void* tmpBuf = FLA_malloc(numElemTmp * sizeof(double));
+
+		unpermA.base = A.base;
+		memcpy(&(unpermA.offset[0]), &(A.offset[0]), order * sizeof(dim_t));
+		FLA_Adjust_2D_info(&unpermA);
+
+		FLA_Obj_attach_buffer_to_tensor(tmpBuf, order, strideTmp, &tmp);
+		FLA_Permute_single(unpermA, A.permutation, &tmp);
+		FLA_Permute_single(tmp, permutation, B);
+		return FLA_SUCCESS;
+	}
 	
 	FLA_Set_tensor_stride(order, size_B, &(stride_B[0]));
 	
@@ -170,16 +201,11 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 		//Calculate linear index fro and to
 		dim_t linIndexFro = 0;
 		dim_t linIndexTo = 0;
-		
+
 		FLA_TIndex_to_LinIndex(order, stride_A, curIndex, &(linIndexFro));
 
-		//Since the View might have a permutation on underlying data, we must
-		//permute the permutation array and then the data
-		dim_t full_permutation[order];
-		FLA_Permute_array(order, &(A.permutation[0]), permutation, &(full_permutation[0]));
-		
 		dim_t permutedIndex[order];
-		FLA_Permute_array(order, curIndex, full_permutation, &(permutedIndex[0]));
+		FLA_Permute_array(order, curIndex, permutation, &(permutedIndex[0]));
 		//Check if this math is right.
 		FLA_TIndex_to_LinIndex(order, stride_B, permutedIndex, &(linIndexTo));
 

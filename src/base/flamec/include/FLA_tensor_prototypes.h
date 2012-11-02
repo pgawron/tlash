@@ -136,3 +136,4 @@ typedef struct pairwise_sort_struct{
 //--- Misc functions ----------------------
 FLA_Error FLA_Obj_print_tensor(FLA_Obj A);
 FLA_Error FLA_Obj_print_tensor_in_mode(FLA_Obj A, dim_t mode);
+FLA_Error FLA_Obj_print_flat_tensor(FLA_Obj A);
