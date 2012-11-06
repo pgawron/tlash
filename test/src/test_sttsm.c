@@ -1,6 +1,15 @@
 #include "FLAME.h"
 #include "stdio.h"
 
+void Usage()
+{
+    printf("Test sttsm operation.\n\n");
+    printf("  test_sttsm <m> <nA> <nC><b>\n\n");
+    printf("  m: order of hyper-symmetric tensors\n");
+    printf("  nA: mode-length of tensor A\n");
+    printf("  nC: mode-length of hyper-symmetric tensor C\n");
+    printf("  b: mode-length of block\n\n");
+}
 
 void initSymmTensor(dim_t order, dim_t size[order], dim_t b, FLA_Obj* obj){
   FLA_Obj_create_symm_tensor_without_buffer(FLA_DOUBLE, order, size, b, obj);
@@ -48,7 +57,7 @@ void setSymmTensorToZero(FLA_Obj obj){
 	}
 }
 
-void test_sttsm(){
+void test_sttsm(int m, int nA, int nC, int b){
 	//Setup parameters
 /*
 	dim_t stOrder = 3;
@@ -60,24 +69,27 @@ void test_sttsm(){
 	dim_t scSize[] = {8, 8, 8};
 	dim_t sblkSize = 2;
 */
-	dim_t tOrder = 4;
-	dim_t tSize[] = {2, 2, 2, 2};
-	dim_t mSize[] = {8, 2};
-	dim_t cOrder = 4;
-	dim_t cSize[] = {8, 8, 8, 8};
-	dim_t blkSize = 1;
+	dim_t i;
+	dim_t aSize[m];
+	for(i = 0; i < m; i++)
+		aSize[i] = nA;
+	dim_t bSize[] = {nC, nA};
+	dim_t cSize[m];
+	for(i = 0; i < m; i++)
+		cSize[i] = nC;
+	dim_t blkSize = b;
 	//End setup parameters
 
   FLA_Obj alpha = FLA_ONE;
   FLA_Obj beta = FLA_ONE;
 
-  FLA_Obj t, m, c;
+  FLA_Obj A, B, C;
 
-  initSymmTensor(tOrder, tSize, blkSize, &t);
-  initMatrix(mSize, blkSize, &m);
+  initSymmTensor(m, aSize, blkSize, &A);
+  initMatrix(bSize, blkSize, &B);
 
-  initSymmTensor(cOrder, cSize, blkSize, &c);
-  setSymmTensorToZero(c);
+  initSymmTensor(m, cSize, blkSize, &C);
+  setSymmTensorToZero(C);
 
     //check identity multiply
 /*
@@ -88,14 +100,47 @@ void test_sttsm(){
 	((double*)t_buf[3].base->buffer)[0] = 1.00;
 */
   
-	printf("t tensor\n");
-	FLA_Obj_print_flat_tensor(t);
+//	printf("t tensor\n");
+//	FLA_Obj_print_flat_tensor(t);
 	
-	printf("m matrix\n");
-	FLA_Obj_print_flat_tensor(m);
+//	printf("m matrix\n");
+//	FLA_Obj_print_flat_tensor(m);
 
-  FLA_Sttsm(alpha, t, beta, m, c);
+  FLA_Sttsm(alpha, A, beta, B, C);
 
-	printf("c tensor\n");
-	FLA_Obj_print_flat_tensor(c);
+//	printf("c tensor\n");
+//	FLA_Obj_print_flat_tensor(c);
+}
+
+int main(int argc, char* argv[]){
+	FLA_Init();
+
+	if(argc < 5){
+		Usage();
+		FLA_Finalize();
+		return 0;
+	}
+		
+
+	int argNum = 0;
+	const int m = atoi(argv[++argNum]);
+	const int nA = atoi(argv[++argNum]);
+	const int nC = atoi(argv[++argNum]);
+	const int b = atoi(argv[++argNum]);
+
+	if(nA % b != 0 || nC % b != 0){
+		printf("b must evenly divide nA and nC\n");
+		FLA_Finalize();
+		return 0;
+	}
+	if(m <= 0 || b <= 0){
+		printf("m and b must be greater than 0\n");
+		FLA_Finalize();
+		return 0;
+	}
+
+	test_sttsm(m, nA, nC, b);
+
+	FLA_Finalize();
+	return 0;
 }

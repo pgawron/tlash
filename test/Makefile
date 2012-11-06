@@ -118,6 +118,9 @@ $(TEST_OBJ_PATH)/%.o: $(TEST_SRC_PATH)/%.c
 test_$(FNAME): $(TEST_OBJS)
 	$(LINKER) $(TEST_OBJS) $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o $(TEST_BIN)
 
+test_sttsm: $(TEST_OBJS)
+	$(LINKER) $(TEST_OBJ_PATH)/test_sttsm.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm.x
+
 clean:
 	$(RM_F) $(TEST_OBJS) $(TEST_BIN)
 
