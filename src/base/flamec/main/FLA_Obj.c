@@ -807,7 +807,8 @@ FLA_Error FLA_Obj_blocked_symm_free_buffer( FLA_Obj *obj)
 		update_ptr = order - 1;
 	}
 	FLA_Obj_free_buffer(obj);
-
+	FLA_free(endIndex);
+	FLA_free(stride);
 	return FLA_SUCCESS;
 }
 
@@ -891,6 +892,7 @@ FLA_Error FLA_Obj_create_symm_tensor_without_buffer(FLA_Datatype datatype, dim_t
 
 	FLA_Adjust_2D_info(obj);
 
+	FLA_free(size_obj);
 	return FLA_SUCCESS;
 }
 
@@ -992,5 +994,7 @@ FLA_Error FLA_Obj_attach_buffer_to_symm_tensor( void *buffer[], dim_t order, dim
 	//obj->base->buffer = buffer;
 	memcpy(&((obj->base->stride)[0]), &(stride[0]), order * sizeof(dim_t));
 
+	FLA_free(size_obj);
+	FLA_free(stride_obj);
 	return FLA_SUCCESS;
 }

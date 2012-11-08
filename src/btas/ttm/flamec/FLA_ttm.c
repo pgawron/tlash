@@ -109,10 +109,10 @@ FLA_Error FLA_Ttm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FL
 	FLA_Obj_free_without_buffer(&tmpC);
 	FLA_Obj_free_buffer(&P);
 	FLA_Obj_free_without_buffer(&P);
-/*
-	printf("res out:\n");
-	FLA_Obj_print_tensor(C);
-*/
+
+	FLA_free(size_A);
+	FLA_free(size_C);
+	FLA_free(stride_C);
 	return FLA_SUCCESS;
 }
 
@@ -136,8 +136,11 @@ FLA_Error FLA_Ttm( FLA_Obj alpha, FLA_Obj A, dim_t nModes, dim_t mode[nModes], F
 	size_tmpA = FLA_Obj_size(A);
 	stride_tmpA = FLA_Obj_stride(A);
 
+	//WARNING: DOUBLE ATTACHMENT.  FIX THIS
 	FLA_Obj_create_tensor_without_buffer(datatype, order, size_tmpA, &tmpA);
-    FLA_Obj_attach_buffer_to_tensor((A.base)->buffer, order, stride_tmpA, &tmpA);
+	double* tmpA_buf = (double*)FLA_malloc(FLA_Obj_num_elem_alloc(A) * sizeof(double*));
+	memcpy(&(tmpA_buf[0]), &(((double*)FLA_Obj_base_buffer(A))[0]), FLA_Obj_num_elem_alloc(A) * sizeof(double));
+    FLA_Obj_attach_buffer_to_tensor(tmpA_buf, order, stride_tmpA, &tmpA);
 
 	for(i = 0; i < nModes; i++){
 		//Setup tmpC
@@ -162,12 +165,20 @@ FLA_Error FLA_Ttm( FLA_Obj alpha, FLA_Obj A, dim_t nModes, dim_t mode[nModes], F
 		//Make tmpA = tmpC and clear tmpC for next iteration
 		memcpy(&(tmpA.size[0]), &(tmpC.size[0]), order * sizeof(dim_t));
 		memcpy(&(((tmpA.base)->stride)[0]), &(((tmpC.base)->stride)[0]), order * sizeof(dim_t));
+		//Clear tmpA's buffer since we will point it elsewhere
+		FLA_free((tmpA.base)->buffer);
 		(tmpA.base)->buffer = (tmpC.base)->buffer;
 		tmpA.base->n_elem_alloc = tmpC.base->n_elem_alloc;
 		FLA_Adjust_2D_info(&tmpA);
+
+		FLA_free(size_tmpC);
+		FLA_free(stride_tmpC);
 	}
 
 	(C.base)->buffer = (tmpC.base)->buffer;
+
+	FLA_free(size_tmpA);
+	FLA_free(stride_tmpA);
 	return FLA_SUCCESS;
 }
 

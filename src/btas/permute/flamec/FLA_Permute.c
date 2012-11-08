@@ -155,8 +155,14 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 		memcpy(&(buf_B[0]), &(((double*)buffer)[0]), nElemB * sizeof(FLA_Obj*));
 	}
 	memcpy(&((B->permutation)[0]), &(A.permutation[0]), order * sizeof(dim_t));
-	
+
 	FLA_Adjust_2D_info(B);
+
+	FLA_free(buffer);	
+	FLA_free(stride_A);
+	FLA_free(size_A);
+	FLA_free(offset_A);
+	FLA_free(size_B);
 
 	return FLA_SUCCESS;
 }

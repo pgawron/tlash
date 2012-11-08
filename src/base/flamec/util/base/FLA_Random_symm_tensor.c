@@ -85,6 +85,8 @@ FLA_Error FLA_Random_dense_symm_tensor(dim_t nSymmGroups, dim_t symmGroupLens[nS
 		//Definitely no longer need tmpB
 		FLA_Obj_free_buffer(&tmpB);
 		FLA_Obj_free_without_buffer(&tmpB);
+
+		FLA_free(tmp);
 	}
 	(obj->base)->buffer = (tmpC.base)->buffer;
 
@@ -161,6 +163,10 @@ FLA_Error FLA_Obj_create_Random_symm_tensor_data(dim_t b, FLA_Obj obj){
 		
 		//Create blk
 		FLA_Obj_create_tensor(FLA_DOUBLE, order, blkSize, blkStride, &tmpBlk);
+		//Freeing block because it gets created in next call
+		//WARNING: NEED TO FIX THIS TO NOT BE A HACK
+		FLA_Obj_free_buffer(&tmpBlk);
+
 		FLA_Random_dense_symm_tensor(nSymmGroups, symmGroupLens, symmGroups, &tmpBlk);
 		//Fill data
 		uniqueBuffers[count] = tmpBlk.base->buffer;
@@ -168,6 +174,10 @@ FLA_Error FLA_Obj_create_Random_symm_tensor_data(dim_t b, FLA_Obj obj){
 //		(blk.base)->buffer = (tmpBlk.base)->buffer;
 		/**///End unique branch
 		
+		FLA_free(symmGroupLens);
+		for(i = 0; i < nSymmGroups; i++)
+			FLA_free(symmGroups[i]);
+		FLA_free(symmGroups);
 		
 		//Update
 		curIndex[update_ptr]++;
@@ -198,5 +208,8 @@ FLA_Error FLA_Obj_create_Random_symm_tensor_data(dim_t b, FLA_Obj obj){
 	
 	FLA_Obj_attach_buffer_to_symm_tensor(uniqueBuffers, order, stride_obj, &obj);
 
+	//Clear uniqueBuffers since no longer necessary
+	FLA_free(uniqueBuffers);
+	FLA_free(size);
 	return FLA_SUCCESS;
 }
