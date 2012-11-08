@@ -120,13 +120,19 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 				nElem *= size_X[i];
 				stride_X[i] = stride_X[i-1]*size_X[i-1];
 			}
+			printf( "check2: memory leak counter: %d\n", FLA_Memory_leak_counter_get() );
 			FLA_Obj_create_blocked_tensor(FLA_DOUBLE, order, size_X, stride_X, blkSize, &X);
+			printf( "check2: memory leak counter: %d\n", FLA_Memory_leak_counter_get() );
 			FLA_Set_zero_tensor(X);
+			printf( "check2: memory leak counter: %d\n", FLA_Memory_leak_counter_get() );
 			//End X setup
 
 			FLA_Ttm_single_mode(alpha, A, mode, beta, B1, X);
 
 			FLA_Sttsm_single(alpha, X, mode+1, beta, B, C1, loopCount);
+
+			FLA_Obj_blocked_free_buffer(&X);
+			FLA_Obj_free_without_buffer(&X);
 			
 //			printf("C after update\n");
 //			FLA_Obj_print_tensor(C);
@@ -142,6 +148,7 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 			loopCount++;
 		}
 	}
+			printf( "check2: memory leak counter: %d\n", FLA_Memory_leak_counter_get() );
 
 	return FLA_SUCCESS;
 }

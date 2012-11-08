@@ -105,6 +105,10 @@ FLA_Error FLA_Ttm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FL
 
 	FLA_Permute_single(tmpC, ipermutation, &C);
 
+	FLA_Obj_free_buffer(&tmpC);
+	FLA_Obj_free_without_buffer(&tmpC);
+	FLA_Obj_free_buffer(&P);
+	FLA_Obj_free_without_buffer(&P);
 /*
 	printf("res out:\n");
 	FLA_Obj_print_tensor(C);

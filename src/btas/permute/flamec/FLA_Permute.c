@@ -92,6 +92,9 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 		FLA_Obj_attach_buffer_to_tensor(tmpBuf, order, strideTmp, &tmp);
 		FLA_Permute_single(unpermA, A.permutation, &tmp);
 		FLA_Permute_single(tmp, permutation, B);
+
+		FLA_Obj_free_buffer(&tmp);
+		FLA_Obj_free_without_buffer(&tmp);
 		return FLA_SUCCESS;
 	}
 	

@@ -54,7 +54,8 @@ dim_t*         FLA_Obj_permutation( FLA_Obj obj );
 dim_t          FLA_Obj_dimsize( FLA_Obj obj, dim_t mode );
 dim_t          FLA_Obj_base_dimstride( FLA_Obj obj, dim_t dim );
 dim_t          FLA_Obj_dimstride( FLA_Obj obj, dim_t dim );
-
+FLA_Error	   FLA_Obj_blocked_free_buffer(FLA_Obj* obj);
+FLA_Error      FLA_Obj_blocked_symm_free_buffer( FLA_Obj *obj);
 
 //--------------------------------------------------------------------------
 FLA_Error     FLA_Part_1xmode2( FLA_Obj A,  FLA_Obj *A1,
@@ -137,3 +138,4 @@ typedef struct pairwise_sort_struct{
 FLA_Error FLA_Obj_print_tensor(FLA_Obj A);
 FLA_Error FLA_Obj_print_tensor_in_mode(FLA_Obj A, dim_t mode);
 FLA_Error FLA_Obj_print_flat_tensor(FLA_Obj A);
+int FLA_Memory_leak_counter_get( );

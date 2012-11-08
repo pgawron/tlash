@@ -129,7 +129,7 @@ echo "   Internal error checking level................ : full"
 fi
 
 echo ""
-echo "Enable memory leak counter...................... : no"
+echo "Enable memory leak counter...................... : yes"
 
 echo ""
 echo "Enable level-3 BLAS front-end control trees..... : yes"

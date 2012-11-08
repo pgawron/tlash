@@ -763,6 +763,54 @@ FLA_Error FLA_Obj_free_buffer( FLA_Obj *obj )
   return FLA_SUCCESS;
 }
 
+FLA_Error FLA_Obj_blocked_free_buffer( FLA_Obj *obj)
+{
+	if(FLA_Obj_elemtype(*obj) == FLA_TENSOR || FLA_Obj_elemtype(*obj) == FLA_MATRIX){
+		dim_t i;
+		FLA_Obj* buf = (FLA_Obj*)FLA_Obj_base_buffer(*obj);
+		for(i = 0; i < FLA_Obj_num_elem_alloc(*obj); i++){
+			FLA_Obj_free_buffer(&(buf[i]));
+			FLA_Obj_free_without_buffer(&(buf[i]));
+		}
+	}
+	return FLA_SUCCESS;
+}
+
+FLA_Error FLA_Obj_blocked_symm_free_buffer( FLA_Obj *obj)
+{
+	dim_t order = FLA_Obj_order(*obj);
+	dim_t* endIndex = FLA_Obj_size(*obj);
+	dim_t curIndex[order];
+	memset(&(curIndex[0]), 0, order * sizeof(dim_t));
+	dim_t* stride = FLA_Obj_stride(*obj);
+	FLA_Obj* buf = (FLA_Obj*)FLA_Obj_base_buffer(*obj);
+
+	dim_t update_ptr = order - 1;
+	while(TRUE){
+		dim_t linIndex;
+		FLA_TIndex_to_LinIndex(order, curIndex, stride, &linIndex);
+
+		FLA_Obj_free_buffer(&(buf[linIndex]));
+		FLA_Obj_free_without_buffer(&(buf[linIndex]));
+		
+		//Update
+		curIndex[update_ptr]++;
+		while(update_ptr < order && curIndex[update_ptr] == endIndex[update_ptr]){
+			update_ptr--;
+			if(update_ptr < order)
+				curIndex[update_ptr]++;
+		}
+		if(update_ptr >= order)
+			break;
+		for(dim_t i = update_ptr+1; i < order; i++)
+			curIndex[i] = curIndex[update_ptr];
+		update_ptr = order - 1;
+	}
+	FLA_Obj_free_buffer(obj);
+
+	return FLA_SUCCESS;
+}
+
 FLA_Error FLA_Obj_create_symm_tensor_without_buffer(FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t blkSize, FLA_Obj *obj){
 	dim_t i;
 	dim_t nTBlks;

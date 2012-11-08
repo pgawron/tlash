@@ -74,7 +74,17 @@ FLA_Error FLA_Random_dense_symm_tensor(dim_t nSymmGroups, dim_t symmGroupLens[nS
 			bMults[i] = tmpB;
 		FLA_Obj_create_tensor(FLA_DOUBLE, order, size_C, stride_C, &tmpC);
 		FLA_Ttm(FLA_ONE, tmpA, symmGroupLens[thisSymmGroup], symmetries[thisSymmGroup], FLA_ONE, bMults, tmpC);
+
+		//Clear tmpA since we no longer need it
+		//Will set it to tmpC right after this clear
+		FLA_Obj_free_buffer(&tmpA);
+		FLA_Obj_free_without_buffer(&tmpA);
+
 		tmpA = tmpC;
+
+		//Definitely no longer need tmpB
+		FLA_Obj_free_buffer(&tmpB);
+		FLA_Obj_free_without_buffer(&tmpB);
 	}
 	(obj->base)->buffer = (tmpC.base)->buffer;
 

@@ -124,6 +124,17 @@ FLA_Bool FLA_Memory_leak_counter_set( FLA_Bool new_status )
   return old_status;
 }
 
+/* *************************************************************************
+
+   FLA_Memory_leak_counter_get()
+
+ *************************************************************************** */
+
+int FLA_Memory_leak_counter_get( )
+{
+  return fla_mem_leak_counter;
+}
+
 /* ***************************************************************************
 
    FLA_malloc()
