@@ -85,6 +85,8 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 
 		void* tmpBuf = FLA_malloc(numElemTmp * sizeof(double));
 
+		//WARNING: HACK NEED TO FIX THIS
+		FLA_free(unpermA.base);
 		unpermA.base = A.base;
 		memcpy(&(unpermA.offset[0]), &(A.offset[0]), order * sizeof(dim_t));
 		FLA_Adjust_2D_info(&unpermA);

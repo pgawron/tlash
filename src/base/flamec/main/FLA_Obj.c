@@ -858,7 +858,6 @@ FLA_Error FLA_Obj_create_symm_tensor_without_buffer(FLA_Datatype datatype, dim_t
 		FLA_Obj_create_tensor_without_buffer( datatype, order, sizeBlock, curObj);
 		//Set the offset array (we will use as an index identifier)
 		memcpy(&((curObj->offset)[0]), &(curIndex[0]), order * sizeof(dim_t));
-		
 
 		//Loop update
 		//Update current index
@@ -874,10 +873,9 @@ FLA_Error FLA_Obj_create_symm_tensor_without_buffer(FLA_Datatype datatype, dim_t
 		if(updateIndex >= order)
 			break;
 		//Otherwise, update current index, and reset all others
-		if(updateIndex != order - 1){
-			memset(&(curIndex[updateIndex+1]), 0, (order - (updateIndex+1)) * sizeof(dim_t));
-			updateIndex = order - 1;
-		}
+		for(i = updateIndex + 1; i < order; i++)
+			curIndex[i] = 0;
+		updateIndex = order - 1;
 	}
 
 	//Buffer of tensor blocks created, set the main obj to represent this hierarchy
@@ -965,6 +963,8 @@ FLA_Error FLA_Obj_attach_buffer_to_symm_tensor( void *buffer[], dim_t order, dim
 			FLA_TIndex_to_LinIndex(order, stride_obj, sortedIndex, &(uniqueLinIndex));
 
 			//point this non-unique FLA_Obj to the correct base
+			//WARNING: HACK
+			FLA_free(buffer_obj[objLinIndex].base);
 			(buffer_obj[objLinIndex]).base = (buffer_obj[uniqueLinIndex]).base;
 			//Set the right permutation
 			memcpy(&(ipermutation[0]), &(permutation[0]), order * sizeof(dim_t));

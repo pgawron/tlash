@@ -75,20 +75,28 @@ FLA_Error FLA_Random_dense_symm_tensor(dim_t nSymmGroups, dim_t symmGroupLens[nS
 		FLA_Obj_create_tensor(FLA_DOUBLE, order, size_C, stride_C, &tmpC);
 		FLA_Ttm(FLA_ONE, tmpA, symmGroupLens[thisSymmGroup], symmetries[thisSymmGroup], FLA_ONE, bMults, tmpC);
 
-		//Clear tmpA since we no longer need it
-		//Will set it to tmpC right after this clear
-		FLA_Obj_free_buffer(&tmpA);
-		FLA_Obj_free_without_buffer(&tmpA);
+        //Make tmpA = tmpC and clear tmpC for next iteration
+        memcpy(&(tmpA.size[0]), &(tmpC.size[0]), order * sizeof(dim_t));
+        memcpy(&((tmpA.base)->size[0]), &(tmpC.size[0]), order * sizeof(dim_t));
+        memcpy(&(((tmpA.base)->stride)[0]), &(((tmpC.base)->stride)[0]), order * sizeof(dim_t));
+        //Clear tmpA's buffer since we will point it elsewhere
+        FLA_free((tmpA.base)->buffer);
 
-		tmpA = tmpC;
+        tmpA.base->buffer = FLA_malloc(tmpC.base->n_elem_alloc * sizeof(double));
+        memcpy(&(((double*)tmpA.base->buffer)[0]), &(((double*)tmpC.base->buffer)[0]), tmpC.base->n_elem_alloc);
+        tmpA.base->n_elem_alloc = tmpC.base->n_elem_alloc;
+        FLA_Adjust_2D_info(&tmpA);
+
 
 		//Definitely no longer need tmpB
 		FLA_Obj_free_buffer(&tmpB);
 		FLA_Obj_free_without_buffer(&tmpB);
-
+		FLA_Obj_free(&tmpC);
 		FLA_free(tmp);
 	}
-	(obj->base)->buffer = (tmpC.base)->buffer;
+	memcpy(&(((double*)obj->base->buffer)[0]), &(((double*)tmpA.base->buffer)[0]), obj->base->n_elem_alloc * sizeof(double));
+
+	FLA_Obj_free(&tmpA);
 
 	return FLA_SUCCESS;
 }
@@ -165,7 +173,7 @@ FLA_Error FLA_Obj_create_Random_symm_tensor_data(dim_t b, FLA_Obj obj){
 		FLA_Obj_create_tensor(FLA_DOUBLE, order, blkSize, blkStride, &tmpBlk);
 		//Freeing block because it gets created in next call
 		//WARNING: NEED TO FIX THIS TO NOT BE A HACK
-		FLA_Obj_free_buffer(&tmpBlk);
+		//FLA_Obj_free_buffer(&tmpBlk);
 
 		FLA_Random_dense_symm_tensor(nSymmGroups, symmGroupLens, symmGroups, &tmpBlk);
 		//Fill data

@@ -164,20 +164,24 @@ FLA_Error FLA_Ttm( FLA_Obj alpha, FLA_Obj A, dim_t nModes, dim_t mode[nModes], F
 
 		//Make tmpA = tmpC and clear tmpC for next iteration
 		memcpy(&(tmpA.size[0]), &(tmpC.size[0]), order * sizeof(dim_t));
+		memcpy(&((tmpA.base)->size[0]), &(tmpC.size[0]), order * sizeof(dim_t));
 		memcpy(&(((tmpA.base)->stride)[0]), &(((tmpC.base)->stride)[0]), order * sizeof(dim_t));
 		//Clear tmpA's buffer since we will point it elsewhere
 		FLA_free((tmpA.base)->buffer);
-		(tmpA.base)->buffer = (tmpC.base)->buffer;
+
+		tmpA.base->buffer = FLA_malloc(tmpC.base->n_elem_alloc * sizeof(double));
+		memcpy(&(((double*)tmpA.base->buffer)[0]), &(((double*)tmpC.base->buffer)[0]), tmpC.base->n_elem_alloc);
 		tmpA.base->n_elem_alloc = tmpC.base->n_elem_alloc;
 		FLA_Adjust_2D_info(&tmpA);
 
+		FLA_Obj_free(&tmpC);
 		FLA_free(size_tmpC);
 		FLA_free(stride_tmpC);
 	}
 
-	FLA_free((C.base)->buffer);
-	(C.base)->buffer = (tmpC.base)->buffer;
+	memcpy(&(((double*)C.base->buffer)[0]), &(((double*)tmpA.base->buffer)[0]), FLA_Obj_num_elem_alloc(C) * sizeof(double));
 
+	FLA_Obj_free(&tmpA);
 	FLA_free(size_tmpA);
 	FLA_free(stride_tmpA);
 	return FLA_SUCCESS;
