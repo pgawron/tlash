@@ -95,6 +95,10 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 
 		FLA_Obj_free_buffer(&tmp);
 		FLA_Obj_free_without_buffer(&tmp);
+		FLA_free(stride_A);
+		FLA_free(size_A);
+		FLA_free(offset_A);
+		FLA_free(size_B);
 		return FLA_SUCCESS;
 	}
 	

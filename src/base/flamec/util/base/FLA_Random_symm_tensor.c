@@ -169,11 +169,15 @@ FLA_Error FLA_Obj_create_Random_symm_tensor_data(dim_t b, FLA_Obj obj){
 
 		FLA_Random_dense_symm_tensor(nSymmGroups, symmGroupLens, symmGroups, &tmpBlk);
 		//Fill data
-		uniqueBuffers[count] = tmpBlk.base->buffer;
+		uniqueBuffers[count] = FLA_malloc(FLA_Obj_num_elem_alloc(tmpBlk) * sizeof(double));
+		memcpy(&(((double*)uniqueBuffers[count])[0]), &(((double*)FLA_Obj_base_buffer(tmpBlk))[0]), FLA_Obj_num_elem_alloc(tmpBlk) * sizeof(double));
+//		uniqueBuffers[count] = tmpBlk.base->buffer;
 //		FLA_Obj blk = ((FLA_Obj*) ((obj.base)->buffer))[count];
 //		(blk.base)->buffer = (tmpBlk.base)->buffer;
 		/**///End unique branch
-		
+
+		FLA_Obj_free_buffer(&tmpBlk);
+		FLA_Obj_free_without_buffer(&tmpBlk);		
 		FLA_free(symmGroupLens);
 		for(i = 0; i < nSymmGroups; i++)
 			FLA_free(symmGroups[i]);

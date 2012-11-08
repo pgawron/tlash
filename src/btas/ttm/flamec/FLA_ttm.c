@@ -175,6 +175,7 @@ FLA_Error FLA_Ttm( FLA_Obj alpha, FLA_Obj A, dim_t nModes, dim_t mode[nModes], F
 		FLA_free(stride_tmpC);
 	}
 
+	FLA_free((C.base)->buffer);
 	(C.base)->buffer = (tmpC.base)->buffer;
 
 	FLA_free(size_tmpA);
