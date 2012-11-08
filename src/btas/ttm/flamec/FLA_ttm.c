@@ -170,7 +170,7 @@ FLA_Error FLA_Ttm( FLA_Obj alpha, FLA_Obj A, dim_t nModes, dim_t mode[nModes], F
 		FLA_free((tmpA.base)->buffer);
 
 		tmpA.base->buffer = FLA_malloc(tmpC.base->n_elem_alloc * sizeof(double));
-		memcpy(&(((double*)tmpA.base->buffer)[0]), &(((double*)tmpC.base->buffer)[0]), tmpC.base->n_elem_alloc);
+		memcpy(&(((double*)tmpA.base->buffer)[0]), &(((double*)tmpC.base->buffer)[0]), tmpC.base->n_elem_alloc * sizeof(double));
 		tmpA.base->n_elem_alloc = tmpC.base->n_elem_alloc;
 		FLA_Adjust_2D_info(&tmpA);
 
