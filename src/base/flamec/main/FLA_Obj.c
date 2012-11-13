@@ -786,13 +786,11 @@ FLA_Error FLA_Obj_blocked_symm_free_buffer( FLA_Obj *obj)
 	dim_t* stride = FLA_Obj_stride(*obj);
 	FLA_Obj* buf = (FLA_Obj*)FLA_Obj_base_buffer(*obj);
 
-	printf("size being freed: %d %d %d\n", endIndex[0], endIndex[1], endIndex[2]);
 	dim_t update_ptr = order - 1;
 	while(TRUE){
 		dim_t linIndex;
 		FLA_TIndex_to_LinIndex(order, curIndex, stride, &linIndex);
 
-		printf("freeing: [%d %d %d] with linIndex: %d\n", curIndex[0], curIndex[1], curIndex[2], linIndex);
 		FLA_Obj_free_buffer(&(buf[linIndex]));
 		FLA_Obj_free_without_buffer(&(buf[linIndex]));
 		

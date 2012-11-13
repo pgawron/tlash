@@ -86,15 +86,11 @@ void test_sttsm(int m, int nA, int nC, int b){
   FLA_Obj A, B, C;
 
   initSymmTensor(m, aSize, blkSize, &A);
-  printf( "check1: memory leak counter: %d\n", FLA_Memory_leak_counter_get() );
 
   initMatrix(bSize, blkSize, &B);
-  printf( "check2: memory leak counter: %d\n", FLA_Memory_leak_counter_get() );
 
   initSymmTensor(m, cSize, blkSize, &C);
-  printf( "check3: memory leak counter: %d\n", FLA_Memory_leak_counter_get() );
   setSymmTensorToZero(C);
-  printf( "check4: memory leak counter: %d\n", FLA_Memory_leak_counter_get() );
 
     //check identity multiply
 /*
@@ -111,8 +107,9 @@ void test_sttsm(int m, int nA, int nC, int b){
 //	printf("m matrix\n");
 //	FLA_Obj_print_flat_tensor(m);
 
+printf("begin computation\n");
   FLA_Sttsm(alpha, A, beta, B, C);
-
+printf("end computation\n");
 //	printf("c tensor\n");
 //	FLA_Obj_print_flat_tensor(c);
 

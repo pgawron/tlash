@@ -113,6 +113,7 @@ FLA_Error FLA_Ttm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FL
 	FLA_free(size_A);
 	FLA_free(size_C);
 	FLA_free(stride_C);
+
 	return FLA_SUCCESS;
 }
 
@@ -189,10 +190,6 @@ FLA_Error FLA_Ttm( FLA_Obj alpha, FLA_Obj A, dim_t nModes, dim_t mode[nModes], F
 
 FLA_Error FLA_Ttm_hierAB_single_repart_mode( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, dim_t repart_mode, FLA_Obj C )
 {
-	dim_t order = FLA_Obj_order( A );
-	dim_t i;
-
-	
 	//FOR
 	FLA_Obj BT, BB;
 	FLA_Obj B0, B1, B2;
@@ -239,10 +236,6 @@ FLA_Error FLA_Ttm_hierAB_single_repart_mode( FLA_Obj alpha, FLA_Obj A, dim_t mod
 
 FLA_Error FLA_Ttm_hierCB_single_repart_mode( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, dim_t repart_mode, FLA_Obj C )
 {
-	dim_t order = FLA_Obj_order( C );
-	dim_t i;
-
-	
 	//FOR
 	FLA_Obj BT, BB;
 	FLA_Obj B0, B1, B2;
@@ -289,10 +282,6 @@ FLA_Error FLA_Ttm_hierCB_single_repart_mode( FLA_Obj alpha, FLA_Obj A, dim_t mod
 
 FLA_Error FLA_Ttm_hierCA_single_repart_mode( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, dim_t repart_mode, FLA_Obj C )
 {
-	dim_t order = FLA_Obj_order( C );
-	dim_t i;
-
-	
 	//FOR
 	FLA_Obj AT, AB;
 	FLA_Obj A0, A1, A2;
