@@ -58,7 +58,7 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 										  &C1,
 										  CB, &C2, mode, b, FLA_BOTTOM);
 
-			printf("ttm performed: %d\n", FLA_Ttm_Ops(order, A.size, B1.size, mode));
+//			printf("ttm performed: %d\n", FLA_Ttm_Ops(order, A.size, B1.size, mode));
 			FLA_Ttm_single_mode(alpha, A, mode, beta, B1, C1);
 
 
@@ -124,7 +124,7 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 			FLA_Set_zero_tensor(X);
 			//End X setup
 
-			printf("ttm performed: %d\n", FLA_Ttm_Ops(order, A.size, B1.size, mode));
+//			printf("ttm performed: %d\n", FLA_Ttm_Ops(order, A.size, B1.size, mode));
 			FLA_Ttm_single_mode(alpha, A, mode, beta, B1, X);
 
 			FLA_Sttsm_single(alpha, X, mode+1, beta, B, C1, loopCount);
