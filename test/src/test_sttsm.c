@@ -107,9 +107,9 @@ void test_sttsm(int m, int nA, int nC, int b){
 //	printf("m matrix\n");
 //	FLA_Obj_print_flat_tensor(m);
 
-printf("begin computation\n");
+//printf("begin computation\n");
   FLA_Sttsm(alpha, A, beta, B, C);
-printf("end computation\n");
+//printf("end computation\n");
 //	printf("c tensor\n");
 //	FLA_Obj_print_flat_tensor(c);
 
@@ -120,6 +120,33 @@ printf("end computation\n");
   FLA_Obj_free_without_buffer(&A);
   FLA_Obj_blocked_symm_free_buffer(&C);
   FLA_Obj_free_without_buffer(&C);
+}
+
+double Sttsm_GFlops(dim_t m, dim_t nA, dim_t nC, dim_t b, double elapsedTime){
+	dim_t i,j;
+	dim_t blkOps = 0;
+
+	dim_t K = nC / b;
+	dim_t N = nA / b;
+
+	dim_t costBlkMult=2;
+	for(i = 0; i < m+1; i++)
+		costBlkMult *= b;
+
+	for(i=0;i < m; i++){
+		dim_t iterCount = 1;
+		for(j = 0; j <= i; j++)
+			iterCount *= (K+j);
+		dim_t blkedOpCost = 1;
+		for(j = 0;j < m-i; j++)
+			blkedOpCost *= N;
+
+		dim_t factorialTerm = 1;
+		for(j = 2; j <= i+1; j++)
+			factorialTerm *= j;
+		blkOps += blkedOpCost*iterCount/factorialTerm;
+	}
+	return costBlkMult*blkOps/(1.e9*elapsedTime);
 }
 
 int main(int argc, char* argv[]){
@@ -149,8 +176,15 @@ int main(int argc, char* argv[]){
 		return 0;
 	}
 
+	double startTime = FLA_Clock();
 	test_sttsm(m, nA, nC, b);
+	double endTime = FLA_Clock();
 
 	FLA_Finalize();
+
+	//Print out results
+	double gflops = Sttsm_GFlops(m, nA, nC, b, endTime - startTime);
+	printf("ARGS %d %d %d %d\n", m, nA, nC, b);
+	printf("GFLOPS %.6f\n", gflops);
 	return 0;
 }

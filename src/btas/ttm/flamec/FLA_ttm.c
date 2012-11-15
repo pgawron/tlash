@@ -94,7 +94,7 @@ FLA_Error FLA_Ttm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FL
 	FLA_Permute_single(A, permutation, &P);
 	FLA_Permute_single(C, permutation, &tmpC);
 
-	printf("ttm performed: %d\n", FLA_Ttm_Ops(order, P.size, B.size, mode));
+	//printf("ttm performed: %d\n", FLA_Ttm_Ops(order, P.size, B.size, mode));
 	//Maybe casting as flash works?
 	FLASH_Gemm(FLA_NO_TRANSPOSE, FLA_NO_TRANSPOSE, beta, B, P, alpha, tmpC);
 /*
