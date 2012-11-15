@@ -121,6 +121,10 @@ test_$(FNAME): $(TEST_OBJS)
 test_sttsm: $(TEST_OBJS)
 	$(LINKER) $(TEST_OBJ_PATH)/test_sttsm.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm.x
 
+test_sttsm_dense: $(TEST_OBJS)
+	$(LINKER) $(TEST_OBJ_PATH)/test_sttsm_dense.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm_dense.x
+
+
 clean:
 	$(RM_F) $(TEST_OBJS) $(TEST_BIN)
 

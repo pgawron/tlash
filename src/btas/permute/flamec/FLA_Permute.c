@@ -34,6 +34,7 @@
 
 /***
  *
+ *  PERMUTES A SCALAR TENSOR ONLY!!!!!
  *	TODO: Need consistency between what a View is.  Right now, I need to permute
  *  data first based on the permutation array in the View, then based on the
  *  permutation given in the parameter.
@@ -107,59 +108,59 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 	FLA_Set_tensor_stride(order, size_B, &(stride_B[0]));
 	
 	void* buffer;
-	if(FLA_Obj_elemtype(A) == FLA_SCALAR)
-		buffer = FLA_malloc(nElem_A * sizeof(double));
-	else
-		buffer = FLA_malloc(nElem_A * sizeof(FLA_Obj));	
+	buffer = FLA_malloc(nElem_A * sizeof(double));
 
     //Explicitely permute the data
 	void* buf_A = FLA_Obj_base_buffer(A);
 	dim_t curIndex[order];
 	memset(&(curIndex[0]), 0, order * sizeof(dim_t));
-	
-	dim_t updatePtr = order - 1;
+
+	dim_t updatePtr = 0;
+	dim_t linIndexFro = 0;
+	dim_t linIndexTo = 0;
     while(TRUE){
 		//Calculate linear index fro and to
-		dim_t linIndexFro = 0;
-		dim_t linIndexTo = 0;
+//		dim_t linIndexFro = 0;
+//		dim_t linIndexTo = 0;
 
-		FLA_TIndex_to_LinIndex(order, stride_A, curIndex, &(linIndexFro));
+//		FLA_TIndex_to_LinIndex(order, stride_A, curIndex, &(linIndexFro));
 
-		dim_t permutedIndex[order];
-		FLA_Permute_array(order, curIndex, permutation, &(permutedIndex[0]));
+//		dim_t permutedIndex[order];
+//		FLA_Permute_array(order, curIndex, permutation, &(permutedIndex[0]));
 		//Check if this math is right.
-		FLA_TIndex_to_LinIndex(order, stride_B, permutedIndex, &(linIndexTo));
+//		FLA_TIndex_to_LinIndex(order, stride_B, permutedIndex, &(linIndexTo));
 
-		if(FLA_Obj_elemtype(A) == FLA_SCALAR)
-			((double*)buffer)[linIndexTo] = ((double*)buf_A)[linIndexFro];
-		else
-			((FLA_Obj*)buffer)[linIndexTo] = ((FLA_Obj*)buf_A)[linIndexFro];
+		((double*)buffer)[linIndexTo] = ((double*)buf_A)[linIndexFro];
 
 		//Update
 		curIndex[updatePtr]++;
+		linIndexFro += stride_A[updatePtr];
+		linIndexTo += stride_B[permutation[updatePtr]];
 		while(updatePtr < order && curIndex[updatePtr] == size_A[updatePtr]){
-			updatePtr--;
-			if(updatePtr < order)
+			updatePtr++;
+			if(updatePtr < order){
 				curIndex[updatePtr]++;
+				linIndexFro += stride_A[updatePtr];
+				linIndexTo += stride_B[permutation[updatePtr]];
+			}
 		}
 		if(updatePtr >= order)
 			break;
-		for(dim_t i = updatePtr+1; i < order; i++)
+		for(dim_t i = updatePtr-1; i < order; i--){
 			curIndex[i] = 0;
-		updatePtr = order - 1;
+			linIndexFro -= stride_A[i]*size_A[i];
+			linIndexTo -= stride_B[permutation[i]]*size_B[permutation[i]];
+		}
+		updatePtr = 0;
 	}
 
 	dim_t nElemB = 1;
 	for(i = 0; i < order; i++)
 		nElemB *= FLA_Obj_dimsize(*B, i);
 	
-	if(FLA_Obj_elemtype(A) == FLA_SCALAR){
-		double* buf_B = FLA_Obj_base_buffer(*B);
-		memcpy(&(buf_B[0]), &(((double*)buffer)[0]), nElemB * sizeof(double));
-	}else{
-		FLA_Obj* buf_B = FLA_Obj_base_buffer(*B);
-		memcpy(&(buf_B[0]), &(((double*)buffer)[0]), nElemB * sizeof(FLA_Obj*));
-	}
+	double* buf_B = FLA_Obj_base_buffer(*B);
+	memcpy(&(buf_B[0]), &(((double*)buffer)[0]), nElemB * sizeof(double));
+
 	memcpy(&((B->permutation)[0]), &(A.permutation[0]), order * sizeof(dim_t));
 
 	FLA_Adjust_2D_info(B);
