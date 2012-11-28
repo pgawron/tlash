@@ -4,11 +4,12 @@
 void Usage()
 {
     printf("Test sttsm operation.\n\n");
-    printf("  test_sttsm <m> <nA> <nC><b>\n\n");
+    printf("  test_sttsm <m> <nA> <nC> <bA> <bC>\n\n");
     printf("  m: order of hyper-symmetric tensors\n");
     printf("  nA: mode-length of tensor A\n");
     printf("  nC: mode-length of hyper-symmetric tensor C\n");
-    printf("  b: mode-length of block\n\n");
+    printf("  bA: mode-length of block of A\n");
+    printf("  bC: mode-length of block of C\n\n");
 }
 
 void initSymmTensor(dim_t order, dim_t size[order], dim_t b, FLA_Obj* obj){
@@ -16,13 +17,13 @@ void initSymmTensor(dim_t order, dim_t size[order], dim_t b, FLA_Obj* obj){
   FLA_Obj_create_Random_symm_tensor_data(b, *obj);
 }
 
-void initMatrix(dim_t size[2], dim_t b, FLA_Obj* obj){
+void initMatrix(dim_t size[2], dim_t bC, dim_t bA, FLA_Obj* obj){
   dim_t i,j;
   dim_t order = 2;
-  dim_t sizeObj[] = {size[0] / b, size[1] / b};
+  dim_t sizeObj[] = {size[0] / bC, size[1] / bA};
   dim_t strideObj[] = {1, sizeObj[0]};
-  dim_t sizeBlk[] = {b, b};
-  dim_t strideBlk[] = {1, b};
+  dim_t sizeBlk[] = {bC, bA};
+  dim_t strideBlk[] = {1, bC};
 
   FLA_Obj_create_tensor_without_buffer(FLA_DOUBLE, order, sizeObj, obj);
   obj->base->elemtype = FLA_TENSOR;
@@ -57,18 +58,7 @@ void setSymmTensorToZero(FLA_Obj obj){
 	}
 }
 
-void test_sttsm(int m, int nA, int nC, int b){
-	//Setup parameters
-/*
-	dim_t stOrder = 3;
-	dim_t stSize[] = {4, 4, 4};
-	dim_t smOrder = 2;
-	dim_t smSize[] = {8, 4};
-	dim_t smStride[] = {1, 8};
-	dim_t scOrder = 3;
-	dim_t scSize[] = {8, 8, 8};
-	dim_t sblkSize = 2;
-*/
+void test_sttsm(int m, int nA, int nC, int bA, int bC, double* elapsedTime){
 	dim_t i;
 	dim_t aSize[m];
 	for(i = 0; i < m; i++)
@@ -77,41 +67,33 @@ void test_sttsm(int m, int nA, int nC, int b){
 	dim_t cSize[m];
 	for(i = 0; i < m; i++)
 		cSize[i] = nC;
-	dim_t blkSize = b;
-	//End setup parameters
 
   FLA_Obj alpha = FLA_ONE;
   FLA_Obj beta = FLA_ONE;
 
   FLA_Obj A, B, C;
 
-  initSymmTensor(m, aSize, blkSize, &A);
+  initSymmTensor(m, aSize, bA, &A);
 
-  initMatrix(bSize, blkSize, &B);
+  initMatrix(bSize, bC, bA, &B);
 
-  initSymmTensor(m, cSize, blkSize, &C);
+  initSymmTensor(m, cSize, bC, &C);
   setSymmTensorToZero(C);
 
-    //check identity multiply
-/*
-	FLA_Obj* t_buf = (FLA_Obj*)FLA_Obj_base_buffer(t);
-	((double*)t_buf[0].base->buffer)[0] = 1.00;
-	((double*)t_buf[1].base->buffer)[0] = 0;
-	((double*)t_buf[2].base->buffer)[0] = 0;
-	((double*)t_buf[3].base->buffer)[0] = 1.00;
-*/
-  
-//	printf("t tensor\n");
-//	FLA_Obj_print_flat_tensor(t);
-	
-//	printf("m matrix\n");
-//	FLA_Obj_print_flat_tensor(m);
-
-//printf("begin computation\n");
+  double startTime = FLA_Clock();
   FLA_Sttsm(alpha, A, beta, B, C);
-//printf("end computation\n");
-//	printf("c tensor\n");
-//	FLA_Obj_print_flat_tensor(c);
+  double endTime = FLA_Clock();
+
+  *elapsedTime = endTime - startTime;
+
+	printf("A tensor\n");
+	FLA_Obj_print_flat_tensor(A);
+
+	printf("B tensor\n");
+	FLA_Obj_print_flat_tensor(B);
+
+	printf("c tensor\n");
+	FLA_Obj_print_flat_tensor(C);
 
   FLA_Obj_blocked_free_buffer(&B);
   FLA_Obj_free_without_buffer(&B);
@@ -122,37 +104,36 @@ void test_sttsm(int m, int nA, int nC, int b){
   FLA_Obj_free_without_buffer(&C);
 }
 
-double Sttsm_GFlops(dim_t m, dim_t nA, dim_t nC, dim_t b, double elapsedTime){
-	dim_t i,j;
-	dim_t blkOps = 0;
+double Sttsm_GFlops(dim_t m, dim_t nA, dim_t nC, dim_t bA, dim_t bC, double elapsedTime){
+	dim_t d, i;
+	dim_t ops = 0;
 
-	dim_t K = nC / b;
-	dim_t N = nA / b;
+	dim_t barP = nC / bC;
 
-	dim_t costBlkMult=2;
-	for(i = 0; i < m+1; i++)
-		costBlkMult *= b;
+	for(d=0;d < m; d++){
+		dim_t qTerm = 1;
+		for(i = 0; i < d+1; i++)
+			qTerm = qTerm * barP;
+		dim_t nTerm = 1;
+		for(i = 0; i < m-d; i++)
+			nTerm *= nA;
 
-	for(i=0;i < m; i++){
-		dim_t iterCount = 1;
-		for(j = 0; j <= i; j++)
-			iterCount *= (K+j);
-		dim_t blkedOpCost = 1;
-		for(j = 0;j < m-i; j++)
-			blkedOpCost *= N;
+		dim_t factTerm = 1;
+		for(i = 0; i < d+1; i++){
+			factTerm *= barP + i;
+			factTerm /= d+1+i;
+		}
 
-		dim_t factorialTerm = 1;
-		for(j = 2; j <= i+1; j++)
-			factorialTerm *= j;
-		blkOps += blkedOpCost*iterCount/factorialTerm;
+		ops += qTerm * nTerm * factTerm;
 	}
-	return costBlkMult*blkOps/(1.e9*elapsedTime);
+	printf("flops: %d\n", 2*ops); 
+	return 2*ops/(1.e9*elapsedTime);
 }
 
 int main(int argc, char* argv[]){
 	FLA_Init();
 
-	if(argc < 5){
+	if(argc < 6){
 		Usage();
 		FLA_Finalize();
 		return 0;
@@ -163,28 +144,28 @@ int main(int argc, char* argv[]){
 	const int m = atoi(argv[++argNum]);
 	const int nA = atoi(argv[++argNum]);
 	const int nC = atoi(argv[++argNum]);
-	const int b = atoi(argv[++argNum]);
+	const int bA = atoi(argv[++argNum]);
+	const int bC = atoi(argv[++argNum]);
 
-	if(nA % b != 0 || nC % b != 0){
-		printf("b must evenly divide nA and nC\n");
+	if(nA % bA != 0 || nC % bC != 0){
+		printf("bA must evenly divide nA and bC must evenly divide nC\n");
 		FLA_Finalize();
 		return 0;
 	}
-	if(m <= 0 || b <= 0){
+	if(m <= 0 || bA <= 0 || bC < 0){
 		printf("m and b must be greater than 0\n");
 		FLA_Finalize();
 		return 0;
 	}
 
-	double startTime = FLA_Clock();
-	test_sttsm(m, nA, nC, b);
-	double endTime = FLA_Clock();
+	double elapsedTime;
+	test_sttsm(m, nA, nC, bA, bC, &elapsedTime);
 
 	FLA_Finalize();
 
 	//Print out results
-	double gflops = Sttsm_GFlops(m, nA, nC, b, endTime - startTime);
-	printf("ARGS %d %d %d %d\n", m, nA, nC, b);
+	double gflops = Sttsm_GFlops(m, nA, nC, bA, bC, elapsedTime);
+	printf("ARGS %d %d %d %d %d\n", m, nA, nC, bA, bC);
 	printf("GFLOPS %.6f\n", gflops);
 	return 0;
 }

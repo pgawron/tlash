@@ -467,7 +467,6 @@ FLA_Error FLA_Obj_print_tensor_under_permutation(FLA_Obj A, dim_t permutation[])
 }
 
 FLA_Error FLA_Obj_print_tensor(FLA_Obj A){
-	dim_t order = FLA_Obj_order(A);
 	dim_t* permutation = FLA_Obj_permutation(A);
 	FLA_Obj_print_tensor_under_permutation(A, permutation);
 
@@ -544,6 +543,7 @@ FLA_Error FLA_Obj_print_flat_tensor(FLA_Obj A){
 			update_ptr = 0;
 		}
 		printf("\n");
+		FLA_free(blkStride);
 	}else{
 		printf("data:");
 
@@ -587,6 +587,9 @@ FLA_Error FLA_Obj_print_flat_tensor(FLA_Obj A){
 		printf("\n");
 
 	}
+
+	FLA_free(size);
+	FLA_free(stride);
 
 	return FLA_SUCCESS;
 }
