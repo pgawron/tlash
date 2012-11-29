@@ -550,11 +550,11 @@ FLA_Error FLA_Obj_print_flat_tensor(FLA_Obj A){
 		dim_t curIndex[order];
 		memset(&(curIndex[0]), 0, order * sizeof(dim_t));
 
-	dim_t ipermutation[order];
-	memcpy(&(ipermutation[0]), &(A.permutation[0]), order * sizeof(dim_t));
+		dim_t ipermutation[order];
+		memcpy(&(ipermutation[0]), &(A.permutation[0]), order * sizeof(dim_t));
 
-	for(i = 0; i < order; i++)
-		ipermutation[A.permutation[i]] = i;
+		for(i = 0; i < order; i++)
+			ipermutation[A.permutation[i]] = i;
 
 
 		dim_t ipermutedSize[order];

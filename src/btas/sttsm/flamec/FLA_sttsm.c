@@ -32,22 +32,22 @@
 
 #include "FLAME.h"
 
-FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C, dim_t startIndex )
+FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C, dim_t endIndex )
 {
 	dim_t order = FLA_Obj_order( A );
 	
-	if(mode == order - 1){
+	if(mode == 0){
 		FLA_Obj BT, BB;
 		FLA_Obj B0, B1, B2;
 		FLA_Obj CT, CB;
 		FLA_Obj C0, C1, C2;
 		
 		FLA_Part_1xmode2(B, &BT,
-						 &BB, 0, startIndex, FLA_TOP);	
+						 &BB, 0, 0, FLA_TOP);	
 		FLA_Part_1xmode2(C, &CT,
-						 &CB, mode, startIndex, FLA_TOP);	
-		dim_t loopCount = startIndex;
-		while(loopCount < FLA_Obj_dimsize(C, mode)){
+						 &CB, mode, 0, FLA_TOP);	
+		dim_t loopCount = 0;
+		while(loopCount <= endIndex){
 			dim_t b = 1;
 			FLA_Repart_1xmode2_to_1xmode3(BT, &B0,
 										  /**/ /**/
@@ -61,6 +61,9 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 //			printf("ttm performed: %d\n", FLA_Ttm_Ops(order, A.size, B1.size, mode));
 			FLA_Ttm_single_mode(alpha, A, mode, beta, B1, C1);
 
+			printf("Updating C:\n");
+			FLA_Obj_print_tensor(C1);
+			FLA_Obj_print_flat_tensor(C1);
 
 			FLA_Cont_with_1xmode3_to_1xmode2( &CT, C0,
 											 C1,
@@ -84,13 +87,13 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 		FLA_Obj C0, C1, C2;
 		
 		FLA_Part_1xmode2(B, &BT,
-							&BB, 0, startIndex, FLA_TOP);	
+							&BB, 0, 0, FLA_TOP);	
 		FLA_Part_1xmode2(C, &CT,
-							&CB, mode, startIndex, FLA_TOP);	
+							&CB, mode, 0, FLA_TOP);	
 		//Only symmetric part touched
 		//Ponder this
-		dim_t loopCount = startIndex;
-		while(loopCount < FLA_Obj_dimsize(C, mode)){
+		dim_t loopCount = 0;
+		while(loopCount <= endIndex){
 			//Check this mathc out.  I think it is correct, Mode-1 of B matches mode-n of A
 			//Mode-0 of B matches Mode-n of C
 			dim_t b = 1;
@@ -125,9 +128,21 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 			//End X setup
 
 //			printf("ttm performed: %d\n", FLA_Ttm_Ops(order, A.size, B1.size, mode));
+			printf("TTM Mode %d Multiply:\n", mode);
+			printf("A:\n");
+			FLA_Obj_print_tensor(A);
+			FLA_Obj_print_flat_tensor(A);
+			printf("\nB1:\n");
+			FLA_Obj_print_tensor(B1);
+			FLA_Obj_print_flat_tensor(B1);
+
 			FLA_Ttm_single_mode(alpha, A, mode, beta, B1, X);
 
-			FLA_Sttsm_single(alpha, X, mode+1, beta, B, C1, loopCount);
+			printf("\nX:\n");
+			FLA_Obj_print_tensor(X);
+			FLA_Obj_print_flat_tensor(X);
+
+			FLA_Sttsm_single(alpha, X, mode-1, beta, B, C1, loopCount);
 
 			FLA_free(size_X);
 			FLA_Obj_blocked_free_buffer(&X);
@@ -153,7 +168,7 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 
 FLA_Error FLA_Sttsm( FLA_Obj alpha, FLA_Obj A, FLA_Obj beta, FLA_Obj B, FLA_Obj C )
 {
-	FLA_Sttsm_single( alpha, A, 0, beta, B, C, 0);
+	FLA_Sttsm_single( alpha, A, FLA_Obj_order(C)-1, beta, B, C, FLA_Obj_dimsize(C,FLA_Obj_order(C)-1)-1);
 
 	return FLA_SUCCESS;
 }

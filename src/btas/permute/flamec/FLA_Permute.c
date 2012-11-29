@@ -61,6 +61,10 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 	size_B = FLA_Obj_size(*B);
 	dim_t stride_B[order];
 	dim_t offset_B[order];
+
+	dim_t ipermutation[order];
+	for(i = 0; i < order; i++)
+		ipermutation[permutation[i]] = i;
 	
 	dim_t viewPermuted = FALSE;
 	for(i = 0; i < order; i++){
@@ -130,18 +134,21 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 		//Check if this math is right.
 //		FLA_TIndex_to_LinIndex(order, stride_B, permutedIndex, &(linIndexTo));
 
+		printf("linIndexFro: %d\n", linIndexFro);
+		printf("linIndexTo: %d\n", linIndexTo);
+
 		((double*)buffer)[linIndexTo] = ((double*)buf_A)[linIndexFro];
 
 		//Update
 		curIndex[updatePtr]++;
 		linIndexFro += stride_A[updatePtr];
-		linIndexTo += stride_B[permutation[updatePtr]];
+		linIndexTo += stride_B[ipermutation[updatePtr]];
 		while(updatePtr < order && curIndex[updatePtr] == size_A[updatePtr]){
 			updatePtr++;
 			if(updatePtr < order){
 				curIndex[updatePtr]++;
 				linIndexFro += stride_A[updatePtr];
-				linIndexTo += stride_B[permutation[updatePtr]];
+				linIndexTo += stride_B[ipermutation[updatePtr]];
 			}
 		}
 		if(updatePtr >= order)
@@ -149,7 +156,7 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 		for(dim_t i = updatePtr-1; i < order; i--){
 			curIndex[i] = 0;
 			linIndexFro -= stride_A[i]*size_A[i];
-			linIndexTo -= stride_B[permutation[i]]*size_B[permutation[i]];
+			linIndexTo -= stride_B[ipermutation[i]]*size_B[ipermutation[i]];
 		}
 		updatePtr = 0;
 	}

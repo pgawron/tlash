@@ -380,12 +380,20 @@ FLA_Error FLA_Ttm_single_mode( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj bet
 		}else{
 			if(elemtype_A != FLA_SCALAR){
 				if(elemtype_B != FLA_SCALAR){
-					FLA_Ttm_hierAB_single_repart_mode( alpha, A, mode, beta, B, nonUnitA, C);
+					if(nonUnitA == mode){
+						FLA_Ttm_hierAB_single_repart_mode( alpha, A, mode, beta, B, nonUnitA, C);
+					}else{
+						FLA_Ttm_hierCA_single_repart_mode( alpha, A, mode, beta, B, nonUnitA, C);
+					}	
 				}else{
 					FLA_Ttm_hierCA_single_repart_mode( alpha, A, mode, beta, B, nonUnitC, C);
 				}	
 			} else if(elemtype_B != FLA_SCALAR){
-				FLA_Ttm_hierCB_single_repart_mode( alpha, A, mode, beta, B, nonUnitC, C);
+					if(nonUnitC == mode){
+						FLA_Ttm_hierCB_single_repart_mode( alpha, A, mode, beta, B, nonUnitC, C);
+					}else{
+						FLA_Ttm_hierCA_single_repart_mode( alpha, A, mode, beta, B, nonUnitA, C);
+					}
 			}
 		}
 	}
