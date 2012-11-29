@@ -61,10 +61,6 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 //			printf("ttm performed: %d\n", FLA_Ttm_Ops(order, A.size, B1.size, mode));
 			FLA_Ttm_single_mode(alpha, A, mode, beta, B1, C1);
 
-			printf("Updating C:\n");
-			FLA_Obj_print_tensor(C1);
-			FLA_Obj_print_flat_tensor(C1);
-
 			FLA_Cont_with_1xmode3_to_1xmode2( &CT, C0,
 											 C1,
 											 /********/
@@ -129,28 +125,13 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 			FLA_Set_zero_tensor(X);
 			//End X setup
 
-//			printf("ttm performed: %d\n", FLA_Ttm_Ops(order, A.size, B1.size, mode));
-			printf("TTM Mode %d Multiply:\n", mode);
-			printf("A:\n");
-			FLA_Obj_print_tensor(A);
-			FLA_Obj_print_flat_tensor(A);
-			printf("\nB1:\n");
-			FLA_Obj_print_tensor(B1);
-			FLA_Obj_print_flat_tensor(B1);
-
 			FLA_Ttm_single_mode(alpha, A, mode, beta, B1, X);
-
-			printf("\nX:\n");
-			FLA_Obj_print_tensor(X);
-			FLA_Obj_print_flat_tensor(X);
 
 			FLA_Sttsm_single(alpha, X, mode-1, beta, B, C1, loopCount);
 
 			FLA_Obj_blocked_free_buffer(&X);
 			FLA_Obj_free_without_buffer(&X);
 			
-//			printf("C after update\n");
-//			FLA_Obj_print_tensor(C);
 			
 			FLA_Cont_with_1xmode3_to_1xmode2( &CT, C0,
 												   C1,

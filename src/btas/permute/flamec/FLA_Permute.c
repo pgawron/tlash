@@ -134,8 +134,6 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 		//Check if this math is right.
 //		FLA_TIndex_to_LinIndex(order, stride_B, permutedIndex, &(linIndexTo));
 
-		printf("linIndexFro: %d\n", linIndexFro);
-		printf("linIndexTo: %d\n", linIndexTo);
 
 		((double*)buffer)[linIndexTo] = ((double*)buf_A)[linIndexFro];
 

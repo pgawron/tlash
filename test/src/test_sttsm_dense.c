@@ -88,7 +88,7 @@ void setSymmTensorToZero(FLA_Obj obj){
 	memset(&(((double*)FLA_Obj_base_buffer(obj))[0]), 0, numel * sizeof(double));
 }
 
-void test_sttsm(int m, int nA, int nC){
+void test_sttsm(int m, int nA, int nC, double* elapsedTime){
 	//Setup parameters
   dim_t i;
   dim_t aSize[m];
@@ -120,7 +120,11 @@ void test_sttsm(int m, int nA, int nC){
   FLA_Obj Barr[m];
   for(i = 0; i < m; i++)
 	Barr[i] = B;
+
+  double startTime = FLA_Clock();
   FLA_Ttm(alpha, A, m, modes, beta, Barr, C);
+  double endTime = FLA_Clock();
+  *elapsedTime = endTime - startTime;
 //printf("end computation\n");
 //	printf("c tensor\n");
 //	FLA_Obj_print_flat_tensor(c);
@@ -168,15 +172,15 @@ int main(int argc, char* argv[]){
 		return 0;
 	}
 
-	double startTime = FLA_Clock();
-	test_sttsm(m, nA, nC);
-	double endTime = FLA_Clock();
+	double elapsedTime;
+	test_sttsm(m, nA, nC, &elapsedTime);
 
 	FLA_Finalize();
 
 	//Print out results
-	double gflops = Sttsm_GFlops(m, nA, nC, endTime - startTime);
-	printf("ARGS %d %d %d\n", m, nA, nC);
+	double gflops = Sttsm_GFlops(m, nA, nC, elapsedTime);
+	printf("ARGS DENSE %d %d %d %d %d\n", m, nA, nC, nA, nC);
+	printf("TIME %.6f\n", elapsedTime);
 	printf("GFLOPS %.6f\n", gflops);
 	return 0;
 }

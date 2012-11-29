@@ -86,6 +86,7 @@ void test_sttsm(int m, int nA, int nC, int bA, int bC, double* elapsedTime){
 
   *elapsedTime = endTime - startTime;
 
+/*
 	printf("A tensor\n");
 	FLA_Obj_print_flat_tensor(A);
 
@@ -94,6 +95,7 @@ void test_sttsm(int m, int nA, int nC, int bA, int bC, double* elapsedTime){
 
 	printf("c tensor\n");
 	FLA_Obj_print_flat_tensor(C);
+*/
 
   FLA_Obj_blocked_free_buffer(&B);
   FLA_Obj_free_without_buffer(&B);
@@ -164,8 +166,9 @@ int main(int argc, char* argv[]){
 	FLA_Finalize();
 
 	//Print out results
-	double gflops = Sttsm_GFlops(m, nA, nC, bA, bC, elapsedTime);
-	printf("ARGS %d %d %d %d %d\n", m, nA, nC, bA, bC);
-	printf("GFLOPS %.6f\n", gflops);
+//	double gflops = Sttsm_GFlops(m, nA, nC, bA, bC, elapsedTime);
+	printf("ARGS COMPACT %d %d %d %d %d\n", m, nA, nC, bA, bC);
+    printf("TIME %.6f\n", elapsedTime);
+//	printf("GFLOPS %.6f\n", gflops);
 	return 0;
 }

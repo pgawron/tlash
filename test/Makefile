@@ -78,19 +78,25 @@ CONFIG_MK_FRAGMENT  := $(CONFIG_DIRPATH)/$(HOST)/config.mk
 
 # BLAS implementation path. A BLAS library must be given in order to run
 # the libflame test suite. Modify these definitions if needed.
-LIBBLAS_PATH   := $(INSTALL_PREFIX)/lib
 #LIBBLAS        := $(LIBBLAS_PATH)/libblas.a
 #LIBBLAS        := $(LIBBLAS_PATH)/libgoto.a
+
+#My Mac
+LIBBLAS_PATH   := $(INSTALL_PREFIX)/lib
 LIBBLAS        := -framework accelerate
+
+#Clarksville
+#LIBBLAS_PATH    := $(HOME)/OpenBLAS/lib
+#LIBBLAS         := $(LIBBLAS_PATH)/libopenblas_single.a
 
 # LAPACK implementation path. These values only matter if libflame was
 # configured with the external-lapack-interfaces option enabled. Modify
 # these definitions if needed.
-LIBLAPACK_PATH := $(INSTALL_PREFIX)/lib
 #LIBLAPACK      := $(LIBLAPACK_PATH)/liblapack.a
+
+#My Mac
+LIBLAPACK_PATH := $(INSTALL_PREFIX)/lib
 LIBLAPACK      := -framework accelerate
-
-
 
 #
 # --- General build definitions ------------------------------------------------
@@ -102,6 +108,7 @@ TEST_OBJ_PATH  := obj
 FLA_LIB_PATH   := $(INSTALL_PREFIX)/lib
 FLA_INC_PATH   := $(INSTALL_PREFIX)/include
 LIBFLAME       := $(FLA_LIB_PATH)/libflame.a
+LIBFLAME_PROF   := $(HOME)/flame_prof/lib/libflame.a
 
 CFLAGS         += -I$(FLA_INC_PATH) -I$(TEST_SRC_PATH)
 
@@ -113,18 +120,23 @@ TEST_OBJS      := $(patsubst $(TEST_SRC_PATH)/%.c, \
 TEST_BIN       := test_$(FNAME).x
 
 $(TEST_OBJ_PATH)/%.o: $(TEST_SRC_PATH)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+		$(CC) $(CFLAGS) -c $< -o $@
 
 test_$(FNAME): $(TEST_OBJS)
-	$(LINKER) $(TEST_OBJS) $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o $(TEST_BIN)
+		$(LINKER) $(TEST_OBJS) $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o $(TEST_BIN)
 
-test_sttsm: $(TEST_OBJS)
-	$(LINKER) $(TEST_OBJ_PATH)/test_sttsm.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm.x
+sttsm: $(TEST_OBJS)
+		$(LINKER) $(TEST_OBJ_PATH)/test_sttsm.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm.x
 
-test_sttsm_dense: $(TEST_OBJS)
-	$(LINKER) $(TEST_OBJ_PATH)/test_sttsm_dense.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm_dense.x
+sttsm_dense: $(TEST_OBJS)
+		$(LINKER) $(TEST_OBJ_PATH)/test_sttsm_dense.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm_dense.x
 
+sttsm_prof: $(TEST_OBJS)
+		$(LINKER) -pg $(TEST_OBJ_PATH)/test_sttsm.o $(LDFLAGS) $(LIBFLAME_PROF) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm_prof.x
+
+sttsm_dense_prof: $(TEST_OBJS)
+		$(LINKER) -pg $(TEST_OBJ_PATH)/test_sttsm_dense.o $(LDFLAGS) $(LIBFLAME_PROF) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm_dense_prof.x
 
 clean:
-	$(RM_F) $(TEST_OBJS) $(TEST_BIN)
+		$(RM_F) $(TEST_OBJS) $(TEST_BIN)
 
