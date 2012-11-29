@@ -107,13 +107,15 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 										  CB, &C2, mode, b, FLA_BOTTOM);
 
 			//Set up X to be corect size
-			dim_t* size_X = FLA_Obj_size( A );
+			dim_t size_X[FLA_Obj_order( A )];
 			//HACK I KNOW, just need to figure out how to make X the correct blocked size
 			dim_t blkSize[order];
 			for(i = 0; i < order; i++)
-				blkSize[i] = (((FLA_Obj*)FLA_Obj_base_buffer(B1))[0]).size[0];
+				blkSize[i] = (((FLA_Obj*)FLA_Obj_base_buffer(A))[0]).size[i];
+			blkSize[mode] = (((FLA_Obj*)FLA_Obj_base_buffer(B1))[0]).size[0];
+
 			for(i = 0; i < order; i++)
-				size_X[i] *= blkSize[i];
+				size_X[i] = blkSize[i] * FLA_Obj_dimsize(A,i);
 			size_X[mode] = FLA_Obj_dimsize( B1, 0) * blkSize[mode];
 			
 			dim_t nElem = size_X[0];
@@ -144,7 +146,6 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 
 			FLA_Sttsm_single(alpha, X, mode-1, beta, B, C1, loopCount);
 
-			FLA_free(size_X);
 			FLA_Obj_blocked_free_buffer(&X);
 			FLA_Obj_free_without_buffer(&X);
 			

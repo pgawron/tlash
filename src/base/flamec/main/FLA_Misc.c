@@ -491,11 +491,11 @@ FLA_Error FLA_Obj_print_flat_tensor(FLA_Obj A){
 
 	if(elemtype == FLA_TENSOR || elemtype == FLA_MATRIX){
 		printf("data:");
-		dim_t blkSize = FLA_Obj_dimsize(((FLA_Obj*)FLA_Obj_base_buffer(A))[0], 0);
+		dim_t* blkSize = FLA_Obj_size(((FLA_Obj*)FLA_Obj_base_buffer(A))[0]);
 		dim_t* blkStride = FLA_Obj_stride(((FLA_Obj*)FLA_Obj_base_buffer(A))[0]);
 		dim_t flatSize[order];
 		for(i = 0; i < order; i++)
-			flatSize[i] = size[i] * blkSize;
+			flatSize[i] = size[i] * blkSize[i];
 
 		dim_t curIndex[order];
 		memset(&(curIndex[0]), 0, order * sizeof(dim_t));
@@ -509,7 +509,7 @@ FLA_Error FLA_Obj_print_flat_tensor(FLA_Obj A){
 		dim_t update_ptr = 0;
 		while(TRUE){
 			for(i = 0; i < order; i++)
-				blkIndex[i] = curIndex[i] / blkSize;
+				blkIndex[i] = curIndex[i] / blkSize[i];
 
 			FLA_TIndex_to_LinIndex(order, stride, blkIndex, &blkLinOffset);
 			FLA_Obj blk = ((FLA_Obj*)FLA_Obj_base_buffer(A))[blkLinOffset];
@@ -519,7 +519,7 @@ FLA_Error FLA_Obj_print_flat_tensor(FLA_Obj A){
 				iblkPermutation[blk.permutation[i]] = i;
 
 			for(i = 0; i < order; i++)
-				innerBlkIndex[i] = curIndex[i] - (blkIndex[i] * blkSize);
+				innerBlkIndex[i] = curIndex[i] - (blkIndex[i] * blkSize[i]);
 
 			FLA_Permute_array(order, innerBlkIndex, iblkPermutation, ipermutedIndex);
 //			FLA_Permute_array(order, innerBlkIndex, blk.permutation, ipermutedIndex);
@@ -544,6 +544,7 @@ FLA_Error FLA_Obj_print_flat_tensor(FLA_Obj A){
 		}
 		printf("\n");
 		FLA_free(blkStride);
+		FLA_free(blkSize);
 	}else{
 		printf("data:");
 
