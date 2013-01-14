@@ -128,6 +128,15 @@ void test_sttsm(int m, int nA, int nC, double* elapsedTime){
 //printf("end computation\n");
 //	printf("c tensor\n");
 //	FLA_Obj_print_flat_tensor(c);
+	printf("A tensor\n");
+	FLA_Obj_print_flat_tensor(A);
+
+	printf("B tensor\n");
+	FLA_Obj_print_flat_tensor(B);
+
+	printf("c tensor\n");
+	FLA_Obj_print_flat_tensor(C);
+
 
   FLA_Obj_free_buffer(&B);
   FLA_Obj_free_without_buffer(&B);
@@ -178,9 +187,9 @@ int main(int argc, char* argv[]){
 	FLA_Finalize();
 
 	//Print out results
-	double gflops = Sttsm_GFlops(m, nA, nC, elapsedTime);
+//	double gflops = Sttsm_GFlops(m, nA, nC, elapsedTime);
 	printf("ARGS DENSE %d %d %d %d %d\n", m, nA, nC, nA, nC);
 	printf("TIME %.6f\n", elapsedTime);
-	printf("GFLOPS %.6f\n", gflops);
+	printf("GFLOPS %.6f\n", -1.0);
 	return 0;
 }
