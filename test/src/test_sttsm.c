@@ -86,16 +86,31 @@ void test_sttsm(int m, int nA, int nC, int bA, int bC, double* elapsedTime){
 
   *elapsedTime = endTime - startTime;
 
-/*
+
 	printf("A tensor\n");
+	printf("a = tensor([");
 	FLA_Obj_print_flat_tensor(A);
+	printf("],[");
+	for(i = 0; i < FLA_Obj_order(A); i++)
+		printf("%d ", FLA_Obj_dimsize(((FLA_Obj*)(FLA_Obj_base_buffer(A)))[0],i) * FLA_Obj_dimsize(A,i));
+	printf("]);\n\n");
 
 	printf("B tensor\n");
+	printf("b = reshape([");
 	FLA_Obj_print_flat_tensor(B);
+	printf("],[");
+	for(i = 0; i < FLA_Obj_order(B); i++)
+		printf("%d ", FLA_Obj_dimsize(((FLA_Obj*)(FLA_Obj_base_buffer(B)))[0],i) * FLA_Obj_dimsize(B,i));
+	printf("]);\n\n");
 
 	printf("c tensor\n");
+	printf("c = tensor([");
 	FLA_Obj_print_flat_tensor(C);
-*/
+	printf("],[");
+	for(i = 0; i < FLA_Obj_order(C); i++)
+		printf("%d ", FLA_Obj_dimsize(((FLA_Obj*)(FLA_Obj_base_buffer(C)))[0],i) * FLA_Obj_dimsize(C,i));
+	printf("]);\n\n");
+
 
   FLA_Obj_blocked_free_buffer(&B);
   FLA_Obj_free_without_buffer(&B);

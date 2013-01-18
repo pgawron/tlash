@@ -490,7 +490,7 @@ FLA_Error FLA_Obj_print_flat_tensor(FLA_Obj A){
 	dim_t* stride = FLA_Obj_stride(A);
 
 	if(elemtype == FLA_TENSOR || elemtype == FLA_MATRIX){
-		printf("data:");
+//		printf("data:");
 		dim_t* blkSize = FLA_Obj_size(((FLA_Obj*)FLA_Obj_base_buffer(A))[0]);
 		dim_t* blkStride = FLA_Obj_stride(((FLA_Obj*)FLA_Obj_base_buffer(A))[0]);
 		dim_t flatSize[order];
@@ -542,11 +542,11 @@ FLA_Error FLA_Obj_print_flat_tensor(FLA_Obj A){
 				curIndex[i] = 0;
 			update_ptr = 0;
 		}
-		printf("\n");
+//		printf("\n");
 		FLA_free(blkStride);
 		FLA_free(blkSize);
 	}else{
-		printf("data:");
+//		printf("data:");
 
 		dim_t curIndex[order];
 		memset(&(curIndex[0]), 0, order * sizeof(dim_t));
@@ -585,7 +585,7 @@ FLA_Error FLA_Obj_print_flat_tensor(FLA_Obj A){
 				curIndex[i] = 0;
 			update_ptr = 0;
 		}
-		printf("\n");
+//		printf("\n");
 
 	}
 
