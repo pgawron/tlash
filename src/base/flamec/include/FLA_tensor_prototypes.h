@@ -58,6 +58,7 @@ FLA_Error	   FLA_Obj_blocked_free_buffer(FLA_Obj* obj);
 FLA_Error      FLA_Obj_blocked_symm_free_buffer( FLA_Obj *obj);
 dim_t* 		   FLA_Obj_base_scalar_size(FLA_Obj A);
 dim_t 		   FLA_Obj_base_scalar_dimsize(FLA_Obj A, dim_t mode);
+void*          FLA_Obj_tensor_buffer_at_view( FLA_Obj obj );
 
 //--------------------------------------------------------------------------
 // --- FLA_View functions -------------------------------

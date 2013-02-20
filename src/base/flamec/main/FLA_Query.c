@@ -309,7 +309,34 @@ void* FLA_Obj_buffer_at_view( FLA_Obj obj )
   return ( void* ) ( buffer + byte_offset );
 }
 
-
+void* FLA_Obj_tensor_buffer_at_view( FLA_Obj obj )
+{
+	dim_t i;
+	dim_t order;
+	char*  buffer;
+	size_t elem_size;
+	dim_t* offset;
+	dim_t* stride;
+	size_t byte_offset;
+	
+//	if ( FLA_Check_error_level() >= FLA_MIN_ERROR_CHECKING )
+//		FLA_Obj_buffer_at_view_check( obj );
+	
+	order	    = FLA_Obj_order( obj ); 
+	elem_size   = ( size_t ) FLA_Obj_elem_size( obj );
+	stride      = ( dim_t* ) FLA_Obj_stride( obj );
+	offset      = ( dim_t* ) FLA_Obj_offset( obj );
+	
+	byte_offset = 0;
+	for(i = 0; i < order; i++)
+		byte_offset += offset[i] * stride[i];
+	
+	byte_offset *= elem_size;
+	
+	buffer      = ( char * ) (obj.base)->buffer;
+	
+	return ( void* ) ( buffer + byte_offset );
+}
 
 FLA_Bool FLA_Obj_buffer_is_null( FLA_Obj obj )
 {

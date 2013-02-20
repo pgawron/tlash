@@ -497,7 +497,7 @@ FLA_Error FLA_Obj_print_scalar_tensor(FLA_Obj A, dim_t repart_mode){
 									  AB,   &A2, 
 									  repart_mode, 1, FLA_BOTTOM);
 		/************************/
-		double* buffer = FLA_Obj_buffer_at_view(A1);
+		double* buffer = FLA_Obj_tensor_buffer_at_view(A1);
 		if(repart_mode == 0){
 			printf("%.3f", *buffer);
 			printf(" ");	
@@ -515,21 +515,19 @@ FLA_Error FLA_Obj_print_scalar_tensor(FLA_Obj A, dim_t repart_mode){
 }
 
 FLA_Error FLA_Obj_print_scalar_tensor_column_at(FLA_Obj A, dim_t index[]){
+	FLA_Obj Atmp;
 	FLA_Obj AT, AB;
 	FLA_Obj A0, A1, A2;
-
-	AB = A;
+	
 	dim_t order = FLA_Obj_order(A);
-	dim_t i;
+	Atmp = A;
+	memcpy(&(Atmp.offset[0]), &(index[0]), order * sizeof(dim_t));
+
+	FLA_Part_1xmode2(Atmp, &AT,
+						   /**/
+						   &AB, 0, 0, FLA_TOP);
 	
-	//TODO: Not sure why this works, ask for explanation
-	for(i = order - 1; i < order; i--){
-		FLA_Part_1xmode2(AB, &AT,
-							/**/
-							&AB, i, index[i], FLA_TOP);
-	}
-	
-	while(FLA_Obj_dimsize(AT,0) < FLA_Obj_dimsize(A,0)){
+	while(FLA_Obj_dimsize(AT,0) < FLA_Obj_dimsize(Atmp,0)){
 		FLA_Repart_1xmode2_to_1xmode3(AT,   &A0,
 											&A1,
 									  /**/  /**/
@@ -548,13 +546,56 @@ FLA_Error FLA_Obj_print_scalar_tensor_column_at(FLA_Obj A, dim_t index[]){
 	return FLA_SUCCESS;
 }
 
+FLA_Error FLA_Obj_print_scalar_tensor_mode_at(FLA_Obj A, dim_t mode, dim_t index[]){
+	FLA_Obj Atmp;
+	FLA_Obj AT, AB;
+	FLA_Obj A0, A1, A2;
+	
+	dim_t order = FLA_Obj_order(A);
+	Atmp = A;
+	memcpy(&(Atmp.offset[0]), &(index[0]), order * sizeof(dim_t));
+	
+	FLA_Part_1xmode2(Atmp, &AT,
+					 /**/
+					 &AB, mode, 0, FLA_TOP);
+	
+	while(FLA_Obj_dimsize(AT,mode) < FLA_Obj_dimsize(Atmp,mode)){
+		FLA_Repart_1xmode2_to_1xmode3(AT,   &A0,
+									  &A1,
+									  /**/  /**/
+									  AB,   &A2, mode, 1, FLA_BOTTOM);
+		/************************/
+		double* buffer = FLA_Obj_tensor_buffer_at_view(A1);
+		printf("%.3f", *buffer);
+		printf(" ");
+		/************************/
+		FLA_Cont_with_1xmode3_to_1xmode2(&AT, A0,
+										 A1,
+										 /**/ /**/
+										 &AB, A2, mode, FLA_TOP);
+	}
+	
+	return FLA_SUCCESS;
+}
+
 FLA_Error FLA_Obj_print_hier_tensor_loop_scalar_mode(FLA_Obj A, dim_t mode, dim_t index[]){
 
 	if(mode == 0){
+		dim_t i;
+		dim_t order = FLA_Obj_order(A);
 		FLA_Obj* buffer = FLA_Obj_buffer_at_view(A);
-		return FLA_Obj_print_scalar_tensor_column_at(*buffer, index);
-	}
+		dim_t* permutation = FLA_Obj_permutation(*buffer);
+		dim_t ipermutation[order];
+		for(i = 0; i < order; i++)
+			ipermutation[permutation[i]] = i;
+		dim_t printMode = permutation[0];
+		dim_t newIndex[order];
+		for(i = 0; i < order; i++)
+			newIndex[i] = index[ipermutation[i]];
 		
+		return FLA_Obj_print_scalar_tensor_mode_at(*buffer, printMode, newIndex);
+	}
+	
 	dim_t i;
 	dim_t order = FLA_Obj_order(A);
 	dim_t newIndex[order];
