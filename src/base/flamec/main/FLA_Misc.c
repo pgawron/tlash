@@ -482,6 +482,132 @@ FLA_Error FLA_Obj_show( char *s1, FLA_Obj A, char *format, char *s2 )
   return FLA_Obj_fshow( stdout, s1, A, format, s2 );
 }
 
+FLA_Error FLA_Obj_print_scalar_tensor(FLA_Obj A, dim_t repart_mode){
+	FLA_Obj AT, AB;
+	FLA_Obj A0, A1, A2;
+	
+	FLA_Part_1xmode2(A, &AT,
+						/**/
+						&AB, repart_mode, 0, FLA_TOP);
+	
+	while(FLA_Obj_dimsize(AT,repart_mode) < FLA_Obj_dimsize(A,repart_mode)){
+		FLA_Repart_1xmode2_to_1xmode3(AT,   &A0,
+										    &A1,
+									  /**/  /**/
+									  AB,   &A2, 
+									  repart_mode, 1, FLA_BOTTOM);
+		/************************/
+		double* buffer = FLA_Obj_buffer_at_view(A1);
+		if(repart_mode == 0){
+			printf("%.3f", *buffer);
+			printf(" ");	
+		}else{
+			FLA_Obj_print_scalar_tensor(A1, repart_mode - 1);
+		}
+		/************************/
+		FLA_Cont_with_1xmode3_to_1xmode2(&AT, A0,
+											  A1,
+										 /**/ /**/
+										 &AB, A2, 
+										 repart_mode, FLA_TOP);
+	}
+	return FLA_SUCCESS;	
+}
+
+FLA_Error FLA_Obj_print_scalar_tensor_column_at(FLA_Obj A, dim_t index[]){
+	FLA_Obj AT, AB;
+	FLA_Obj A0, A1, A2;
+
+	AB = A;
+	dim_t order = FLA_Obj_order(A);
+	dim_t i;
+	
+	//TODO: Not sure why this works, ask for explanation
+	for(i = order - 1; i < order; i--){
+		FLA_Part_1xmode2(AB, &AT,
+							/**/
+							&AB, i, index[i], FLA_TOP);
+	}
+	
+	while(FLA_Obj_dimsize(AT,0) < FLA_Obj_dimsize(A,0)){
+		FLA_Repart_1xmode2_to_1xmode3(AT,   &A0,
+											&A1,
+									  /**/  /**/
+									  AB,   &A2, 0, 1, FLA_BOTTOM);
+		/************************/
+		double* buffer = FLA_Obj_buffer_at_view(A1);
+		printf("%.3f", *buffer);
+		printf(" ");
+		/************************/
+		FLA_Cont_with_1xmode3_to_1xmode2(&AT, A0,
+											  A1,
+										 /**/ /**/
+										 &AB, A2, 0, FLA_TOP);
+	}
+	
+	return FLA_SUCCESS;
+}
+
+FLA_Error FLA_Obj_print_hier_tensor_loop_scalar_mode(FLA_Obj A, dim_t mode, dim_t index[]){
+
+	if(mode == 0){
+		FLA_Obj* buffer = FLA_Obj_buffer_at_view(A);
+		return FLA_Obj_print_scalar_tensor_column_at(*buffer, index);
+	}
+		
+	dim_t i;
+	dim_t order = FLA_Obj_order(A);
+	dim_t newIndex[order];
+	memcpy(&(newIndex[0]), &(index[0]), order * sizeof(dim_t));
+	FLA_Obj* buffer = FLA_Obj_buffer_at_view(A);
+	for(i = 0; i < FLA_Obj_dimsize(*buffer,mode); i++){
+		newIndex[mode] = i;
+		FLA_Obj_print_hier_tensor_repart_mode_at(A, mode - 1, newIndex);
+	}
+	
+	return FLA_SUCCESS;
+}
+
+FLA_Error FLA_Obj_print_hier_tensor_repart_mode_at(FLA_Obj A, dim_t repart_mode, dim_t index[]){
+	FLA_Obj AT, AB;
+	FLA_Obj A0, A1, A2;
+
+	FLA_Part_1xmode2(A, &AT,
+						 /**/
+						 &AB, repart_mode, 0, FLA_TOP);
+
+	
+	while(FLA_Obj_dimsize(AT,repart_mode) < FLA_Obj_dimsize(A,repart_mode)){
+		FLA_Repart_1xmode2_to_1xmode3(AT, &A0,
+											  &A1,
+										/**/  /**/
+										AB,   &A2, repart_mode, 1, FLA_BOTTOM);
+		/************************/
+		FLA_Obj_print_hier_tensor_loop_scalar_mode(A1, repart_mode, index);
+		/************************/
+		FLA_Cont_with_1xmode3_to_1xmode2(&AT, A0,
+												  A1,
+											 /**/ /**/
+											 &AB, A2, repart_mode, FLA_TOP);
+	}
+	return FLA_SUCCESS;
+}
+
+FLA_Error FLA_Obj_print_tensor2(FLA_Obj A){
+	FLA_Elemtype elemtype = FLA_Obj_elemtype(A);
+	dim_t order = FLA_Obj_order(A);
+
+	if(elemtype == FLA_SCALAR){
+		FLA_Obj_print_scalar_tensor(A, order - 1);
+	}else{
+		dim_t index[order];
+		memset(&(index[0]), 0, order * sizeof(dim_t));
+		FLA_Obj_print_hier_tensor_repart_mode_at(A, order - 1, index);
+	}
+	
+	return FLA_SUCCESS;
+}
+
 FLA_Error FLA_Obj_print_flat_tensor(FLA_Obj A){
 	dim_t i;
 	FLA_Elemtype elemtype = FLA_Obj_elemtype(A);
@@ -490,7 +616,7 @@ FLA_Error FLA_Obj_print_flat_tensor(FLA_Obj A){
 	dim_t* stride = FLA_Obj_stride(A);
 
 	if(elemtype == FLA_TENSOR || elemtype == FLA_MATRIX){
-//		printf("data:");
+		printf("data:");
 		dim_t* blkSize = FLA_Obj_size(((FLA_Obj*)FLA_Obj_base_buffer(A))[0]);
 		dim_t* blkStride = FLA_Obj_stride(((FLA_Obj*)FLA_Obj_base_buffer(A))[0]);
 		dim_t flatSize[order];
@@ -595,3 +721,22 @@ FLA_Error FLA_Obj_print_flat_tensor(FLA_Obj A){
 	return FLA_SUCCESS;
 }
 
+dim_t FLA_Obj_mode_at_symm_pos( FLA_Obj A, dim_t pos ){
+	return A.symm_modes[pos];
+}
+
+dim_t FLA_Obj_symm_group_of_pos( FLA_Obj A, dim_t pos ){
+	dim_t i;
+	dim_t passedModes = 0;
+	dim_t nSymmGroups = A.nSymmGroups;
+	for(i = 0; i < nSymmGroups; i++){
+		passedModes += A.symmGroupLens[i];
+		if(pos <= passedModes)
+			return i;
+	}
+	return -1;
+}
+
+dim_t FLA_Obj_symmGroupSize(FLA_Obj A, dim_t symmGroup){
+	return A.symmGroupLens[symmGroup];
+}

@@ -56,24 +56,49 @@ dim_t          FLA_Obj_base_dimstride( FLA_Obj obj, dim_t dim );
 dim_t          FLA_Obj_dimstride( FLA_Obj obj, dim_t dim );
 FLA_Error	   FLA_Obj_blocked_free_buffer(FLA_Obj* obj);
 FLA_Error      FLA_Obj_blocked_symm_free_buffer( FLA_Obj *obj);
+dim_t* 		   FLA_Obj_base_scalar_size(FLA_Obj A);
+dim_t 		   FLA_Obj_base_scalar_dimsize(FLA_Obj A, dim_t mode);
 
 //--------------------------------------------------------------------------
+// --- FLA_View functions -------------------------------
 FLA_Error     FLA_Part_1xmode2( FLA_Obj A,  FLA_Obj *A1,
                                             FLA_Obj *A2,
                                 dim_t mode, dim_t  b,  FLA_Side side );
 
+FLA_Error     FLA_Part_2powm( FLA_Obj A,  FLA_Obj Apart[], 
+							  dim_t sizes[], FLA_Side sides[]);
+
 FLA_Error     FLA_Merge_1xmode2( FLA_Obj AT,
                                  FLA_Obj AB,  FLA_Obj *A, dim_t mode );
+
+FLA_Error     FLA_Merge_2powm(FLA_Obj Aparts[], FLA_Obj* A);
+
 
 FLA_Error     FLA_Repart_1xmode2_to_1xmode3( FLA_Obj AT,  FLA_Obj *A0,
                                                           FLA_Obj *A1,
                                              FLA_Obj AB,  FLA_Obj *A2,
                                              dim_t mode,  dim_t    b,  FLA_Side side );
 
+FLA_Error FLA_Repart_2xmodeBlank_to_3xmodeBlank( dim_t order, dim_t sizeApart[], dim_t strideApart[], FLA_Obj Apart[], 
+												 			  dim_t strideArepart[], FLA_Obj Arepart[],
+										 		 			  dim_t mode, dim_t size, FLA_Side side);
+
+FLA_Error     FLA_Repart_2powm_to_3powm( dim_t order, FLA_Obj Apart[],  
+												  	  FLA_Obj Arepart[],
+													  dim_t sizes[], FLA_Side sides[]);
+
 FLA_Error     FLA_Cont_with_1xmode3_to_1xmode2( FLA_Obj *AT,  FLA_Obj A0,
                                                               FLA_Obj A1,
                                                 FLA_Obj *AB,  FLA_Obj A2,
                                                               dim_t mode, FLA_Side side );
+
+FLA_Error FLA_Cont_with_3xmodeBlank_to_2xmodeBlank( dim_t order, dim_t strideApart[], FLA_Obj Apart[], 
+												 			  dim_t sizeArepart[], dim_t strideArepart[], FLA_Obj Arepart[],
+										 		 			  dim_t mode, dim_t size, FLA_Side side);
+
+FLA_Error     FLA_Cont_with_3powm_to_2powm( dim_t order, FLA_Obj Apart[],  
+														 FLA_Obj Arepart[],
+											dim_t sizes[], FLA_Side sides[]);
 
 FLA_Error     FLA_Part_1xmode2_check( FLA_Obj A,  FLA_Obj *A1,
                                                   FLA_Obj *A2,
@@ -121,6 +146,7 @@ FLA_Error FLA_Set_zero_tensor( FLA_Obj A );
 FLA_Error FLA_Adjust_2D_info( FLA_Obj *A );
 FLA_Error FLA_Obj_create_Random_symm_tensor_data(dim_t b, FLA_Obj obj);
 FLA_Error FLA_Random_dense_symm_tensor(dim_t nSymmGroups, dim_t symmGroupLens[nSymmGroups], dim_t** symmetries, FLA_Obj *obj);
+FLA_Error FLA_Random_tensor(FLA_Obj A);
 
 //---  Non-FLA utils ---------------
 int compare_pairwise_sort(const void* a, const void* b);
@@ -139,6 +165,14 @@ typedef struct pairwise_sort_struct{
 } FLA_Paired_Sort;
 
 //--- Misc functions ----------------------
+FLA_Error FLA_Obj_print_hier_tensor_repart_mode_at(FLA_Obj A, dim_t repart_mode, dim_t index[]);
+FLA_Error FLA_Obj_print_tensor2(FLA_Obj A);
 FLA_Error FLA_Obj_print_tensor(FLA_Obj A);
 FLA_Error FLA_Obj_print_flat_tensor(FLA_Obj A);
 int FLA_Memory_leak_counter_get( );
+
+
+//--- Symmetry related functions ----------
+dim_t FLA_Obj_mode_at_symm_pos( FLA_Obj A, dim_t pos );
+dim_t FLA_Obj_symm_group_of_pos( FLA_Obj A, dim_t pos );
+dim_t FLA_Obj_symmGroupSize(FLA_Obj A, dim_t symmgroup);

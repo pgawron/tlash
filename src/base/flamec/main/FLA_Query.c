@@ -230,6 +230,18 @@ dim_t FLA_Obj_dimstride( FLA_Obj obj, dim_t mode )
   return ((obj.base)->stride)[mode];
 }
 
+dim_t* FLA_Obj_offset( FLA_Obj obj )
+{
+	dim_t* tmp = FLA_malloc(FLA_MAX_ORDER * sizeof(dim_t));
+	memcpy(&(tmp[0]), &(obj.offset[0]), FLA_Obj_order( obj ) * sizeof( dim_t ) );
+	return tmp;
+}
+
+dim_t FLA_Obj_mode_offset( FLA_Obj obj, dim_t mode )
+{
+  return obj.offset[mode];
+}
+
 dim_t FLA_Obj_row_offset( FLA_Obj obj )
 {
 	return obj.offm;
@@ -239,13 +251,6 @@ dim_t FLA_Obj_row_offset( FLA_Obj obj )
 dim_t FLA_Obj_col_offset( FLA_Obj obj )
 {
 	return obj.offn;
-}
-
-dim_t* FLA_Obj_offset( FLA_Obj obj )
-{
-  dim_t* tmp = FLA_malloc(FLA_MAX_ORDER * sizeof(dim_t));
-  memcpy(&(tmp[0]), &((obj.offset)[0]), FLA_Obj_order( obj ) * sizeof( dim_t ) );
-  return tmp;
 }
 
 dim_t FLA_Obj_base_length( FLA_Obj obj )
@@ -1032,3 +1037,51 @@ void* FLA_Submatrix_at( FLA_Datatype datatype, void* buffer, dim_t i, dim_t j, d
   return r_val;
 }
 
+/**
+ *   Tensor stuff
+**/
+dim_t FLA_Obj_num_symm_groups(FLA_Obj A){
+
+	return A.nSymmGroups;
+}
+
+
+dim_t* FLA_Obj_base_scalar_size(FLA_Obj A){
+	FLA_Elemtype elemtype = FLA_Obj_elemtype(A);
+	dim_t order = FLA_Obj_order(A);
+	dim_t* size = FLA_malloc(order * sizeof(dim_t));
+	dim_t i;
+	
+	if(elemtype == FLA_SCALAR){
+		return FLA_Obj_base_size(A);
+	}else{
+		for(i = 0; i < order; i++)
+			size[i] = FLA_Obj_base_scalar_dimsize(A, i);
+		return size;
+	}
+}
+
+dim_t FLA_Obj_base_scalar_dimsize(FLA_Obj A, dim_t mode){
+	FLA_Elemtype elemtype = FLA_Obj_elemtype(A);
+	dim_t size_base = 0;
+	
+	if(elemtype == FLA_SCALAR){
+		return FLA_Obj_base_dimsize(A, mode);
+	}else{
+		FLA_Obj* buffer;
+		dim_t mode_dimension;
+		dim_t stride;
+		dim_t i;
+		
+		buffer = FLA_Obj_base_buffer(A);
+		mode_dimension = FLA_Obj_dimsize(A, mode);
+		stride = FLA_Obj_dimstride(A, mode);
+		
+		for(i = 0; i < mode_dimension; i++){
+			FLA_Obj obj = buffer[stride * i];
+			
+			size_base += FLA_Obj_base_dimsize(obj, mode);
+		}
+	}
+	return size_base;
+}

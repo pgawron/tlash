@@ -66,7 +66,7 @@ CONFIG_MK_FRAGMENT  := $(CONFIG_DIRPATH)/$(HOST)/config.mk
 # present in the master config makefile fragment.
 # CC             := gcc
 # LINKER         := $(CC)
- CFLAGS         := -g -O0 -Wall -Wno-comment
+ CFLAGS         := -ggdb -O0 -Wall -Wno-comment
  LDFLAGS        := 
 # INSTALL_PREFIX := $(HOME)/flame
 
@@ -127,6 +127,12 @@ test_$(FNAME): $(TEST_OBJS)
 
 sttsm: $(TEST_OBJS)
 		$(LINKER) $(TEST_OBJ_PATH)/test_sttsm.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm.x
+
+tensor_print: $(TEST_OBJS)
+		$(LINKER) $(TEST_OBJ_PATH)/test_tensor_print.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_print.x
+
+symm_part: $(TEST_OBJS)
+		$(LINKER) $(TEST_OBJ_PATH)/test_symm_part.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o symm_part.x
 
 sttsm_dense: $(TEST_OBJS)
 		$(LINKER) $(TEST_OBJ_PATH)/test_sttsm_dense.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm_dense.x
