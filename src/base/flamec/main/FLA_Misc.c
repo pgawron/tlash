@@ -592,6 +592,8 @@ FLA_Error FLA_Obj_print_hier_tensor_loop_scalar_mode(FLA_Obj A, dim_t mode, dim_
 		dim_t newIndex[order];
 		for(i = 0; i < order; i++)
 			newIndex[i] = index[ipermutation[i]];
+			
+		FLA_free(permutation);
 		
 		return FLA_Obj_print_scalar_tensor_mode_at(*buffer, printMode, newIndex);
 	}

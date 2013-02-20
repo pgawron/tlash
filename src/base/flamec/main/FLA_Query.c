@@ -335,6 +335,9 @@ void* FLA_Obj_tensor_buffer_at_view( FLA_Obj obj )
 	
 	buffer      = ( char * ) (obj.base)->buffer;
 	
+	FLA_free(stride);
+	FLA_free(offset);
+	
 	return ( void* ) ( buffer + byte_offset );
 }
 

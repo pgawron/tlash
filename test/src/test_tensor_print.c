@@ -54,6 +54,11 @@ void test_tlash_print_routines(dim_t order, dim_t nA, dim_t bA){
 
   FLA_Obj_print_tensor2(Ablocked);
 
+  FLA_Obj_free_buffer(&Ascalar);
+  FLA_Obj_free_without_buffer(&Ascalar);
+
+  FLA_Obj_blocked_free_buffer(&Ablocked);
+  FLA_Obj_free_without_buffer(&Ablocked);
 }
 
 int main(int argc, char* argv[]){
