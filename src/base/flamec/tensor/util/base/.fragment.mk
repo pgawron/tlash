@@ -40,10 +40,10 @@
 # These two mmakefile variables need to be set in order for the recursive
 # include process to work!
 CURRENT_DIR_NAME := base
-CURRENT_SUB_DIRS := transpose
+CURRENT_SUB_DIRS := 
 
 # Source files local to this fragment
-LOCAL_SRC_FILES  := FLA_Absolute_square.c FLA_Absolute_value.c FLA_Add_to_diag.c FLA_Clock.c FLA_Conjugate.c FLA_Conjugate_r.c FLA_Fill_with_cluster_dist.c FLA_Fill_with_geometric_dist.c FLA_Fill_with_inverse_dist.c FLA_Fill_with_linear_dist.c FLA_Fill_with_logarithmic_dist.c FLA_Fill_with_random_dist.c FLA_Hermitianize.c FLA_Inv_scal_elemwise.c FLA_Invert.c FLA_Max_abs_value.c FLA_Max_abs_value_herm.c FLA_Max_elemwise_diff.c FLA_Mult_add.c FLA_Negate.c FLA_Norm1.c FLA_Norm_frob.c FLA_Norm_inf.c FLA_Pow.c FLA_Random_herm_matrix.c FLA_Random_matrix.c FLA_Random_spd_matrix.c FLA_Random_symm_matrix.c FLA_Random_tri_matrix.c FLA_Random_unitary_matrix.c FLA_Scal_elemwise.c FLA_Scale_diag.c FLA_Set.c FLA_Set_diag.c FLA_Set_offdiag.c FLA_Set_to_identity.c FLA_Setr.c FLA_Shift_diag.c FLA_Sort.c FLA_Sqrt.c FLA_Symmetrize.c FLA_Triangularize.c FLA_random_number.c
+LOCAL_SRC_FILES  := FLA_Adjust_2D_Info.c FLA_Binomial.c FLA_Compare_Pairwise_Sort.c FLA_Get_unique_info.c FLA_Permute_array.c FLA_Random_symm_tensor.c FLA_Random_tensor.c FLA_Set_tensor_permutation.c FLA_Set_tensor_stride.c FLA_Set_zero_tensor.c FLA_TIndex_to_LinIndex.c FLA_Ttm_flops.c
 
 # Add the fragment's local source files to the _global_variable_ variable.
 MK_BASE_FLAMEC_SRC += $(addprefix $(PARENT_PATH)/$(CURRENT_DIR_NAME)/, $(LOCAL_SRC_FILES))

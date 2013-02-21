@@ -31,13 +31,13 @@ void test_tlash_print_routines(dim_t order, dim_t nA, dim_t bA){
   printf("scalar tensor test\n");
   FLA_Obj_create_tensor(FLA_DOUBLE, order, scalar_sizeA, stride_A, &Ascalar);
   FLA_Random_tensor(Ascalar);
-  FLA_Obj_print_tensor2(Ascalar);
+  FLA_Obj_print_tensor(Ascalar);
 	
   printf("\n\n");
   printf("blocked tensor test\n");
   FLA_Obj_create_blocked_tensor(FLA_DOUBLE, order, scalar_sizeA, stride_A, block_sizeA, &Ablocked);
   FLA_Random_tensor(Ablocked);
-  FLA_Obj_print_tensor2(Ablocked);
+  FLA_Obj_print_tensor(Ablocked);
   
   printf("\n\n");
 
@@ -52,7 +52,7 @@ void test_tlash_print_routines(dim_t order, dim_t nA, dim_t bA){
   printf("] ");
   printf("permuted blocked tensor test\n");  
 
-  FLA_Obj_print_tensor2(Ablocked);
+  FLA_Obj_print_tensor(Ablocked);
 
   FLA_Obj_free_buffer(&Ascalar);
   FLA_Obj_free_without_buffer(&Ascalar);

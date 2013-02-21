@@ -92,9 +92,6 @@ extern "C" {
   #include "FLA_util_base_prototypes.h"
   #include "FLA_util_lapack_prototypes.h"
 
-  // Include prototypes for TLASH routines.
-  #include "FLA_tensor_prototypes.h"
-
   // Include prototypes for FLAME interfaces to BLAS and LAPACK operations.
   #include "FLA_blas1_prototypes.h"
   #include "FLA_blas2_prototypes.h"
@@ -116,6 +113,9 @@ extern "C" {
 
   // Include prototypes for LAPACK routines.
   #include "FLA_lapack_f77_prototypes.h"
+
+  // Include tensor headers.
+  #include "TLASH.h"
 
 // End extern "C" construct block.
 #ifdef __cplusplus

@@ -650,27 +650,6 @@ FLA_Error FLA_Check_adjacent_objects_1x2( FLA_Obj AL, FLA_Obj AR )
   return e_val;
 }
 
-FLA_Error FLA_Check_adjacent_objects_1xmode2( FLA_Obj AT,
-                                          FLA_Obj AB, dim_t mode )
-{
-  FLA_Error e_val = FLA_SUCCESS;
-
-  if ( FLA_Obj_dimsize( AT, mode ) != FLA_Obj_dimsize( AB, mode ) )
-    e_val = FLA_ADJACENT_OBJECT_DIM_MISMATCH;
-
-  for(int i = 0; i < AT.order; i++){
-    if(i == mode){
-      if ( AB.offset[i] != AT.offset[i] + FLA_Obj_dimsize( AT, mode ) )
-        e_val = FLA_OBJECTS_NOT_VERTICALLY_ADJ;
-    }
-    else{
-      if ( AB.offset[i] != AT.offset[i] )
-        e_val = FLA_OBJECTS_NOT_VERTICALLY_ALIGNED;
-    }
-  }
-  return e_val;
-}
-
 FLA_Error FLA_Check_blocksize_value( dim_t b )
 {
   FLA_Error e_val = FLA_SUCCESS;
@@ -1147,16 +1126,6 @@ FLA_Error FLA_Check_attempted_repart_1x2( FLA_Obj A_side, dim_t b_n )
 
   if ( b_n > FLA_Obj_width( A_side ) )
     e_val = FLA_ATTEMPTED_OVER_REPART_1X2;
-
-  return e_val;
-}
-
-FLA_Error FLA_Check_attempted_repart_1xmode2( FLA_Obj A_side, dim_t mode, dim_t b )
-{
-  FLA_Error e_val = FLA_SUCCESS;
-
-  if ( b > FLA_Obj_dimsize( A_side, mode ) )
-    e_val = FLA_ATTEMPTED_OVER_REPART_2X1;
 
   return e_val;
 }
