@@ -40,8 +40,10 @@
 # These two mmakefile variables need to be set in order for the recursive
 # include process to work!
 CURRENT_DIR_NAME := init
-CURRENT_SUB_DIRS := base blas lapack
+CURRENT_SUB_DIRS := base blas
 
+#Original libFLAME line
+#CURRENT_SUB_DIRS := base blas lapack
 # Source files local to this fragment
 LOCAL_SRC_FILES  := FLA_Cntl_init.c FLA_Cntl_init_flamec.c FLA_Cntl_init_flash.c
 

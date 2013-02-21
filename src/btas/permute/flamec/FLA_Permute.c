@@ -60,7 +60,6 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 	nElem_A = FLA_Obj_num_elem_alloc(A);
 	size_B = FLA_Obj_size(*B);
 	dim_t stride_B[order];
-	dim_t offset_B[order];
 
 	dim_t ipermutation[order];
 	for(i = 0; i < order; i++)

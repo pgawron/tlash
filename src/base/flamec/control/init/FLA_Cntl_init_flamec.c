@@ -61,6 +61,8 @@ void FLA_Cntl_init_flamec()
   FLA_Trmm_cntl_init();
   FLA_Trsm_cntl_init();
 
+//Original libFLAME lines
+/*
   // LAPACK-level
   // These require level-3 BLAS operations to be initialized.
   FLA_Apply_pivots_cntl_init();
@@ -88,6 +90,7 @@ void FLA_Cntl_init_flamec()
   FLA_Hess_UT_cntl_init();
   FLA_Tridiag_UT_cntl_init();
   FLA_Bidiag_UT_cntl_init();
+*/
 }
 
 void FLA_Cntl_finalize_flamec()
@@ -118,6 +121,8 @@ void FLA_Cntl_finalize_flamec()
   FLA_Trmm_cntl_finalize();
   FLA_Trsm_cntl_finalize();
 
+//Original libFLAME lines
+/*
   // LAPACK-level
   FLA_Apply_pivots_cntl_finalize();
   FLA_Chol_cntl_finalize();
@@ -143,5 +148,6 @@ void FLA_Cntl_finalize_flamec()
   FLA_Hess_UT_cntl_finalize();
   FLA_Tridiag_UT_cntl_finalize();
   FLA_Bidiag_UT_cntl_finalize();
+*/
 }
 

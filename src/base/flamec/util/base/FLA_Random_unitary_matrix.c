@@ -32,8 +32,15 @@
 
 #include "FLAME.h"
 
+//TODO: THIS FUNCTION PROKEN!!!
 FLA_Error FLA_Random_unitary_matrix( FLA_Obj A )
 {
+  printf("FLA_Random_unitary_matrix is non-functioning as LAPACK routines have been removed\n");
+  return FLA_SUCCESS;
+
+//Original libFLAME lines
+/*
+
   FLA_Obj B, T;
 
   if ( FLA_Check_error_level() >= FLA_MIN_ERROR_CHECKING )
@@ -54,6 +61,7 @@ FLA_Error FLA_Random_unitary_matrix( FLA_Obj A )
   //FLA_Obj_free( &W );
   FLA_Obj_free( &T );
   FLA_Obj_free( &B );
+*/
 
 /*
   FLA_Datatype datatype;

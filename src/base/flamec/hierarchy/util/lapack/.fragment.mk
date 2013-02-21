@@ -39,14 +39,11 @@
 
 # These two mmakefile variables need to be set in order for the recursive
 # include process to work!
-CURRENT_DIR_NAME := 1
-CURRENT_SUB_DIRS := external front task
-
-#Original libFLAME line
-#CURRENT_SUB_DIRS := external front gpu task
+CURRENT_DIR_NAME := lapack
+CURRENT_SUB_DIRS :=
 
 # Source files local to this fragment
-LOCAL_SRC_FILES  := 
+LOCAL_SRC_FILES  := FLASH_LU_find_zero_on_diagonal.c
 
 # Add the fragment's local source files to the _global_variable_ variable.
 MK_BASE_FLAMEC_SRC += $(addprefix $(PARENT_PATH)/$(CURRENT_DIR_NAME)/, $(LOCAL_SRC_FILES))

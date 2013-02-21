@@ -124,7 +124,6 @@ FLA_Error FLA_Ttm_single_no_permC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj
 	FLA_Elemtype elemtype = FLA_Obj_elemtype(A);
 	dim_t order = FLA_Obj_order(A);
     dim_t permutation[order];
-	dim_t ipermutation[order];
     dim_t i;
 	permutation[0] = mode;
 	dim_t* size_A;

@@ -43,7 +43,10 @@ CURRENT_DIR_NAME := control
 CURRENT_SUB_DIRS := init
 
 # Source files local to this fragment
-LOCAL_SRC_FILES  := FLA_Cntl.c FLA_Cntl_blas1.c FLA_Cntl_blas2.c FLA_Cntl_blas3.c FLA_Cntl_lapack.c
+LOCAL_SRC_FILES  := FLA_Cntl.c FLA_Cntl_blas1.c FLA_Cntl_blas2.c FLA_Cntl_blas3.c
+
+#Original libFLAME line
+#LOCAL_SRC_FILES  := FLA_Cntl.c FLA_Cntl_blas1.c FLA_Cntl_blas2.c FLA_Cntl_blas3.c FLA_Cntl_lapack.c
 
 # Add the fragment's local source files to the _global_variable_ variable.
 MK_BASE_FLAMEC_SRC += $(addprefix $(PARENT_PATH)/$(CURRENT_DIR_NAME)/, $(LOCAL_SRC_FILES))
