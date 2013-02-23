@@ -101,7 +101,7 @@ FLA_Error FLA_Obj_print_hier_tensor_loop_scalar_mode(FLA_Obj A, dim_t mode, dim_
 	if(mode == 0){
 		dim_t i;
 		dim_t order = FLA_Obj_order(A);
-		FLA_Obj* buffer = FLA_Obj_buffer_at_view(A);
+		FLA_Obj* buffer = FLA_Obj_tensor_buffer_at_view(A);
 		dim_t* permutation = FLA_Obj_permutation(*buffer);
 		dim_t ipermutation[order];
 		for(i = 0; i < order; i++)
@@ -120,7 +120,7 @@ FLA_Error FLA_Obj_print_hier_tensor_loop_scalar_mode(FLA_Obj A, dim_t mode, dim_
 	dim_t order = FLA_Obj_order(A);
 	dim_t newIndex[order];
 	memcpy(&(newIndex[0]), &(index[0]), order * sizeof(dim_t));
-	FLA_Obj* buffer = FLA_Obj_buffer_at_view(A);
+	FLA_Obj* buffer = FLA_Obj_tensor_buffer_at_view(A);
 	for(i = 0; i < FLA_Obj_dimsize(*buffer,mode); i++){
 		newIndex[mode] = i;
 		FLA_Obj_print_hier_tensor_repart_mode_at(A, mode - 1, newIndex);

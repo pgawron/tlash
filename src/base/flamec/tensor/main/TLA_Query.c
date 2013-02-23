@@ -121,6 +121,7 @@ void* FLA_Obj_tensor_buffer_at_view( FLA_Obj obj )
 	offset      = ( dim_t* ) FLA_Obj_offset( obj );
 	
 	byte_offset = 0;
+
 	for(i = 0; i < order; i++)
 		byte_offset += offset[i] * stride[i];
 	

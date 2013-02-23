@@ -131,8 +131,8 @@ sttsm: $(TEST_OBJS)
 tensor_print: $(TEST_OBJS)
 		$(LINKER) $(TEST_OBJ_PATH)/test_tensor_print.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_print.x
 
-symm_part: $(TEST_OBJS)
-		$(LINKER) $(TEST_OBJ_PATH)/test_symm_part.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o symm_part.x
+tensor_part: $(TEST_OBJS)
+		$(LINKER) $(TEST_OBJ_PATH)/test_tensor_part.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_part.x
 
 sttsm_dense: $(TEST_OBJS)
 		$(LINKER) $(TEST_OBJ_PATH)/test_sttsm_dense.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm_dense.x

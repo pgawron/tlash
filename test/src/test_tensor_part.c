@@ -10,9 +10,15 @@ void Usage()
     printf("  bA: mode-length of block of A\n");
 }
 
-void initSymmTensor(dim_t order, dim_t size[order], dim_t b, FLA_Obj* obj){
-  FLA_Obj_create_symm_tensor_without_buffer(FLA_DOUBLE, order, size, b, obj);
-  FLA_Obj_create_Random_symm_tensor_data(b, *obj);
+void initBlockedTensor(dim_t order, dim_t size[order], dim_t bSize[order], FLA_Obj* obj){
+  dim_t i;
+  dim_t stride[order];
+  stride[0] = 1;
+  for(i = 1; i < order; i++)
+	stride[i] = size[i-1]*stride[i-1];
+
+  FLA_Obj_create_blocked_tensor(FLA_DOUBLE, order, size, stride, bSize, obj);
+  FLA_Random_tensor(*obj);
 }
 
 void print_Part(FLA_Obj A, FLA_Obj parts[]){
@@ -28,7 +34,7 @@ void print_Part(FLA_Obj A, FLA_Obj parts[]){
 		for(i = 0; i < order; i++)
 			printf("%d", curIndex[i]);
 		printf(" = [");
-		FLA_Obj_print_flat_tensor(parts[curPart++]);
+		FLA_Obj_print_tensor(parts[curPart++]);
 		printf("];\n");
 		//Update
 		curIndex[update_ptr]++;
@@ -52,15 +58,17 @@ void test_tlash_part_routines(dim_t m, dim_t nA, dim_t bA){
   dim_t i;
   FLA_Obj A;
   dim_t sizeA[m];
+  dim_t sizeBlock[m];
   dim_t partSize[m];
   FLA_Side sides[m];
   for(i = 0; i < m; i++){
 	sizeA[i] = nA;
+	sizeBlock[i] = bA;
 	partSize[i] = 1;
 	sides[i] = FLA_TOP;
   }
 
-  initSymmTensor(m, sizeA, bA, &(A) );
+  initBlockedTensor(m, sizeA, sizeBlock, &(A) );
 
   dim_t nPartitions = 1;
   nPartitions <<= m;
@@ -68,7 +76,7 @@ void test_tlash_part_routines(dim_t m, dim_t nA, dim_t bA){
   FLA_Obj Apart[nPartitions];
 
   printf("A = [\n");
-  FLA_Obj_print_flat_tensor(A);
+  FLA_Obj_print_tensor(A);
   printf("];\n");
 
   printf("Partitioning A\n");

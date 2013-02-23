@@ -55,7 +55,7 @@
 
 /* Determines whether to enable the FLA_malloc()/FLA_free() memory counter by
    default. */
-#define FLA_ENABLE_MEMORY_LEAK_COUNTER 1
+/* #undef FLA_ENABLE_MEMORY_LEAK_COUNTER */
 
 /* Determines whether thread-specific blocks of code should be compiled. */
 /* #undef FLA_ENABLE_MULTITHREADING */

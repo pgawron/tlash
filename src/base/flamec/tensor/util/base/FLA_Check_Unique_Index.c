@@ -32,8 +32,10 @@
 
 #include "FLAME.h"
 
-bool FLA_Check_Unique_Index( dim_t order, dim_t index[order], dim_t nSymmGroups, dim_t symmGroupLens[nSymmGroups], dim_t symm_modes[order])
+//TODO: IMPLEMENT
+FLA_Error FLA_Check_Unique_Index( dim_t order, dim_t index[order], dim_t nSymmGroups, dim_t symmGroupLens[nSymmGroups], dim_t symm_modes[order])
 {
+/*
 	dim_t uniqueIndex = FALSE;
 	dim_t i;
 
@@ -45,7 +47,7 @@ bool FLA_Check_Unique_Index( dim_t order, dim_t index[order], dim_t nSymmGroups,
 	*linIndex = 0;
 	for(i = 0; i < order; i++)
 		(*linIndex) += index[i] * stride[i];
-
+*/
   return FLA_SUCCESS;
 }
 

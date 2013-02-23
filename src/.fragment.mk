@@ -40,10 +40,7 @@
 # These two mmakefile variables need to be set in order for the recursive
 # include process to work!
 CURRENT_DIR_NAME := src
-CURRENT_SUB_DIRS := base blas btas flablas
-
-#Original libFLAME line
-#CURRENT_SUB_DIRS := base blas btas flablas lapack map
+CURRENT_SUB_DIRS := base blas btas flablas lapack map
 
 # Source files local to this fragment
 LOCAL_SRC_FILES  := 

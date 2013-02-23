@@ -40,7 +40,7 @@
 # These two mmakefile variables need to be set in order for the recursive
 # include process to work!
 CURRENT_DIR_NAME := lapack
-CURRENT_SUB_DIRS :=
+CURRENT_SUB_DIRS := 
 
 # Source files local to this fragment
 LOCAL_SRC_FILES  := FLASH_LU_find_zero_on_diagonal.c

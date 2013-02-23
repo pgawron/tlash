@@ -42,11 +42,8 @@
 CURRENT_DIR_NAME := base
 CURRENT_SUB_DIRS := 
 
-#Original libFLAME line
-#CURRENT_SUB_DIRS := base lapack
-
 # Source files local to this fragment
-LOCAL_SRC_FILES  := FLASH_Norm1.c FLASH_Obj_create_diag_panel.c FLASH_Set.c FLASH_Shift_diag.c FLASH_Hermitianize.c FLASH_Max_elemwise_diff.c FLASH_Random_matrix.c FLASH_Random_spd_matrix.c FLASH_Triangularize.c
+LOCAL_SRC_FILES  := FLASH_Hermitianize.c FLASH_Max_elemwise_diff.c FLASH_Norm1.c FLASH_Obj_create_diag_panel.c FLASH_Random_matrix.c FLASH_Random_spd_matrix.c FLASH_Set.c FLASH_Shift_diag.c FLASH_Triangularize.c
 
 # Add the fragment's local source files to the _global_variable_ variable.
 MK_BASE_FLAMEC_SRC += $(addprefix $(PARENT_PATH)/$(CURRENT_DIR_NAME)/, $(LOCAL_SRC_FILES))

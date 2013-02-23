@@ -40,10 +40,7 @@
 # These two mmakefile variables need to be set in order for the recursive
 # include process to work!
 CURRENT_DIR_NAME := flamec
-CURRENT_SUB_DIRS := blis check control hierarchy include main tensor util wrappers
-
-#Original libFLAME line
-#CURRENT_SUB_DIRS := blis check control hierarchy include main supermatrix tensor util wrappers
+CURRENT_SUB_DIRS := blis check control hierarchy include main supermatrix tensor util wrappers
 
 # Source files local to this fragment
 LOCAL_SRC_FILES  := 

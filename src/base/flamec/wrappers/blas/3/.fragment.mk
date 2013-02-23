@@ -40,10 +40,7 @@
 # These two mmakefile variables need to be set in order for the recursive
 # include process to work!
 CURRENT_DIR_NAME := 3
-CURRENT_SUB_DIRS := external front task
-
-#Original libFLAME line
-#CURRENT_SUB_DIRS := external front gpu task
+CURRENT_SUB_DIRS := external front gpu task
 
 # Source files local to this fragment
 LOCAL_SRC_FILES  := 

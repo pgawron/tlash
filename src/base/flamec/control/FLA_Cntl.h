@@ -114,5 +114,5 @@ void FLA_Cntl_obj_free( void* cntl );
 #include "FLA_Cntl_blas1.h"
 #include "FLA_Cntl_blas2.h"
 #include "FLA_Cntl_blas3.h"
-//#include "FLA_Cntl_lapack.h"
+#include "FLA_Cntl_lapack.h"
 

@@ -60,13 +60,6 @@ FLA_Error FLA_Part_2powm_helper(FLA_Obj A, FLA_Obj Apart[], dim_t sizes[], FLA_S
 						&(Apart[createdObj1]),
 						mode, sizes[mode], sides[mode]);
 
-	printf("printing partitions\n");
-	FLA_Obj_print_tensor(Apart[createdObj0]);
-	printf("\n");
-	FLA_Obj_print_tensor(Apart[createdObj1]);
-	printf("\n\n");
-
-
 	if(mode > 0){
 		FLA_Part_2powm_helper(Apart[createdObj0], Apart, sizes, sides, stride, mode - 1);
 		FLA_Part_2powm_helper(Apart[createdObj1], Apart, sizes, sides, stride, mode - 1);

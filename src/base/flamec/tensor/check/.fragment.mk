@@ -39,7 +39,7 @@
 
 # These two mmakefile variables need to be set in order for the recursive
 # include process to work!
-CURRENT_DIR_NAME := include
+CURRENT_DIR_NAME := check
 CURRENT_SUB_DIRS := 
 
 # Source files local to this fragment

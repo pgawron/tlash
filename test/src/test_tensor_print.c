@@ -42,13 +42,16 @@ void test_tlash_print_routines(dim_t order, dim_t nA, dim_t bA){
   printf("\n\n");
 
   FLA_Obj* buf = FLA_Obj_base_buffer(Ablocked);	
+//  for(i = 0; i < order; i++)
+//    (*buf).permutation[i] = i;
+
   (*buf).permutation[0] = order - 1;
   for(i = 1; i < order; i++)
   	(*buf).permutation[i] = i-1;
 
-  printf("[ %d ", order - 1);  
-  for(i = 1; i < order; i++)
-    printf("%d ", i-1);
+  printf("[ ");  
+  for(i = 0; i < order; i++)
+    printf("%d ", (*buf).permutation[i]);
   printf("] ");
   printf("permuted blocked tensor test\n");  
 
