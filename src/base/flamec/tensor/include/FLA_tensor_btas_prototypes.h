@@ -34,10 +34,10 @@
 
 
 // --- Permute routines --------------------------------------------------------
-FLA_Error FLA_Permute_helper( FLA_Obj A, dim_t permutation[], FLA_Obj* B, dim_t partitionModes[], dim_t repart_mode_index);
+FLA_Error FLA_Permute_helper( FLA_Obj A, dim_t permutation[], FLA_Obj B, dim_t partitionModes[], dim_t repart_mode_index);
 FLA_Error FLA_Permute_hier( FLA_Obj A, dim_t permtuation[], FLA_Obj* B);
 FLA_Error FLA_Permute_single_inplace( FLA_Obj* A, dim_t permutation[]);
-FLA_Error FLA_Permute( FLA_Obj A, dim_t permutation[], FLA_Obj *B );
+FLA_Error FLA_Permute( FLA_Obj A, dim_t permutation[], FLA_Obj B );
 
 // --- Ttm routines --------------------------------------------------------
 FLA_Error FLA_Ttm_single_mode_new( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C, dim_t repart_mode );
@@ -54,7 +54,7 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 FLA_Error FLA_Sttsm( FLA_Obj alpha, FLA_Obj A, FLA_Obj beta, FLA_Obj B, FLA_Obj C );
 
 // --- Copy_col routine --------------------------------------------------------
-FLA_Error TLA_Copy_col_mode(FLA_Obj A, dim_t mode_A, FLA_Obj* B, dim_t mode_B);
+FLA_Error TLA_Copy_col_mode(FLA_Obj A, dim_t mode_A, FLA_Obj B, dim_t mode_B);
 
 // --- check routine prototypes ------------------------------------------------
 

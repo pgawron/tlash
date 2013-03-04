@@ -32,4 +32,4 @@
 
 #include "FLAME.h"
 
-FLA_Error FLA_Permute(FLA_Obj A, dim_t permutation[], FLA_Obj B);
+FLA_Error TLA_Copy_col_mode(FLA_Obj A, dim_t mode_A, FLA_Obj B, dim_t mode_B);

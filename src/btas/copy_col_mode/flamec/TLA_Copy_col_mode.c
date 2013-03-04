@@ -30,6 +30,29 @@
    Austin TX 78712
 */
 
-#include "FLAME.h"
+#include "TLA_Copy_col_mode.h"
 
-FLA_Error FLA_Permute(FLA_Obj A, dim_t permutation[], FLA_Obj B);
+FLA_Error TLA_Copy_col_mode(FLA_Obj A, dim_t mode_A, FLA_Obj B, dim_t mode_B){
+	dim_t i;
+	dim_t stride_A = FLA_Obj_dimstride(A,mode_A);
+	dim_t stride_B = FLA_Obj_dimstride(B,mode_B);
+
+	/*
+	 *	Replace the following with better routine
+	 */
+	dim_t dt_A = FLA_Obj_datatype(A);
+	if(dt_A == FLA_DOUBLE){
+		double* buf_A = FLA_Obj_tensor_buffer_at_view(A);
+		double* buf_B = FLA_Obj_tensor_buffer_at_view(B);
+		for(i = 0; i < FLA_Obj_dimsize(A,mode_A); i++){
+			buf_B[i*stride_B] = buf_A[i*stride_A];
+		}
+	}else{
+		FLA_Obj* buf_A = FLA_Obj_tensor_buffer_at_view(A);
+		FLA_Obj* buf_B = FLA_Obj_tensor_buffer_at_view(B);
+		for(i = 0; i < FLA_Obj_dimsize(A,mode_A); i++){
+			buf_B[i*stride_B] = buf_A[i*stride_A];
+		}
+	}
+	return FLA_SUCCESS;
+}
