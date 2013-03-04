@@ -80,16 +80,9 @@ void test_sttsm(int m, int nA, int nC, int bA, int bC, double* elapsedTime){
   initSymmTensor(m, cSize, bC, &C);
   setSymmTensorToZero(C);
 
-  double startTime = FLA_Clock();
-  FLA_Sttsm(alpha, A, beta, B, C);
-  double endTime = FLA_Clock();
-
-  *elapsedTime = endTime - startTime;
-
-
 	printf("A tensor\n");
 	printf("a = tensor([");
-	FLA_Obj_print_flat_tensor(A);
+	FLA_Obj_print_tensor(A);
 	printf("],[");
 	for(i = 0; i < FLA_Obj_order(A); i++)
 		printf("%d ", FLA_Obj_dimsize(((FLA_Obj*)(FLA_Obj_base_buffer(A)))[0],i) * FLA_Obj_dimsize(A,i));
@@ -97,15 +90,26 @@ void test_sttsm(int m, int nA, int nC, int bA, int bC, double* elapsedTime){
 
 	printf("B tensor\n");
 	printf("b = reshape([");
-	FLA_Obj_print_flat_tensor(B);
+	FLA_Obj_print_tensor(B);
 	printf("],[");
 	for(i = 0; i < FLA_Obj_order(B); i++)
 		printf("%d ", FLA_Obj_dimsize(((FLA_Obj*)(FLA_Obj_base_buffer(B)))[0],i) * FLA_Obj_dimsize(B,i));
 	printf("]);\n\n");
 
+	printf("C\n");
+	FLA_Obj_print_tensor(C);
+	
+  double startTime = FLA_Clock();
+  FLA_Sttsm(alpha, A, beta, B, C);
+  double endTime = FLA_Clock();
+
+  *elapsedTime = endTime - startTime;
+
+
+
 	printf("c tensor\n");
 	printf("c = tensor([");
-	FLA_Obj_print_flat_tensor(C);
+	FLA_Obj_print_tensor(C);
 	printf("],[");
 	for(i = 0; i < FLA_Obj_order(C); i++)
 		printf("%d ", FLA_Obj_dimsize(((FLA_Obj*)(FLA_Obj_base_buffer(C)))[0],i) * FLA_Obj_dimsize(C,i));

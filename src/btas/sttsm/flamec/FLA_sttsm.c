@@ -125,7 +125,38 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 			FLA_Set_zero_tensor(X);
 			//End X setup
 
+			printf("\n\nMultiply happening\n");
+			printf("a = tensor([");
+			FLA_Obj_print_tensor(A);
+			printf("],[");
+			for(i = 0; i < FLA_Obj_order(A); i++)
+				printf("%d ", FLA_Obj_dimsize(((FLA_Obj*)(FLA_Obj_base_buffer(A)))[0],i) * FLA_Obj_dimsize(A,i));
+			printf("]);\n\n");
+			
+			printf("\ntimes %d\n", mode);
+			printf("b1 = reshape([");
+			FLA_Obj_print_tensor(B1);
+			printf("],[");
+			printf("%d ", 2);
+			printf("%d ", 4);
+			printf("]);\n\n");
+			
+			printf("preX = tensor([");
+			FLA_Obj_print_tensor(X);
+			printf("],[");
+			for(i = 0; i < FLA_Obj_order(X); i++)
+				printf("%d ", FLA_Obj_dimsize(((FLA_Obj*)(FLA_Obj_base_buffer(X)))[0],i) * FLA_Obj_dimsize(X,i));
+			printf("]);\n\n");
+			
 			FLA_Ttm_single_mode(alpha, A, mode, beta, B1, X);
+
+			printf("postX = tensor([");
+			FLA_Obj_print_tensor(X);
+			printf("],[");
+			for(i = 0; i < FLA_Obj_order(X); i++)
+				printf("%d ", FLA_Obj_dimsize(((FLA_Obj*)(FLA_Obj_base_buffer(X)))[0],i) * FLA_Obj_dimsize(X,i));
+			printf("]);\n\n");
+			
 
 			FLA_Sttsm_single(alpha, X, mode-1, beta, B, C1, loopCount);
 

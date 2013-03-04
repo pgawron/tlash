@@ -222,7 +222,7 @@ FLA_Error FLA_Obj_create_symm_tensor_without_buffer(FLA_Datatype datatype, dim_t
 	memset(curIndex, 0, order * sizeof(dim_t));
 	for(i = 0; i < order; i++)
 		endIndex[i] = nBlksPerMode;
-	updateIndex = order - 1;
+	updateIndex = 0;
 	objLinIndex = 0;
 
 	while(TRUE){
@@ -231,7 +231,8 @@ FLA_Error FLA_Obj_create_symm_tensor_without_buffer(FLA_Datatype datatype, dim_t
 
 		FLA_Obj_create_tensor_without_buffer( datatype, order, sizeBlock, curObj);
 		//Set the offset array (we will use as an index identifier)
-		memcpy(&((curObj->offset)[0]), &(curIndex[0]), order * sizeof(dim_t));
+		memset(&((curObj->offset)[0]), 0, order * sizeof(dim_t));
+		//memcpy(&((curObj->offset)[0]), &(curIndex[0]), order * sizeof(dim_t));
 
 		//Loop update
 		//Update current index
@@ -239,7 +240,7 @@ FLA_Error FLA_Obj_create_symm_tensor_without_buffer(FLA_Datatype datatype, dim_t
 		objLinIndex++;
 		//If we hit the end, loop until we find the index to update
 		while(updateIndex < order && curIndex[updateIndex] == endIndex[updateIndex]){
-			updateIndex--;
+			updateIndex++;
 			if(updateIndex < order)
 				curIndex[updateIndex]++;
 		}
@@ -247,9 +248,9 @@ FLA_Error FLA_Obj_create_symm_tensor_without_buffer(FLA_Datatype datatype, dim_t
 		if(updateIndex >= order)
 			break;
 		//Otherwise, update current index, and reset all others
-		for(i = updateIndex + 1; i < order; i++)
+		for(i = updateIndex - 1; i < order; i--)
 			curIndex[i] = 0;
-		updateIndex = order - 1;
+		updateIndex = 0;
 	}
 
 	//Buffer of tensor blocks created, set the main obj to represent this hierarchy

@@ -122,9 +122,15 @@ void* FLA_Obj_tensor_buffer_at_view( FLA_Obj obj )
 	
 	byte_offset = 0;
 
+//	printf("\ntensor_buffer_at_view\n");
+//	printf("offset: [");
+//	for(i = 0; i < order; i++)
+//		printf(" %d", offset[i]);
+//	printf("] to linIndex: ");
 	for(i = 0; i < order; i++)
 		byte_offset += offset[i] * stride[i];
 	
+//	printf("%lu\n", byte_offset);
 	byte_offset *= elem_size;
 	
 	buffer      = ( char * ) (obj.base)->buffer;

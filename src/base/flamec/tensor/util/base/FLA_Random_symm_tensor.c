@@ -177,7 +177,14 @@ FLA_Error FLA_Obj_create_Random_symm_tensor_data(dim_t b, FLA_Obj obj){
 
 		FLA_Random_dense_symm_tensor(nSymmGroups, symmGroupLens, symmGroups, &tmpBlk);
 		//Fill data
-		uniqueBuffers[count] = FLA_malloc(FLA_Obj_num_elem_alloc(tmpBlk) * sizeof(double));
+//		printf("created temporary block\n");
+//		FLA_Obj_print_tensor(tmpBlk);
+//		printf("\n");
+
+		printf("count: %d, malloc'd: %d\n", count, nUniques);
+		printf("num elem alloc: %d\n", FLA_Obj_num_elem_alloc(tmpBlk));
+		
+		uniqueBuffers[count] = (double*)FLA_malloc(FLA_Obj_num_elem_alloc(tmpBlk) * sizeof(double));
 		memcpy(&(((double*)uniqueBuffers[count])[0]), &(((double*)FLA_Obj_base_buffer(tmpBlk))[0]), FLA_Obj_num_elem_alloc(tmpBlk) * sizeof(double));
 //		uniqueBuffers[count] = tmpBlk.base->buffer;
 //		FLA_Obj blk = ((FLA_Obj*) ((obj.base)->buffer))[count];

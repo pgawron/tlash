@@ -134,6 +134,12 @@ tensor_print: $(TEST_OBJS)
 tensor_part: $(TEST_OBJS)
 		$(LINKER) $(TEST_OBJ_PATH)/test_tensor_part.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_part.x
 
+tensor_permute: $(TEST_OBJS)
+		$(LINKER) $(TEST_OBJ_PATH)/tensor_permute.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_permute.x
+
+tensor_ttm: $(TEST_OBJS)
+		$(LINKER) $(TEST_OBJ_PATH)/tensor_ttm.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_ttm.x
+
 sttsm_dense: $(TEST_OBJS)
 		$(LINKER) $(TEST_OBJ_PATH)/test_sttsm_dense.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm_dense.x
 

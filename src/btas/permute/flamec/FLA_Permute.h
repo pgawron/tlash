@@ -32,4 +32,4 @@
 
 #include "FLAME.h"
 
-FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B);
+FLA_Error FLA_Permute(FLA_Obj A, dim_t permutation[], FLA_Obj* B);
