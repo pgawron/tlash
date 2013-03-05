@@ -245,8 +245,8 @@ FLA_Error FLA_Ttm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FL
 	P.base->elemtype = elemtype;
 	tmpC.base->elemtype = elemtype;
 
-	FLA_Permute(A, permutation, &P);
-	FLA_Permute(C, permutation, &tmpC);
+	FLA_Permute(A, permutation, P);
+	FLA_Permute(C, permutation, tmpC);
 
 	//printf("ttm performed: %d\n", FLA_Ttm_Ops(order, P.size, B.size, mode));
 	//Maybe casting as flash works?
@@ -258,7 +258,7 @@ FLA_Error FLA_Ttm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FL
 	for(i = 0; i < order; i++)
 		ipermutation[permutation[i]] = i;
 
-	FLA_Permute(tmpC, ipermutation, &C);
+	FLA_Permute(tmpC, ipermutation, C);
 
 	FLA_Obj_free_buffer(&tmpC);
 	FLA_Obj_free_without_buffer(&tmpC);
@@ -330,7 +330,7 @@ FLA_Error FLA_Ttm_single_no_permC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj
 	P.base->elemtype = elemtype;
 //	tmpC.base->elemtype = elemtype;
 
-	FLA_Permute(A, permutation, &P);
+	FLA_Permute(A, permutation, P);
 //	FLA_Permute_single(C, permutation, &tmpC);
 
 	//printf("ttm performed: %d\n", FLA_Ttm_Ops(order, P.size, B.size, mode));
@@ -483,7 +483,7 @@ FLA_Error FLA_Ttm_hierAB_single_repart_mode( FLA_Obj alpha, FLA_Obj A, dim_t mod
 	FLA_Obj_attach_buffer_to_tensor(tmpCBuf, order, stride_tmpC, &tmpC);
 	tmpC.base->elemtype = elemtype_C;
 
-	FLA_Permute(C, permutation, &tmpC);
+	FLA_Permute(C, permutation, tmpC);
 	//End Stationry-C code
 
 	//Only symmetric part touched
@@ -520,7 +520,7 @@ FLA_Error FLA_Ttm_hierAB_single_repart_mode( FLA_Obj alpha, FLA_Obj A, dim_t mod
 	for(i = 0; i < order; i++)
 		ipermutation[permutation[i]] = i;
 
-	FLA_Permute(tmpC, ipermutation, &C);
+	FLA_Permute(tmpC, ipermutation, C);
 
 	FLA_Obj_free_buffer(&tmpC);
 	FLA_Obj_free_without_buffer(&tmpC);
