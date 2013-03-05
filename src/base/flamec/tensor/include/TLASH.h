@@ -38,4 +38,7 @@
 #include "FLA_tensor_util_prototypes.h"
 #include "FLA_tensor_btas_prototypes.h"
 
+//Needed supermatrix junk
+#include "FLASH_Queue.h"
+
 #endif

@@ -43,7 +43,7 @@ CURRENT_DIR_NAME := main
 CURRENT_SUB_DIRS := 
 
 # Source files local to this fragment
-LOCAL_SRC_FILES  := FLA_Axpy_to.c FLA_Blocksize.c FLA_Check.c FLA_Copy_to.c FLA_Error.c FLA_Init.c FLA_Lock.c FLA_Memory.c FLA_Misc.c FLA_Obj.c FLA_Param.c FLA_Query.c FLA_View.c
+LOCAL_SRC_FILES  := FLA_Axpy_to.c FLA_Blocksize.c FLA_Check.c FLA_Copy_to.c FLA_Error.c FLA_Init.c FLA_Memory.c FLA_Misc.c FLA_Obj.c FLA_Param.c FLA_Query.c FLA_View.c
 
 # Add the fragment's local source files to the _global_variable_ variable.
 MK_BASE_FLAMEC_SRC += $(addprefix $(PARENT_PATH)/$(CURRENT_DIR_NAME)/, $(LOCAL_SRC_FILES))

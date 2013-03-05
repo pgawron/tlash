@@ -176,15 +176,6 @@ void          FLA_Finalize_numerical_constants( void );
 
 
 
-//------------------------------------------------------------------------------
-
-void          FLA_Lock_init( FLA_Lock* fla_lock_ptr );
-void          FLA_Lock_destroy( FLA_Lock* fla_lock_ptr );
-void          FLA_Lock_acquire( FLA_Lock* fla_lock_ptr );
-void          FLA_Lock_release( FLA_Lock* fla_lock_ptr );
-
-
-
 // -----------------------------------------------------------------------------
 
 void          FLA_Memory_leak_counter_init( void );

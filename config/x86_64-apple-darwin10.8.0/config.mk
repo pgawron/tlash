@@ -105,9 +105,9 @@ EMPTY_FILE := /dev/null
 CC           := gcc
 CPPROCFLAGS  := -DHAVE_CONFIG_H -DBLIS_FROM_LIBFLAME
 CMISCFLAGS   := -std=c99  
-CDBGFLAGS    := -g
+CDBGFLAGS    := -g0
 CWARNFLAGS   := -Wall -Wno-comment
-COPTFLAGS    := -O0
+COPTFLAGS    := -O3
 CVECFLAGS    := 
 
 # Add position-independent code flag if building a dynamic library.
@@ -138,8 +138,8 @@ endif
 #     THIS IS DANGEROUS. THE USER MUST TAKE CARE NOT TO ADD "EXTRA FLAGS"
 #     THAT WOULD DISRUPT THE NUMERICAL PROPERTIES OF SLAMCH/DLAMCH. ***
 ifneq (,)
-CFLAGS       := -ggdb -O0
-CFLAGS_NOOPT := -ggdb -O0
+CFLAGS       := -g -O2
+CFLAGS_NOOPT := -g -O2
 endif
 
 

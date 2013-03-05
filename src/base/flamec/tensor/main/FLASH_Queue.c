@@ -32,6 +32,7 @@
 
 #include "FLAME.h"
 
+
 static unsigned int   flash_queue_stack           = 0;
 static FLA_Bool       flash_queue_enabled         = TRUE;
 
@@ -62,6 +63,16 @@ void FLASH_Queue_end( void )
    return;
 }
 
+FLA_Bool FLASH_Queue_get_enabled( void )
+/*----------------------------------------------------------------------------
+
+   FLASH_Queue_get_enabled
+
+----------------------------------------------------------------------------*/
+{
+   return FALSE;
+}
+
 FLA_Error FLASH_Queue_enable( void )
 /*----------------------------------------------------------------------------
 
@@ -69,9 +80,12 @@ FLA_Error FLASH_Queue_enable( void )
 
 ----------------------------------------------------------------------------*/
 {
+
+   // Raise an exception when SuperMatrix is not configured.
    FLA_Check_error_code( FLA_SUPERMATRIX_NOT_ENABLED );
    return FLA_FAILURE;
 }
+
 
 FLA_Error FLASH_Queue_disable( void )
 /*----------------------------------------------------------------------------
@@ -80,17 +94,8 @@ FLA_Error FLASH_Queue_disable( void )
 
 ----------------------------------------------------------------------------*/
 {
-   flash_queue_enabled = FALSE;   
+   // Allow disabling enqueuing even when SuperMatrix is not configured.
+   flash_queue_enabled = FALSE;
    return FLA_SUCCESS;
 }
 
-FLA_Bool FLASH_Queue_get_enabled( void )
-/*----------------------------------------------------------------------------
-
-   FLASH_Queue_get_enabled
-
-----------------------------------------------------------------------------*/
-{
-   // Return if enabled, but always false if SuperMatrix is not configured.
-   return FALSE;
-}
