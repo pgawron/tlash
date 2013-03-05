@@ -1,0 +1,33 @@
+function [ Bout, Cout, ...
+           Dout, Eout, ...
+           TBout, ...
+           TDout, TEout ] = FLA_QR_2x2( B, C, ...
+                                        D, E, ...
+                                        TB, ...
+                                        TD, TE, nb_alg )
+
+  [ B, TB ] = FLA_QR_UT_blk_var1( B, TB, nb_alg );
+
+    C       = FLA_Apply_Q_UT_blk_var1( B, TB, C );
+
+  [ B, ...
+    D, TD ] = FLA_QR_UT_UD_blk_var1( B, ...
+                                     D, TD, nb_alg );
+ 
+  [ C, ...
+    E ]     = FLA_Apply_Q_UT_UD_blk_var1( D, TD, C, ...
+                                                 E );
+
+  [ E, TE ] = FLA_QR_UT_blk_var1( E, TE, nb_alg );
+
+  Bout = B;
+  Cout = C;
+  Dout = D;
+  Eout = E;
+  
+  TBout = TB;
+  TDout = TD;
+  TEout = TE;
+  
+return
+  

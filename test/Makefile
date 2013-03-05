@@ -66,7 +66,7 @@ CONFIG_MK_FRAGMENT  := $(CONFIG_DIRPATH)/$(HOST)/config.mk
 # present in the master config makefile fragment.
 # CC             := gcc
 # LINKER         := $(CC)
- CFLAGS         := -ggdb -O0 -Wall -Wno-comment
+ CFLAGS         := -g -O0 -Wall -Wno-comment
  LDFLAGS        := 
 # INSTALL_PREFIX := $(HOME)/flame
 
@@ -127,18 +127,6 @@ test_$(FNAME): $(TEST_OBJS)
 
 sttsm: $(TEST_OBJS)
 		$(LINKER) $(TEST_OBJ_PATH)/test_sttsm.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm.x
-
-tensor_print: $(TEST_OBJS)
-		$(LINKER) $(TEST_OBJ_PATH)/test_tensor_print.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_print.x
-
-tensor_part: $(TEST_OBJS)
-		$(LINKER) $(TEST_OBJ_PATH)/test_tensor_part.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_part.x
-
-tensor_permute: $(TEST_OBJS)
-		$(LINKER) $(TEST_OBJ_PATH)/tensor_permute.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_permute.x
-
-tensor_ttm: $(TEST_OBJS)
-		$(LINKER) $(TEST_OBJ_PATH)/tensor_ttm.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_ttm.x
 
 sttsm_dense: $(TEST_OBJS)
 		$(LINKER) $(TEST_OBJ_PATH)/test_sttsm_dense.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm_dense.x

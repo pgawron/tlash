@@ -89,7 +89,6 @@ void FLASH_Trsm_cntl_finalize( void );
 
 
 // --- LAPACK-level prototypes -------------------------------------------------
-/*
 void FLASH_Apply_pivots_cntl_init( void );
 void FLASH_Chol_cntl_init( void );
 void FLASH_LU_nopiv_cntl_init( void );
@@ -143,4 +142,4 @@ void FLASH_Apply_Q_UT_inc_cntl_finalize( void );
 void FLASH_Apply_CAQ_UT_inc_cntl_finalize( void );
 void FLASH_Apply_QUD_UT_inc_cntl_finalize( void );
 void FLASH_Eig_gest_cntl_finalize( void );
-*/
+

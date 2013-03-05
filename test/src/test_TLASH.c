@@ -128,7 +128,7 @@ void permute_test(){
   dim_t B_order;
   dim_t B_size[3];
 
-  //FLA_Permute(permutation, A.order, blk_A_size, blk_A, &B_order, &B_size, &blk_B);
+  FLA_Permute(permutation, A.order, blk_A_size, blk_A, &B_order, &B_size, &blk_B);
   
   printView("B000", blk_B[0]);
   FLA_Obj_show("data:", blk_B[0], "%d", "");

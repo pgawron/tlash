@@ -137,6 +137,11 @@ dim_t FLA_Obj_elem_size( FLA_Obj obj )
   return elem_size;
 }
 
+dim_t FLA_Obj_order( FLA_Obj obj )
+{
+  return obj.order;
+}
+
 dim_t FLA_Obj_length( FLA_Obj obj )
 {
   return obj.m;
@@ -147,10 +152,31 @@ dim_t FLA_Obj_width( FLA_Obj obj )
   return obj.n;
 }
 
+dim_t* FLA_Obj_size( FLA_Obj obj )
+{
+  dim_t* tmp = FLA_malloc(FLA_MAX_ORDER * sizeof(dim_t));
+  memcpy(&(tmp[0]), &(obj.size[0]), FLA_Obj_order( obj ) * sizeof( dim_t ) );
+  return tmp;
+}
+
+dim_t FLA_Obj_dimsize( FLA_Obj obj, dim_t mode )
+{
+  return obj.size[mode];
+}
+
+dim_t* FLA_Obj_permutation( FLA_Obj obj )
+{
+  dim_t* tmp = FLA_malloc(FLA_MAX_ORDER * sizeof(dim_t));
+  memcpy(&(tmp[0]), &(obj.permutation[0]), FLA_Obj_order( obj ) * sizeof( dim_t ) );
+  return tmp;
+}
+
 FLA_Uplo FLA_Obj_structure( FLA_Obj obj )
 {
   return obj.base->uplo;
 }
+
+
 
 dim_t FLA_Obj_vector_dim( FLA_Obj obj )
 {
@@ -192,6 +218,18 @@ dim_t FLA_Obj_col_stride( FLA_Obj obj )
   return (obj.base)->cs;
 }
 
+dim_t* FLA_Obj_stride( FLA_Obj obj )
+{
+  dim_t* tmp = FLA_malloc(FLA_MAX_ORDER * sizeof(dim_t));
+  memcpy(&(tmp[0]), &(((obj.base)->stride)[0]), FLA_Obj_order( obj ) * sizeof( dim_t ) );
+  return tmp;
+}
+
+dim_t FLA_Obj_dimstride( FLA_Obj obj, dim_t mode )
+{
+  return ((obj.base)->stride)[mode];
+}
+
 dim_t FLA_Obj_row_offset( FLA_Obj obj )
 {
 	return obj.offm;
@@ -201,6 +239,13 @@ dim_t FLA_Obj_row_offset( FLA_Obj obj )
 dim_t FLA_Obj_col_offset( FLA_Obj obj )
 {
 	return obj.offn;
+}
+
+dim_t* FLA_Obj_offset( FLA_Obj obj )
+{
+  dim_t* tmp = FLA_malloc(FLA_MAX_ORDER * sizeof(dim_t));
+  memcpy(&(tmp[0]), &((obj.offset)[0]), FLA_Obj_order( obj ) * sizeof( dim_t ) );
+  return tmp;
 }
 
 dim_t FLA_Obj_base_length( FLA_Obj obj )
@@ -214,6 +259,17 @@ dim_t FLA_Obj_base_width( FLA_Obj obj )
 	return (obj.base)->n;
 }
 
+dim_t* FLA_Obj_base_size( FLA_Obj obj )
+{
+  dim_t* tmp = FLA_malloc(FLA_MAX_ORDER * sizeof(dim_t));
+  memcpy(&(tmp[0]), &(((obj.base)->size)[0]), FLA_Obj_order( obj ) * sizeof( dim_t ) );
+  return tmp;
+}
+
+dim_t FLA_Obj_base_dimsize( FLA_Obj obj, dim_t mode )
+{
+	return ((obj.base)->size)[mode];
+}
 
 dim_t FLA_Obj_num_elem_alloc( FLA_Obj obj )
 {
@@ -247,6 +303,7 @@ void* FLA_Obj_buffer_at_view( FLA_Obj obj )
 
   return ( void* ) ( buffer + byte_offset );
 }
+
 
 
 FLA_Bool FLA_Obj_buffer_is_null( FLA_Obj obj )

@@ -44,7 +44,12 @@ FLA_Error FLASH_Set( FLA_Obj alpha, FLA_Obj H );
 
 FLA_Error FLASH_Obj_create_diag_panel( FLA_Obj A, FLA_Obj* U );
 
+FLA_Error FLASH_LU_find_zero_on_diagonal( FLA_Obj A );
+
 FLA_Error FLASH_Triangularize( FLA_Uplo uplo, FLA_Diag diag, FLA_Obj A );
 FLA_Error FLASH_Hermitianize( FLA_Uplo uplo, FLA_Obj A );
 
+// --- FLASH utility check routine prototypes ----------------------------------
+
+FLA_Error FLASH_LU_find_zero_on_diagonal_check( FLA_Obj A );
 

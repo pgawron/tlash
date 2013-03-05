@@ -59,8 +59,6 @@ void FLA_Cntl_init_flash()
   FLASH_Trmm_cntl_init();
   FLASH_Trsm_cntl_init();
 
-//Original libFLAME lines
-/*
   // LAPACK-level
   // These require level-3 BLAS operations to be initialized.
   FLASH_Apply_pivots_cntl_init();
@@ -92,7 +90,6 @@ void FLA_Cntl_init_flash()
   FLASH_UDdate_UT_cntl_init();
   FLASH_UDdate_UT_inc_cntl_init();
   FLASH_Apply_QUD_UT_inc_cntl_init();
-*/
 }
 
 void FLA_Cntl_finalize_flash()
@@ -121,8 +118,6 @@ void FLA_Cntl_finalize_flash()
   FLASH_Trmm_cntl_finalize();
   FLASH_Trsm_cntl_finalize();
 
-//Original libFLAME lines
-/*
   // LAPACK-level
   FLASH_Apply_pivots_cntl_finalize();
   FLASH_Chol_cntl_finalize();
@@ -152,6 +147,5 @@ void FLA_Cntl_finalize_flash()
   FLASH_UDdate_UT_cntl_finalize();
   FLASH_UDdate_UT_inc_cntl_finalize();
   FLASH_Apply_QUD_UT_inc_cntl_finalize();
-*/
 }
 

@@ -32,73 +32,6 @@
 
 #include "FLA_Permute.h"
 
-
-FLA_Error FLA_Permute_helper(FLA_Obj A, dim_t permutation[], FLA_Obj B, dim_t partitionModes[], dim_t repart_mode_index){
-	dim_t i;
-	dim_t repartModeA = partitionModes[repart_mode_index];
-	
-	dim_t ipermutation[FLA_Obj_order(A)];
-	for(i = 0; i < FLA_Obj_order(A); i++)
-		ipermutation[permutation[i]] = i;
-	
-	dim_t repartModeB = partitionModes[ipermutation[repart_mode_index]];
-
-	//Down to a single column copy, call routine
-	if(repart_mode_index == 0){
-		TLA_Copy_col_mode(A, repartModeA, B, repartModeB);
-		return FLA_SUCCESS;
-	}
-
-	FLA_Obj AT, AB;
-	FLA_Obj A0, A1, A2;
-
-	FLA_Obj BT, BB;
-	FLA_Obj B0, B1, B2;
-
-	FLA_Part_1xmode2(A, &AT,
-						&AB, repartModeA, 0, FLA_TOP);
-
-	FLA_Part_1xmode2(B, &BT,
-						&BB, repartModeB, 0, FLA_TOP);
-
-	while(FLA_Obj_dimsize(AT, repartModeA) < FLA_Obj_dimsize(A, repartModeA)){
-		FLA_Repart_1xmode2_to_1xmode3(AT, &A0,
-										  &A1,
-									  AB, &A2, repartModeA, 1, FLA_BOTTOM);
-		FLA_Repart_1xmode2_to_1xmode3(BT, &B0,
-										  &B1,
-									  BB, &B2, repartModeB, 1, FLA_BOTTOM);
-		/***********************************/
-			FLA_Permute_helper(A1, permutation, B1, partitionModes, repart_mode_index - 1);
-		/***********************************/
-		FLA_Cont_with_1xmode3_to_1xmode2(&AT, A0,
-										  	  A1,
-									  	 &AB, A2, repartModeA, FLA_TOP);
-		FLA_Cont_with_1xmode3_to_1xmode2(&BT, B0,
-										  	  B1,
-									  	 &BB, B2, repartModeB, FLA_TOP);
-	}
-	return FLA_SUCCESS;
-}
-
-//TODO: Fix to account for initially permuted A objs
-//NOTE: ONLY WORKS FOR FLA_SCALAR DATA
-
-FLA_Error FLA_Permute(FLA_Obj A, dim_t permutation[], FLA_Obj B){
-	if(FLA_Obj_elemtype(A) != FLA_SCALAR){
-		printf("FLA_Permute: Only defined for objects with FLA_SCALAR elements");
-		return FLA_SUCCESS;
-	}
-	
-	dim_t order = FLA_Obj_order(A);
-
-
-	dim_t partitionModes[order];
-	memcpy(&(partitionModes[0]), &(A.permutation[0]), order * sizeof(dim_t));
-
-	return FLA_Permute_helper(A, permutation, B, partitionModes, order - 1);
-}
-
 /***
  *
  *  PERMUTES A SCALAR TENSOR ONLY!!!!!
@@ -109,7 +42,6 @@ FLA_Error FLA_Permute(FLA_Obj A, dim_t permutation[], FLA_Obj B){
  *  permuted data? (same with other associated fields.
  *
  ***/
-/*
 FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 	
 	dim_t i;
@@ -128,6 +60,7 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 	nElem_A = FLA_Obj_num_elem_alloc(A);
 	size_B = FLA_Obj_size(*B);
 	dim_t stride_B[order];
+	dim_t offset_B[order];
 
 	dim_t ipermutation[order];
 	for(i = 0; i < order; i++)
@@ -245,4 +178,3 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 
 	return FLA_SUCCESS;
 }
-*/

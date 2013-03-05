@@ -90,14 +90,20 @@ extern "C" {
   // Include prototypes for base FLAME routines.
   #include "FLA_main_prototypes.h"
   #include "FLA_util_base_prototypes.h"
+  #include "FLA_util_lapack_prototypes.h"
+
+  // Include prototypes for TLASH routines.
+  #include "FLA_tensor_prototypes.h"
 
   // Include prototypes for FLAME interfaces to BLAS and LAPACK operations.
   #include "FLA_blas1_prototypes.h"
   #include "FLA_blas2_prototypes.h"
   #include "FLA_blas3_prototypes.h"
+  #include "FLA_lapack_prototypes.h"
 
   // Include prototypes for FLAME implementations of BLAS and LAPACK operations.
   #include "FLA_blas_var_prototypes.h"
+  #include "FLA_lapack_var_prototypes.h"
 
   // Include FLASH headers.
   #include "FLASH.h"
@@ -108,8 +114,8 @@ extern "C" {
   // Include Fortran name-mangling macro (if not already defined).
   #include "FLA_f77_name_mangling.h"
 
-  // Include tensor headers.
-  #include "TLASH.h"
+  // Include prototypes for LAPACK routines.
+  #include "FLA_lapack_f77_prototypes.h"
 
 // End extern "C" construct block.
 #ifdef __cplusplus

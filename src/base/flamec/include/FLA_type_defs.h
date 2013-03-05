@@ -190,9 +190,6 @@ typedef struct FLA_Obj_view
   dim_t         size[FLA_MAX_ORDER];
   dim_t         size_inner[FLA_MAX_ORDER];
   dim_t			permutation[FLA_MAX_ORDER];
-  dim_t			nSymmGroups;
-  dim_t			symmGroupLens[FLA_MAX_ORDER];
-  dim_t			symm_modes[FLA_MAX_ORDER];
 
   FLA_Base_obj* base;
 

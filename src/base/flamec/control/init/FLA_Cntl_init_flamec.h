@@ -89,7 +89,6 @@ void FLA_Trsm_cntl_finalize( void );
 
 
 // --- LAPACK-level prototypes -------------------------------------------------
-/*
 void FLA_Apply_pivots_cntl_init( void );
 void FLA_Chol_cntl_init( void );
 void FLA_LU_piv_cntl_init( void );
@@ -135,4 +134,4 @@ void FLA_Apply_Q2_UT_cntl_finalize( void );
 void FLA_Apply_CAQ2_UT_cntl_finalize( void );
 void FLA_Apply_QUD_UT_cntl_finalize( void );
 void FLA_Eig_gest_cntl_finalize( void );
-*/
+

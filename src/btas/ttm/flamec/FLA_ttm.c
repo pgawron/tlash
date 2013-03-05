@@ -32,160 +32,6 @@
 
 #include "FLAME.h"
 
-//TODO: Handle permuted C
-FLA_Error FLA_Ttm_single_mode_new( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C, dim_t repart_mode )
-{
-	dim_t order = FLA_Obj_order(A);
-	dim_t i;
-
-	dim_t* permA = FLA_Obj_permutation(A);
-	dim_t ipermA[order];
-	for(i = 0; i < order; i++)
-		ipermA[permA[i]] = i;
-
-	if((mode == 0 && repart_mode == 1) || repart_mode == 0){
-		FLA_Obj A_2D, C_2D;
-		dim_t size_A_2D[2];
-		dim_t size_C_2D[2];
-		dim_t stride_A_2D[2];
-		dim_t stride_C_2D[2];
-		dim_t firstModeA, firstModeC;
-
-		if(permA[mode] < permA[repart_mode]){
-			size_A_2D[0] = FLA_Obj_dimsize(A, permA[mode]);
-			size_A_2D[1] = FLA_Obj_dimsize(A, permA[repart_mode]);
-			stride_A_2D[0] = FLA_Obj_dimstride(A, permA[mode]);
-			stride_A_2D[1] = FLA_Obj_dimstride(A, permA[repart_mode]);
-			firstModeA = mode;
-		}else{
-			size_A_2D[0] = FLA_Obj_dimsize(A, permA[repart_mode]);
-			size_A_2D[1] = FLA_Obj_dimsize(A, permA[mode]);
-			stride_A_2D[0] = FLA_Obj_dimstride(A, permA[repart_mode]);
-			stride_A_2D[1] = FLA_Obj_dimstride(A, permA[mode]);
-			firstModeA = repart_mode;
-		}
-	
-		if(mode < repart_mode){
-			size_C_2D[0] = FLA_Obj_dimsize(C, mode);
-			size_C_2D[1] = FLA_Obj_dimsize(C, repart_mode);
-			stride_C_2D[0] = FLA_Obj_dimstride(C, mode);
-			stride_C_2D[1] = FLA_Obj_dimstride(C, repart_mode);
-			firstModeC = mode;
-		}else{
-			size_C_2D[0] = FLA_Obj_dimsize(C, repart_mode);
-			size_C_2D[1] = FLA_Obj_dimsize(C, mode);
-			stride_C_2D[0] = FLA_Obj_dimstride(C, repart_mode);
-			stride_C_2D[1] = FLA_Obj_dimstride(C, mode);
-			firstModeC = repart_mode;
-		}	
-
-		void* A_buf = FLA_Obj_tensor_buffer_at_view(A);
-		void* C_buf = FLA_Obj_tensor_buffer_at_view(C);
-		
-		FLA_Obj_create_without_buffer(FLA_DOUBLE, size_A_2D[0], size_A_2D[1], &A_2D);
-		FLA_Obj_attach_buffer(A_buf, stride_A_2D[0], stride_A_2D[1], &A_2D);
-		
-		FLA_Obj_create_without_buffer(FLA_DOUBLE, size_C_2D[0], size_C_2D[1], &C_2D);
-		FLA_Obj_attach_buffer(C_buf, stride_C_2D[0], stride_C_2D[1], &C_2D);
-
-		/*
-		if(mode < repart_mode){
-			if(permA[mode] < permA[repart_mode]){
-				FLA_Gemm(FLA_NO_TRANSPOSE, FLA_NO_TRANSPOSE, alpha, B, A_2D, beta, C_2D);
-			}else{
-				FLA_Gemm(FLA_TRANSPOSE, FLA_TRANSPOSE, alpha, A_2D, B, beta, C_2D);				
-			}
-		}else {
-			if (permA[mode] < permA[repart_mode]) {
-				FLA_Gemm(FLA_NO_TRANSPOSE, FLA_TRANSPOSE, alpha, B, A_2D, beta, C_2D);
-
-			}else {
-				FLA_Gemm(FLA_NO_TRANSPOSE, FLA_TRANSPOSE, alpha, A_2D, B, beta, C_2D);
-			}
-
-		}
-		*/
-
-		if (mode < repart_mode) {
-			if(firstModeC == firstModeA){
-				FLA_Gemm(FLA_NO_TRANSPOSE, FLA_NO_TRANSPOSE, alpha, B, A_2D, beta, C_2D);				
-			}else{
-				FLA_Gemm(FLA_NO_TRANSPOSE, FLA_TRANSPOSE, alpha, B, A_2D, beta, C_2D);				
-			}
-		}else{
-			if(firstModeC == firstModeA){
-				FLA_Gemm(FLA_NO_TRANSPOSE, FLA_TRANSPOSE, alpha, A_2D, B, beta, C_2D);				
-			}else{
-				FLA_Gemm(FLA_TRANSPOSE, FLA_TRANSPOSE, alpha, A_2D, B, beta, C_2D);				
-			}
-		}
-		/*
-		if(permA[mode] < permA[repart_mode]){
-			if(mode >= repart_mode)
-				FLA_Gemm(FLA_NO_TRANSPOSE, FLA_NO_TRANSPOSE, alpha, B, A_2D, beta, C_2D);
-			else
-				FLA_Gemm(FLA_NO_TRANSPOSE, FLA_TRANSPOSE, alpha, B, A_2D, beta, C_2D);
-		}else{
-			if(mode >= repart_mode)
-				FLA_Gemm(FLA_TRANSPOSE, FLA_TRANSPOSE, alpha, A_2D, B, beta, C_2D);
-			else
-				FLA_Gemm(FLA_NO_TRANSPOSE, FLA_TRANSPOSE, alpha, A_2D, B, beta, C_2D);
-		}
-		*/
-		FLA_Obj_free_without_buffer(&A_2D);
-		FLA_Obj_free_without_buffer(&C_2D);
-	}else{
-	
-		//FOR
-		FLA_Obj AT, AB;
-		FLA_Obj A0, A1, A2;
-		FLA_Obj CT, CB;
-		FLA_Obj C0, C1, C2;
-
-		FLA_Part_1xmode2(A, &AT,
-							&AB, permA[repart_mode], 0, FLA_TOP);	
-		FLA_Part_1xmode2(C, &CT,
-							&CB, repart_mode, 0, FLA_TOP);	
-		//Only symmetric part touched
-		//Ponder this
-		while(FLA_Obj_dimsize(CT, repart_mode) < FLA_Obj_dimsize(C, repart_mode)){
-
-			//Check this mathc out.  I think it is correct, Mode-1 of B matches mode-n of A
-			//Mode-0 of B matches Mode-n of C
-			dim_t b = 1;
-			FLA_Repart_1xmode2_to_1xmode3(AT, &A0,
-										/**/ /**/
-											  &A1,
-										  AB, &A2, permA[repart_mode], b, FLA_BOTTOM); 
-			FLA_Repart_1xmode2_to_1xmode3(CT, &C0,
-										/**/ /**/
-											  &C1,
-										  CB, &C2, repart_mode, b, FLA_BOTTOM);
-
-	/********************/
-			if(mode == repart_mode - 1)
-				FLA_Ttm_single_mode_new(alpha, A1, mode, beta, B, C1, repart_mode - 2);
-			else
-				FLA_Ttm_single_mode_new(alpha, A1, mode, beta, B, C1, repart_mode - 1);
-	/********************/
-
-			FLA_Cont_with_1xmode3_to_1xmode2( &AT, A0,
-												   A1,
-											/********/
-											  &AB, A2, permA[repart_mode], FLA_TOP);
-			FLA_Cont_with_1xmode3_to_1xmode2( &CT, C0,
-												   C1,
-											/********/
-											  &CB, C2, repart_mode, FLA_TOP);
-		}
-	}
-	return FLA_SUCCESS;
-}
-
-/*****************/
- // End new code
-/*****************/
-
 FLA_Error FLA_Ttm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C )
 {
 	FLA_Datatype datatype = FLA_Obj_datatype(A);
@@ -245,8 +91,8 @@ FLA_Error FLA_Ttm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FL
 	P.base->elemtype = elemtype;
 	tmpC.base->elemtype = elemtype;
 
-	FLA_Permute(A, permutation, P);
-	FLA_Permute(C, permutation, tmpC);
+	FLA_Permute_single(A, permutation, &P);
+	FLA_Permute_single(C, permutation, &tmpC);
 
 	//printf("ttm performed: %d\n", FLA_Ttm_Ops(order, P.size, B.size, mode));
 	//Maybe casting as flash works?
@@ -258,7 +104,7 @@ FLA_Error FLA_Ttm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FL
 	for(i = 0; i < order; i++)
 		ipermutation[permutation[i]] = i;
 
-	FLA_Permute(tmpC, ipermutation, C);
+	FLA_Permute_single(tmpC, ipermutation, &C);
 
 	FLA_Obj_free_buffer(&tmpC);
 	FLA_Obj_free_without_buffer(&tmpC);
@@ -278,6 +124,7 @@ FLA_Error FLA_Ttm_single_no_permC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj
 	FLA_Elemtype elemtype = FLA_Obj_elemtype(A);
 	dim_t order = FLA_Obj_order(A);
     dim_t permutation[order];
+	dim_t ipermutation[order];
     dim_t i;
 	permutation[0] = mode;
 	dim_t* size_A;
@@ -330,7 +177,7 @@ FLA_Error FLA_Ttm_single_no_permC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj
 	P.base->elemtype = elemtype;
 //	tmpC.base->elemtype = elemtype;
 
-	FLA_Permute(A, permutation, P);
+	FLA_Permute_single(A, permutation, &P);
 //	FLA_Permute_single(C, permutation, &tmpC);
 
 	//printf("ttm performed: %d\n", FLA_Ttm_Ops(order, P.size, B.size, mode));
@@ -402,7 +249,7 @@ FLA_Error FLA_Ttm( FLA_Obj alpha, FLA_Obj A, dim_t nModes, dim_t mode[nModes], F
 		FLA_Obj_create_tensor_without_buffer(datatype, order, size_tmpC, &tmpC);
 	    FLA_Obj_attach_buffer_to_tensor(data, order, stride_tmpC, &tmpC);
 
-		FLA_Ttm_single_mode(alpha, tmpA, mode[i], beta, B[i], tmpC);
+		FLA_Ttm_single(alpha, tmpA, mode[i], beta, B[i], tmpC);
 
 		//Make tmpA = tmpC and clear tmpC for next iteration
 		memcpy(&(tmpA.size[0]), &(tmpC.size[0]), order * sizeof(dim_t));
@@ -483,7 +330,7 @@ FLA_Error FLA_Ttm_hierAB_single_repart_mode( FLA_Obj alpha, FLA_Obj A, dim_t mod
 	FLA_Obj_attach_buffer_to_tensor(tmpCBuf, order, stride_tmpC, &tmpC);
 	tmpC.base->elemtype = elemtype_C;
 
-	FLA_Permute(C, permutation, tmpC);
+	FLA_Permute_single(C, permutation, &tmpC);
 	//End Stationry-C code
 
 	//Only symmetric part touched
@@ -503,7 +350,10 @@ FLA_Error FLA_Ttm_hierAB_single_repart_mode( FLA_Obj alpha, FLA_Obj A, dim_t mod
 										  &A1,
 									  AB, &A2, repart_mode, b, FLA_BOTTOM);
 
-		FLA_Ttm_single_mode(alpha, A1, mode, beta, B1, C);
+		//Stationary C code
+		FLA_Ttm_single_mode_no_permC(alpha, A1, mode, beta, B1, tmpC);
+		//Other variants
+		//FLA_Ttm_single_mode(alpha, A1, mode, beta, B1, C);
 
 		FLA_Cont_with_1xmode3_to_1xmode2( &AT, A0,
 											   A1,
@@ -520,7 +370,7 @@ FLA_Error FLA_Ttm_hierAB_single_repart_mode( FLA_Obj alpha, FLA_Obj A, dim_t mod
 	for(i = 0; i < order; i++)
 		ipermutation[permutation[i]] = i;
 
-	FLA_Permute(tmpC, ipermutation, C);
+	FLA_Permute_single(tmpC, ipermutation, &C);
 
 	FLA_Obj_free_buffer(&tmpC);
 	FLA_Obj_free_without_buffer(&tmpC);
@@ -629,18 +479,7 @@ FLA_Error FLA_Ttm_single_mode( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj bet
 	FLA_Elemtype elemtype_C = FLA_Obj_elemtype(C);
 
 	if(elemtype_A == FLA_SCALAR && elemtype_B == FLA_SCALAR && elemtype_C == FLA_SCALAR){
-//		printf("\n\nA:\n");
-//		FLA_Obj_print_tensor(A);
-//		printf("\ntimes%d B:\n", mode);
-//		FLA_Obj_print_tensor(B);
-//		printf("\nC:\n");
-//		FLA_Obj_print_tensor(C);
-		if(mode == FLA_Obj_order(A) - 1)
-			FLA_Ttm_single_mode_new(alpha, A, mode, beta, B, C, FLA_Obj_order(A) - 2);
-		else
-			FLA_Ttm_single_mode_new(alpha, A, mode, beta, B, C, FLA_Obj_order(A) - 1);
-//		printf("\npostC:\n");
-//		FLA_Obj_print_tensor(C);
+		FLA_Ttm_single(alpha, A, mode, beta, B, C);
 	}else{
 		dim_t i;
 		dim_t singleElemA = TRUE;
@@ -674,20 +513,17 @@ FLA_Error FLA_Ttm_single_mode( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj bet
 			dim_t linIndex = 0;
 			dim_t order = FLA_Obj_order(C);
 			FLA_TIndex_to_LinIndex(order, &(((C.base)->stride)[0]), &(C.offset[0]), &linIndex);
-			//FLA_Ttm_single_mode(alpha, A, mode, beta, B, ((FLA_Obj*)buf_C)[linIndex]);
-			FLA_Ttm_single_mode(alpha, A, mode, beta, B, *((FLA_Obj*)FLA_Obj_tensor_buffer_at_view(C)));
+			FLA_Ttm_single_mode(alpha, A, mode, beta, B, ((FLA_Obj*)buf_C)[linIndex]);
 		}else if(singleElemA && elemtype_A != FLA_SCALAR){
 			dim_t linIndex = 0;
 			dim_t order = FLA_Obj_order(A);
 			FLA_TIndex_to_LinIndex(order, &(((A.base)->stride)[0]), &(A.offset[0]), &linIndex);
-			//FLA_Ttm_single_mode(alpha, ((FLA_Obj*)buf_A)[linIndex], mode, beta, B, C);
-			FLA_Ttm_single_mode(alpha, *((FLA_Obj*)FLA_Obj_tensor_buffer_at_view(A)), mode, beta, B, C);
+			FLA_Ttm_single_mode(alpha, ((FLA_Obj*)buf_A)[linIndex], mode, beta, B, C);
 		}else if(singleElemB && elemtype_B != FLA_SCALAR){
 			dim_t linIndex = 0;
 			dim_t order = FLA_Obj_order(B);
 			FLA_TIndex_to_LinIndex(order, &(((B.base)->stride)[0]), &(B.offset[0]), &linIndex);
-			//FLA_Ttm_single_mode(alpha, A, mode, beta, ((FLA_Obj*)buf_B)[linIndex], C);
-			FLA_Ttm_single_mode(alpha, A, mode, beta, *((FLA_Obj*)FLA_Obj_buffer_at_view(B)), C);
+			FLA_Ttm_single_mode(alpha, A, mode, beta, ((FLA_Obj*)buf_B)[linIndex], C);
 		}else{
 			if(elemtype_C != FLA_SCALAR){
 				if(elemtype_B != FLA_SCALAR){
