@@ -1,0 +1,403 @@
+/*
+   libflame
+   An object-based infrastructure for developing high-performance
+   dense linear algebra libraries.
+
+   Copyright (C) 2011, The University of Texas
+
+   libflame is free software; you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as
+   published by the Free Software Foundation; either version 2.1 of
+   the License, or (at your option) any later version.
+
+   libflame is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+   Lesser General Public License for more details.
+
+   You should have received a copy of the GNU Lesser General Public
+   License along with libflame; if you did not receive a copy, see
+   http://www.gnu.org/licenses/.
+
+   For more information, please contact us at flame@cs.utexas.edu or
+   send mail to:
+
+   Field G. Van Zee and/or
+   Robert A. van de Geijn
+   The University of Texas at Austin
+   Department of Computer Sciences
+   1 University Station C0500
+   Austin TX 78712
+*/
+
+#include "FLAME.h"
+
+FLA_Error FLA_Sylv_hh_opt_var1( FLA_Obj isgn, FLA_Obj A, FLA_Obj B, FLA_Obj C, FLA_Obj scale )
+{
+  FLA_Datatype datatype;
+  int          m_C, n_C;
+  int          rs_A, cs_A;
+  int          rs_B, cs_B;
+  int          rs_C, cs_C;
+  int          info;
+
+  datatype = FLA_Obj_datatype( A );
+
+  rs_A     = FLA_Obj_row_stride( A );
+  cs_A     = FLA_Obj_col_stride( A );
+
+  rs_B     = FLA_Obj_row_stride( B );
+  cs_B     = FLA_Obj_col_stride( B );
+
+  m_C      = FLA_Obj_length( C );
+  n_C      = FLA_Obj_width( C );
+  rs_C     = FLA_Obj_row_stride( C );
+  cs_C     = FLA_Obj_col_stride( C );
+  
+
+  switch ( datatype )
+  {
+    case FLA_FLOAT:
+    {
+      int*   buff_isgn  = FLA_INT_PTR( isgn );
+      float* buff_A     = FLA_FLOAT_PTR( A );
+      float* buff_B     = FLA_FLOAT_PTR( B );
+      float* buff_C     = FLA_FLOAT_PTR( C );
+      float* buff_scale = FLA_FLOAT_PTR( scale );
+      float  sgn        = ( float ) *buff_isgn;
+
+      FLA_Sylv_hh_ops_var1( sgn,
+                            m_C,
+                            n_C,
+                            buff_A, rs_A, cs_A,
+                            buff_B, rs_B, cs_B,
+                            buff_C, rs_C, cs_C,
+                            buff_scale,
+                            &info );
+
+      break;
+    }
+
+    case FLA_DOUBLE:
+    {
+      int*    buff_isgn  = FLA_INT_PTR( isgn );
+      double* buff_A     = FLA_DOUBLE_PTR( A );
+      double* buff_B     = FLA_DOUBLE_PTR( B );
+      double* buff_C     = FLA_DOUBLE_PTR( C );
+      double* buff_scale = FLA_DOUBLE_PTR( scale );
+      double  sgn        = ( double ) *buff_isgn;
+
+      FLA_Sylv_hh_opd_var1( sgn,
+                            m_C,
+                            n_C,
+                            buff_A, rs_A, cs_A,
+                            buff_B, rs_B, cs_B,
+                            buff_C, rs_C, cs_C,
+                            buff_scale,
+                            &info );
+
+      break;
+    }
+
+    case FLA_COMPLEX:
+    {
+      int*      buff_isgn  = FLA_INT_PTR( isgn );
+      scomplex* buff_A     = FLA_COMPLEX_PTR( A );
+      scomplex* buff_B     = FLA_COMPLEX_PTR( B );
+      scomplex* buff_C     = FLA_COMPLEX_PTR( C );
+      scomplex* buff_scale = FLA_COMPLEX_PTR( scale );
+      float     sgn        = ( float ) *buff_isgn;
+
+      FLA_Sylv_hh_opc_var1( sgn,
+                            m_C,
+                            n_C,
+                            buff_A, rs_A, cs_A,
+                            buff_B, rs_B, cs_B,
+                            buff_C, rs_C, cs_C,
+                            buff_scale,
+                            &info );
+
+      break;
+    }
+
+    case FLA_DOUBLE_COMPLEX:
+    {
+      int*      buff_isgn  = FLA_INT_PTR( isgn );
+      dcomplex* buff_A     = FLA_DOUBLE_COMPLEX_PTR( A );
+      dcomplex* buff_B     = FLA_DOUBLE_COMPLEX_PTR( B );
+      dcomplex* buff_C     = FLA_DOUBLE_COMPLEX_PTR( C );
+      dcomplex* buff_scale = FLA_DOUBLE_COMPLEX_PTR( scale );
+      double    sgn        = ( double ) *buff_isgn;
+
+      FLA_Sylv_hh_opz_var1( sgn,
+                            m_C,
+                            n_C,
+                            buff_A, rs_A, cs_A,
+                            buff_B, rs_B, cs_B,
+                            buff_C, rs_C, cs_C,
+                            buff_scale,
+                            &info );
+
+      break;
+    }
+  }
+
+  return FLA_SUCCESS;
+}
+
+
+
+FLA_Error FLA_Sylv_hh_ops_var1( float sgn,
+                                int m_C,
+                                int n_C,
+                                float* buff_A, int rs_A, int cs_A,
+                                float* buff_B, int rs_B, int cs_B,
+                                float* buff_C, int rs_C, int cs_C,
+                                float* buff_scale,
+                                int* info )
+{
+  int l, k;
+
+  for ( l = n_C - 1; l >= 0; l-- )
+  {
+    for ( k = 0; k < m_C; k++ )
+    {
+      float*    a01      = buff_A + (k  )*cs_A + (0  )*rs_A;
+      float*    b12t     = buff_B + (l+1)*cs_B + (l  )*rs_B;
+      float*    c01      = buff_C + (l  )*cs_C + (0  )*rs_C;
+      float*    c12t     = buff_C + (l+1)*cs_C + (k  )*rs_C;
+      float*    alpha11  = buff_A + (k  )*cs_A + (k  )*rs_A;
+      float*    beta11   = buff_B + (l  )*cs_B + (l  )*rs_B;
+      float*    ckl      = buff_C + (l  )*cs_C + (k  )*rs_C;
+      float     suml;
+      float     sumr;
+      float     vec;
+      float     a11;
+      float     x11;
+
+      int       m_behind = k;
+      int       n_behind = n_C - l - 1;
+
+      /*------------------------------------------------------------*/
+
+      bli_sdot( BLIS_CONJUGATE,
+                m_behind,
+                a01, rs_A,
+                c01, rs_C,
+                &suml );
+
+      bli_sdot( BLIS_CONJUGATE,
+                n_behind,
+                c12t, cs_C,
+                b12t, cs_B,
+                &sumr );
+
+      vec = (*ckl) - ( suml + sgn * sumr );
+
+      a11 = (*alpha11) + sgn * (*beta11);
+
+      bli_sdiv3( &vec, &a11, &x11 );
+
+      *ckl = x11;
+
+      /*------------------------------------------------------------*/
+
+    }
+  }
+
+  return FLA_SUCCESS;
+}
+
+
+
+FLA_Error FLA_Sylv_hh_opd_var1( double sgn,
+                                int m_C,
+                                int n_C,
+                                double* buff_A, int rs_A, int cs_A,
+                                double* buff_B, int rs_B, int cs_B,
+                                double* buff_C, int rs_C, int cs_C,
+                                double* buff_scale,
+                                int* info )
+{
+  int l, k;
+
+  for ( l = n_C - 1; l >= 0; l-- )
+  {
+    for ( k = 0; k < m_C; k++ )
+    {
+      double*   a01      = buff_A + (k  )*cs_A + (0  )*rs_A;
+      double*   b12t     = buff_B + (l+1)*cs_B + (l  )*rs_B;
+      double*   c01      = buff_C + (l  )*cs_C + (0  )*rs_C;
+      double*   c12t     = buff_C + (l+1)*cs_C + (k  )*rs_C;
+      double*   alpha11  = buff_A + (k  )*cs_A + (k  )*rs_A;
+      double*   beta11   = buff_B + (l  )*cs_B + (l  )*rs_B;
+      double*   ckl      = buff_C + (l  )*cs_C + (k  )*rs_C;
+      double    suml;
+      double    sumr;
+      double    vec;
+      double    a11;
+      double    x11;
+
+      int       m_behind = k;
+      int       n_behind = n_C - l - 1;
+
+      /*------------------------------------------------------------*/
+
+      bli_ddot( BLIS_CONJUGATE,
+                m_behind,
+                a01, rs_A,
+                c01, rs_C,
+                &suml );
+
+      bli_ddot( BLIS_CONJUGATE,
+                n_behind,
+                c12t, cs_C,
+                b12t, cs_B,
+                &sumr );
+
+      vec = (*ckl) - ( suml + sgn * sumr );
+
+      a11 = (*alpha11) + sgn * (*beta11);
+
+      bli_ddiv3( &vec, &a11, &x11 );
+
+      *ckl = x11;
+
+      /*------------------------------------------------------------*/
+
+    }
+  }
+
+  return FLA_SUCCESS;
+}
+
+
+
+FLA_Error FLA_Sylv_hh_opc_var1( float sgn,
+                                int m_C,
+                                int n_C,
+                                scomplex* buff_A, int rs_A, int cs_A,
+                                scomplex* buff_B, int rs_B, int cs_B,
+                                scomplex* buff_C, int rs_C, int cs_C,
+                                scomplex* buff_scale,
+                                int* info )
+{
+  int l, k;
+
+  for ( l = n_C - 1; l >= 0; l-- )
+  {
+    for ( k = 0; k < m_C; k++ )
+    {
+      scomplex* a01      = buff_A + (k  )*cs_A + (0  )*rs_A;
+      scomplex* b12t     = buff_B + (l+1)*cs_B + (l  )*rs_B;
+      scomplex* c01      = buff_C + (l  )*cs_C + (0  )*rs_C;
+      scomplex* c12t     = buff_C + (l+1)*cs_C + (k  )*rs_C;
+      scomplex* alpha11  = buff_A + (k  )*cs_A + (k  )*rs_A;
+      scomplex* beta11   = buff_B + (l  )*cs_B + (l  )*rs_B;
+      scomplex* ckl      = buff_C + (l  )*cs_C + (k  )*rs_C;
+      scomplex  suml;
+      scomplex  sumr;
+      scomplex  vec;
+      scomplex  a11;
+      scomplex  x11;
+
+      int       m_behind = k;
+      int       n_behind = n_C - l - 1;
+
+      /*------------------------------------------------------------*/
+
+      bli_cdot( BLIS_CONJUGATE,
+                m_behind,
+                a01, rs_A,
+                c01, rs_C,
+                &suml );
+
+      bli_cdot( BLIS_CONJUGATE,
+                n_behind,
+                c12t, cs_C,
+                b12t, cs_B,
+                &sumr );
+
+      vec.real = ckl->real - ( suml.real + sgn *  sumr.real );
+      vec.imag = ckl->imag - ( suml.imag + sgn * -sumr.imag );
+
+      a11.real =  alpha11->real + sgn *  beta11->real;
+      a11.imag = -alpha11->imag + sgn * -beta11->imag;
+
+      bli_cdiv3( &vec, &a11, &x11 );
+
+      *ckl = x11;
+
+      /*------------------------------------------------------------*/
+
+    }
+  }
+
+  return FLA_SUCCESS;
+}
+
+
+
+FLA_Error FLA_Sylv_hh_opz_var1( double sgn,
+                                int m_C,
+                                int n_C,
+                                dcomplex* buff_A, int rs_A, int cs_A,
+                                dcomplex* buff_B, int rs_B, int cs_B,
+                                dcomplex* buff_C, int rs_C, int cs_C,
+                                dcomplex* buff_scale,
+                                int* info )
+{
+  int l, k;
+
+  for ( l = n_C - 1; l >= 0; l-- )
+  {
+    for ( k = 0; k < m_C; k++ )
+    {
+      dcomplex* a01      = buff_A + (k  )*cs_A + (0  )*rs_A;
+      dcomplex* b12t     = buff_B + (l+1)*cs_B + (l  )*rs_B;
+      dcomplex* c01      = buff_C + (l  )*cs_C + (0  )*rs_C;
+      dcomplex* c12t     = buff_C + (l+1)*cs_C + (k  )*rs_C;
+      dcomplex* alpha11  = buff_A + (k  )*cs_A + (k  )*rs_A;
+      dcomplex* beta11   = buff_B + (l  )*cs_B + (l  )*rs_B;
+      dcomplex* ckl      = buff_C + (l  )*cs_C + (k  )*rs_C;
+      dcomplex  suml;
+      dcomplex  sumr;
+      dcomplex  vec;
+      dcomplex  a11;
+      dcomplex  x11;
+
+      int       m_behind = k;
+      int       n_behind = n_C - l - 1;
+
+      /*------------------------------------------------------------*/
+
+      bli_zdot( BLIS_CONJUGATE,
+                m_behind,
+                a01, rs_A,
+                c01, rs_C,
+                &suml );
+
+      bli_zdot( BLIS_CONJUGATE,
+                n_behind,
+                c12t, cs_C,
+                b12t, cs_B,
+                &sumr );
+
+      vec.real = ckl->real - ( suml.real + sgn *  sumr.real );
+      vec.imag = ckl->imag - ( suml.imag + sgn * -sumr.imag );
+
+      a11.real =  alpha11->real + sgn *  beta11->real;
+      a11.imag = -alpha11->imag + sgn * -beta11->imag;
+
+      bli_zdiv3( &vec, &a11, &x11 );
+
+      *ckl = x11;
+
+      /*------------------------------------------------------------*/
+
+    }
+  }
+
+  return FLA_SUCCESS;
+}
+
