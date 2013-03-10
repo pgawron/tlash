@@ -48,7 +48,6 @@ FLA_Error FLA_Obj_create_tensor( FLA_Datatype datatype, dim_t order, dim_t size[
   return FLA_SUCCESS;
 }
 
-
 FLA_Error FLA_Obj_create_blocked_tensor_ext( FLA_Datatype datatype, FLA_Elemtype elemtype, dim_t order, dim_t size[order], dim_t size_inner[order], dim_t stride[order], dim_t blkSize[order], FLA_Obj *obj )
 {
   dim_t i,j;
@@ -153,7 +152,7 @@ FLA_Error FLA_Obj_attach_buffer_to_tensor( void *buffer, dim_t order, dim_t stri
 }
 
 
-FLA_Error FLA_Obj_blocked_symm_free_buffer( FLA_Obj *obj)
+FLA_Error FLA_Obj_blocked_sym_tensor_free_buffer( FLA_Obj *obj)
 {
 	dim_t order = FLA_Obj_order(*obj);
 	dim_t* endIndex = FLA_Obj_size(*obj);
@@ -189,7 +188,7 @@ FLA_Error FLA_Obj_blocked_symm_free_buffer( FLA_Obj *obj)
 	return FLA_SUCCESS;
 }
 
-FLA_Error FLA_Obj_create_symm_tensor_without_buffer(FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t blkSize, FLA_Obj *obj){
+FLA_Error FLA_Obj_create_blocked_sym_tensor_without_buffer(FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t blkSize, FLA_Obj *obj){
 	dim_t i;
 	dim_t nTBlks;
 	dim_t nBlksPerMode;
@@ -201,7 +200,7 @@ FLA_Error FLA_Obj_create_symm_tensor_without_buffer(FLA_Datatype datatype, dim_t
 	dim_t sizeBlock[order];
 
 	if ( FLA_Check_error_level() >= FLA_MIN_ERROR_CHECKING )
-		FLA_Obj_create_symm_tensor_without_buffer_check( datatype, order, size, blkSize, obj );
+		FLA_Obj_create_blocked_sym_tensor_without_buffer_check( datatype, order, size, blkSize, obj );
 
 	//Figure out how many FLA_Objs we need for intermediate level
 	nTBlks = 1;
@@ -272,7 +271,30 @@ FLA_Error FLA_Obj_create_symm_tensor_without_buffer(FLA_Datatype datatype, dim_t
 	return FLA_SUCCESS;
 }
 
-FLA_Error FLA_Obj_attach_buffer_to_symm_tensor( void *buffer[], dim_t order, dim_t stride[order], FLA_Obj *obj ){
+FLA_Error FLA_Obj_create_blocked_sym_tensor(FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t stride[order], dim_t blkSize, FLA_Obj *obj){
+
+	//First set up the hierarchy without buffers
+	FLA_Obj_create_blocked_sym_tensor_without_buffer(datatype, order, size, blkSize, obj);
+
+	//Set up the data buffers for sym tensor
+	dim_t i;
+	dim_t nBlockElems = 1;
+	for(i = 0; i < order; i++)
+		nBlockElems *= blkSize;
+
+	dim_t nUniques = binomial(order + size[0] - 1,order);
+	void** dataBuffers = (void**)FLA_malloc(nUniques * sizeof(void*));
+
+	for(i = 0; i < nUniques; i++)
+		dataBuffers[i] = (double*)FLA_malloc(nBlockElems * sizeof(double));
+
+	//Attach empty buffers to the sym tensor
+	FLA_Obj_attach_buffer_to_blocked_sym_tensor(dataBuffers, order, stride, obj);
+
+	return FLA_SUCCESS;
+}
+
+FLA_Error FLA_Obj_attach_buffer_to_blocked_sym_tensor( void *buffer[], dim_t order, dim_t stride[order], FLA_Obj *obj ){
 	dim_t i, updateIndex;
 	dim_t curIndex[order];
 	dim_t endIndex[order];

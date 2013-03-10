@@ -32,7 +32,106 @@
 
 #include "FLAME.h"
 
-FLA_Error FLA_Random_dense_symm_tensor(dim_t nSymmGroups, dim_t symmGroupLens[nSymmGroups], dim_t** symmetries, FLA_Obj *obj){
+int compare_dim_t(const void* a, const void* b){
+	return ((dim_t*)a)[0] - ((dim_t*)b)[0];
+}
+
+FLA_Bool next_permutation(dim_t nElem, dim_t perm[]){
+	dim_t k = -1;
+	dim_t i;
+
+	for(i = 0; i < nElem - 1; i++)
+		if(perm[i] < perm[i+1])
+			k = i;
+
+	if(k == -1)
+		return FALSE;
+	
+	dim_t l = k+1;
+	for(i = k+1; i < nElem; i++)
+		if(perm[k] < perm[i])
+			l = i;
+
+	dim_t tmp = perm[k];
+	perm[k] = perm[l];
+	perm[l] = tmp;
+
+	qsort(&(perm[k+1]), (nElem - (k+1)), sizeof(dim_t), compare_dim_t);	
+	return TRUE;
+}
+
+FLA_Error FLA_Random_scalar_psym_tensor(FLA_Obj obj){
+	dim_t order = FLA_Obj_order(obj);
+	dim_t* size = FLA_Obj_size(obj);
+	dim_t* stride = FLA_Obj_stride(obj);
+	
+	FLA_Random_tensor(obj);
+
+	FLA_Obj tmpBlk;
+	FLA_Obj_create_tensor(FLA_DOUBLE, FLA_Obj_order(obj), size, stride, &tmpBlk);
+	FLA_Set_zero_tensor(tmpBlk);
+	
+	FLA_Obj permC;
+	FLA_Obj_create_tensor(FLA_DOUBLE, FLA_Obj_order(obj), size, stride, &permC);
+
+	dim_t i,j;
+	dim_t modeOffset = 0;
+	for(i = 0; i < obj.nSymGroups; i++){
+		dim_t lenGroup = obj.symGroupLens[i];
+		if(lenGroup == 1){
+			modeOffset++;
+			continue;
+		}
+
+		dim_t perm[lenGroup];
+		for(j = 0; j < lenGroup; j++)
+			perm[j] = j;
+		
+		//Wrap the sum into a function that blocks, blah blah...
+		double* bufpermC = (double*)FLA_Obj_base_buffer(permC);
+		double* buftmpBlk = (double*)FLA_Obj_base_buffer(tmpBlk);
+		for(j = 0; j < lenGroup; j++)
+			permC.permutation[modeOffset + j] = obj.symModes[modeOffset + perm[j]];
+		FLA_Permute(obj, &(permC.permutation[0]), permC);
+
+		//Wrap the sum into a function that blocks, blah blah...
+		for(j = 0; j < FLA_Obj_num_elem_alloc(permC); j++)
+			buftmpBlk[j] += bufpermC[j];
+
+
+		while(next_permutation(lenGroup, perm) == TRUE){
+			for(j = 0; j < lenGroup; j++)
+				permC.permutation[modeOffset + j] = obj.symModes[modeOffset + perm[j]];
+			
+			FLA_Permute(obj, &(permC.permutation[0]), permC);
+			//Wrap the sum into a function that blocks, blah blah...
+			for(j = 0; j < FLA_Obj_num_elem_alloc(permC); j++)
+				buftmpBlk[j] += bufpermC[j];
+			
+		}
+		
+		modeOffset += lenGroup;
+		for(j = 0; j < order; j++)
+			permC.permutation[j] = j;
+	}
+	memcpy(&(((double*)FLA_Obj_base_buffer(obj))[0]), &(((double*)FLA_Obj_base_buffer(tmpBlk))[0]), FLA_Obj_num_elem_alloc(obj) * sizeof(double));
+	FLA_Obj_free_buffer(&tmpBlk);
+	FLA_Obj_free_without_buffer(&tmpBlk);
+
+	FLA_Obj_free_buffer(&permC);
+	FLA_Obj_free_without_buffer(&permC);
+	
+	FLA_free(size);
+	FLA_free(stride);
+	return FLA_SUCCESS;
+}
+
+/*
+FLA_Error FLA_Random_dense_sym_tensor(dim_t b, FLA_Obj* obj)
+	dim_t order = FLA_Obj_order(obj);
+	dim_t* size = FLA_Obj_size(obj);
+	dim_t* stride = FLA_Obj_stride(obj);
+
 	dim_t i, thisSymmGroup;
 	dim_t order = FLA_Obj_order(*obj);
 	dim_t modeSize = FLA_Obj_dimsize(*obj, 0);
@@ -100,51 +199,56 @@ FLA_Error FLA_Random_dense_symm_tensor(dim_t nSymmGroups, dim_t symmGroupLens[nS
 
 	return FLA_SUCCESS;
 }
+*/
 
-void create_symm_groups(dim_t order, dim_t index[order], dim_t* nGroups, dim_t** groupLens, dim_t*** groups){
+void create_sym_groups(dim_t order, dim_t index[order], dim_t* nGroups, dim_t* groupLens, dim_t* groups){
 	dim_t i;
 
 	(*nGroups) = 0;
-	(*groupLens) = (dim_t*)FLA_malloc(order * sizeof(dim_t));
-	(*groups) = (dim_t**)FLA_malloc(order * sizeof(dim_t*));
 
 	dim_t match = index[0];
 	dim_t curGroupLen = 0;
-	dim_t* curGroup = (dim_t*)FLA_malloc(order * sizeof(dim_t));
-	curGroup[curGroupLen] = 0;
 	curGroupLen++;
+
+	for(i = 0; i < order; i++)
+		groups[i] = i;
 
 	for(i = 1; i < order; i++){
 		if(index[i] == match){
-			curGroup[curGroupLen] = i;
 			curGroupLen++;
 		}
 		else{
 			match = index[i];
-			(*groupLens)[*nGroups] = curGroupLen;
-			(*groups)[*nGroups] = curGroup;
+			groupLens[*nGroups] = curGroupLen;
 			//Update variables for next group
 			(*nGroups)++;
-			curGroupLen = 0;
-			curGroup = (dim_t*)FLA_malloc(order * sizeof(dim_t));
-			curGroup[curGroupLen] = i;
-			curGroupLen++;
+			curGroupLen = 1;
 		}
 	}
 	//Do final update
-	(*groupLens)[*nGroups] = curGroupLen;
-	(*groups)[*nGroups] = curGroup;
+	groupLens[*nGroups] = curGroupLen;
 	(*nGroups)++;
 }
 
-FLA_Error FLA_Obj_create_Random_symm_tensor_data(dim_t b, FLA_Obj obj){
+FLA_Error FLA_Random_sym_tensor(FLA_Obj obj){
 	dim_t i;
 	dim_t order = FLA_Obj_order(obj);
+
+	if(FLA_Obj_elemtype(obj) == FLA_SCALAR){
+		create_sym_groups(order, &(obj.offset[0]), &(obj.nSymGroups), &(obj.symGroupLens[0]), &(obj.symModes[0]));
+		FLA_Random_scalar_psym_tensor(obj);
+		return FLA_SUCCESS;
+	}
+
 	dim_t* size = FLA_Obj_size(obj);
+	dim_t* stride = FLA_Obj_stride(obj);
 	dim_t blkSize[order];
 	dim_t blkStride[order];
 	dim_t curIndex[order];
 	dim_t endIndex[order];
+	dim_t linIndex;
+
+	dim_t b = FLA_Obj_dimsize(((FLA_Obj*)FLA_Obj_base_buffer(obj))[0],0);
 	blkSize[0] = b;
 	blkStride[0] = 1;
 	memset(&(curIndex[0]), 0, order * sizeof(dim_t));
@@ -155,52 +259,32 @@ FLA_Error FLA_Obj_create_Random_symm_tensor_data(dim_t b, FLA_Obj obj){
 		blkStride[i] = blkStride[i-1]*blkSize[i-1];
 	}
 
-	dim_t nUniques = binomial(order + size[0] - 1, order);
-	void** uniqueBuffers = (void**)FLA_malloc(nUniques * sizeof(void*));
-	
 	FLA_Obj tmpBlk;
 
 	dim_t update_ptr = order - 1;
-	dim_t count = 0;
 	while(TRUE){
-		//Determine symm groups
-		dim_t nSymmGroups;
-		dim_t* symmGroupLens;
-		dim_t** symmGroups;
-		create_symm_groups(order, curIndex, &nSymmGroups, &symmGroupLens, &symmGroups);
-		
 		//Create blk
 		FLA_Obj_create_tensor(FLA_DOUBLE, order, blkSize, blkStride, &tmpBlk);
-		//Freeing block because it gets created in next call
-		//WARNING: NEED TO FIX THIS TO NOT BE A HACK
-		//FLA_Obj_free_buffer(&tmpBlk);
 
-		FLA_Random_dense_symm_tensor(nSymmGroups, symmGroupLens, symmGroups, &tmpBlk);
-		//Fill data
-//		printf("created temporary block\n");
-//		FLA_Obj_print_tensor(tmpBlk);
-//		printf("\n");
-
-		printf("count: %d, malloc'd: %d\n", count, nUniques);
-		printf("num elem alloc: %d\n", FLA_Obj_num_elem_alloc(tmpBlk));
+		//Determine symm groups
+		create_sym_groups(order, curIndex, &(tmpBlk.nSymGroups), &(tmpBlk.symGroupLens[0]), &(tmpBlk.symModes[0]));
 		
-		uniqueBuffers[count] = (double*)FLA_malloc(FLA_Obj_num_elem_alloc(tmpBlk) * sizeof(double));
-		memcpy(&(((double*)uniqueBuffers[count])[0]), &(((double*)FLA_Obj_base_buffer(tmpBlk))[0]), FLA_Obj_num_elem_alloc(tmpBlk) * sizeof(double));
-//		uniqueBuffers[count] = tmpBlk.base->buffer;
-//		FLA_Obj blk = ((FLA_Obj*) ((obj.base)->buffer))[count];
-//		(blk.base)->buffer = (tmpBlk.base)->buffer;
-		/**///End unique branch
+		FLA_Random_scalar_psym_tensor(tmpBlk);
+		//Fill data
+
+		FLA_TIndex_to_LinIndex(order, stride, curIndex, &linIndex);
+		FLA_Obj curObj = ((FLA_Obj*)FLA_Obj_base_buffer(obj))[linIndex];
+		double* curObjBuf = (double*)FLA_Obj_base_buffer(curObj);
+		double* tmpBlkBuf = (double*)FLA_Obj_base_buffer(tmpBlk);
+		memcpy(&(curObjBuf[0]), &(tmpBlkBuf[0]), FLA_Obj_num_elem_alloc(tmpBlk) * sizeof(double));
+//		uniqueBuffers[count] = (double*)FLA_malloc(FLA_Obj_num_elem_alloc(tmpBlk) * sizeof(double));
+//		memcpy(&(((double*)uniqueBuffers[count])[0]), &(((double*)FLA_Obj_base_buffer(tmpBlk))[0]), FLA_Obj_num_elem_alloc(tmpBlk) * sizeof(double));
 
 		FLA_Obj_free_buffer(&tmpBlk);
 		FLA_Obj_free_without_buffer(&tmpBlk);		
-		FLA_free(symmGroupLens);
-		for(i = 0; i < nSymmGroups; i++)
-			FLA_free(symmGroups[i]);
-		FLA_free(symmGroups);
 		
 		//Update
 		curIndex[update_ptr]++;
-		count++;
 		//Hit the end of this index
 		if(curIndex[update_ptr] == endIndex[update_ptr]){
 			//Keep updating previous index loops until we get a value that hasn't hit the end
@@ -220,15 +304,8 @@ FLA_Error FLA_Obj_create_Random_symm_tensor_data(dim_t b, FLA_Obj obj){
 			update_ptr = order - 1;
 		}
 	}
-	dim_t stride_obj[order];
-	stride_obj[0] = 1;
-	for(i = 1; i < order; i++)
-		stride_obj[i] = stride_obj[i-1] * FLA_Obj_dimsize(obj, i);
-	
-	FLA_Obj_attach_buffer_to_symm_tensor(uniqueBuffers, order, stride_obj, &obj);
 
-	//Clear uniqueBuffers since no longer necessary
-	FLA_free(uniqueBuffers);
 	FLA_free(size);
+	FLA_free(stride);
 	return FLA_SUCCESS;
 }

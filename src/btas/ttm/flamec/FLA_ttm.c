@@ -186,92 +186,6 @@ FLA_Error FLA_Ttm_single_mode_new( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj
  // End new code
 /*****************/
 
-FLA_Error FLA_Ttm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C )
-{
-	FLA_Datatype datatype = FLA_Obj_datatype(A);
-	FLA_Elemtype elemtype = FLA_Obj_elemtype(A);
-	dim_t order = FLA_Obj_order(A);
-    dim_t permutation[order];
-	dim_t ipermutation[order];
-    dim_t i;
-	permutation[0] = mode;
-	dim_t* size_A;
-	dim_t size_P[order];
-	dim_t stride_P[order];
-	dim_t* size_C;
-	dim_t* stride_C;
-	dim_t size_tmpC[order];
-	dim_t stride_tmpC[order];
-
-	if(elemtype != FLA_SCALAR){
-		printf("NON-scalar detected in final ttm\n");
-		return FLA_SUCCESS;
-	}
-	
-	size_A = FLA_Obj_size(A);
-	size_C = FLA_Obj_size(C);
-	stride_C = FLA_Obj_stride(C);
-	
-    for(i = 0; i < mode; i++)
-		permutation[i+1] = i;
-    for(i = mode+1; i < order; i++)
-		permutation[i] = i;
-
-	FLA_Obj P, tmpC;
-	FLA_Permute_array(order, size_A, permutation, &(size_P[0]));
-	FLA_Permute_array(order, size_C, permutation, &(size_tmpC[0]));
-	
-	FLA_Set_tensor_stride(order, size_P, &(stride_P[0]));
-	FLA_Set_tensor_stride(order, size_tmpC, &(stride_tmpC[0]));
-	
-	FLA_Obj_create_tensor_without_buffer(datatype, order, size_P, &P);
-	FLA_Obj_create_tensor_without_buffer(datatype, order, size_tmpC, &tmpC);
-	
-	dim_t numElemP = 1;
-	dim_t numElemtmpC = 1;
-	for(i = 0; i < order; i++){
-		numElemP *= size_P[i];
-		numElemtmpC *= size_tmpC[i];		
-	}
-	
-	void* pBuf;
-	void* tmpCBuf;
-	pBuf = FLA_malloc(numElemP * sizeof(double));
-	tmpCBuf = FLA_malloc(numElemtmpC * sizeof(double));
-
-	FLA_Obj_attach_buffer_to_tensor(pBuf, order, stride_P, &P);
-	FLA_Obj_attach_buffer_to_tensor(tmpCBuf, order, stride_tmpC, &tmpC);
-	
-	P.base->elemtype = elemtype;
-	tmpC.base->elemtype = elemtype;
-
-	FLA_Permute(A, permutation, P);
-	FLA_Permute(C, permutation, tmpC);
-
-	//printf("ttm performed: %d\n", FLA_Ttm_Ops(order, P.size, B.size, mode));
-	//Maybe casting as flash works?
-	FLASH_Gemm(FLA_NO_TRANSPOSE, FLA_NO_TRANSPOSE, beta, B, P, alpha, tmpC);
-/*
-	printf("tmp postcomp:\n");
-	FLA_Obj_print_tensor(tmpC);
-*/	
-	for(i = 0; i < order; i++)
-		ipermutation[permutation[i]] = i;
-
-	FLA_Permute(tmpC, ipermutation, C);
-
-	FLA_Obj_free_buffer(&tmpC);
-	FLA_Obj_free_without_buffer(&tmpC);
-	FLA_Obj_free_buffer(&P);
-	FLA_Obj_free_without_buffer(&P);
-
-	FLA_free(size_A);
-	FLA_free(size_C);
-	FLA_free(stride_C);
-
-	return FLA_SUCCESS;
-}
-
 FLA_Error FLA_Ttm_single_no_permC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C )
 {
 	FLA_Datatype datatype = FLA_Obj_datatype(A);
@@ -504,6 +418,8 @@ FLA_Error FLA_Ttm_hierAB_single_repart_mode( FLA_Obj alpha, FLA_Obj A, dim_t mod
 									  AB, &A2, repart_mode, b, FLA_BOTTOM);
 
 		FLA_Ttm_single_mode(alpha, A1, mode, beta, B1, C);
+		//Stationary C calls nopermC I think...
+
 
 		FLA_Cont_with_1xmode3_to_1xmode2( &AT, A0,
 											   A1,
