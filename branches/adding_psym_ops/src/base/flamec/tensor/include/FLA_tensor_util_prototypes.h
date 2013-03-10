@@ -34,9 +34,8 @@
 
 FLA_Error FLA_Set_zero_tensor( FLA_Obj A );
 FLA_Error FLA_Adjust_2D_info( FLA_Obj *A );
-FLA_Error FLA_Obj_create_Random_symm_tensor_data(dim_t b, FLA_Obj obj);
-FLA_Error FLA_Random_dense_symm_tensor(dim_t nSymmGroups, dim_t symmGroupLens[nSymmGroups], dim_t** symmetries, FLA_Obj *obj);
 FLA_Error FLA_Random_tensor(FLA_Obj A);
+FLA_Error FLA_Random_sym_tensor(FLA_Obj obj);
 
 //---  Non-FLA utils ---------------
 int compare_pairwise_sort(const void* a, const void* b);
