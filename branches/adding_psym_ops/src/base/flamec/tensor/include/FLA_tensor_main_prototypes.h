@@ -41,9 +41,12 @@ FLA_Error FLA_Obj_create_blocked_tensor( FLA_Datatype datatype, dim_t order, dim
 FLA_Error FLA_Obj_create_blocked_tensor_ext( FLA_Datatype datatype, FLA_Elemtype elemtype, dim_t order, dim_t size[order], dim_t size_inner[order], dim_t stride[order], dim_t blkSize[order], FLA_Obj *obj );
 FLA_Error FLA_Obj_attach_buffer_to_tensor( void *buffer, dim_t order, dim_t stride[order], FLA_Obj *obj );
 FLA_Error FLA_Obj_attach_buffer_to_blocked_sym_tensor( void *buffer[], dim_t order, dim_t stride[order], FLA_Obj *obj );
+FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t order, dim_t stride[order], FLA_Obj *obj );
 FLA_Error FLA_Obj_create_tensor_without_buffer( FLA_Datatype datatype, dim_t order, dim_t size[order], FLA_Obj *obj );
 FLA_Error FLA_Obj_create_blocked_sym_tensor_without_buffer(FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t blkSize, FLA_Obj *obj);
 FLA_Error FLA_Obj_create_blocked_sym_tensor(FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t stride[order], dim_t blkSize, FLA_Obj *obj);
+FLA_Error FLA_Obj_create_blocked_psym_tensor(FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t stride[order], dim_t blkSize, dim_t nSymGroups, dim_t symGroupLens[nSymGroups], dim_t symModes[order], FLA_Obj *obj);
+FLA_Error	TLA_Obj_split_sym_group(FLA_Obj A, dim_t sym_group, dim_t split_mode);
 
 //--- Query functions --------------
 
@@ -57,14 +60,17 @@ dim_t		FLA_Obj_base_dimstride( FLA_Obj obj, dim_t dim );
 dim_t		FLA_Obj_dimstride( FLA_Obj obj, dim_t dim );
 FLA_Error	FLA_Obj_blocked_free_buffer(FLA_Obj* obj);
 FLA_Error	FLA_Obj_blocked_sym_tensor_free_buffer( FLA_Obj *obj);
+FLA_Error	FLA_Obj_blocked_psym_tensor_free_buffer( FLA_Obj *obj);
 dim_t*		FLA_Obj_base_scalar_size(FLA_Obj A);
 dim_t		FLA_Obj_base_scalar_dimsize(FLA_Obj A, dim_t mode);
 void*		FLA_Obj_tensor_buffer_at_view( FLA_Obj obj );
 
 //--- Symmetry related queries ----------
-dim_t		FLA_Obj_mode_at_symm_pos( FLA_Obj A, dim_t pos );
-dim_t		FLA_Obj_symm_group_of_pos( FLA_Obj A, dim_t pos );
-dim_t		FLA_Obj_symmGroupSize(FLA_Obj A, dim_t symmgroup);
+dim_t		FLA_Obj_mode_at_sym_pos( FLA_Obj A, dim_t pos );
+dim_t		FLA_Obj_sym_group_of_pos( FLA_Obj A, dim_t pos );
+dim_t		FLA_Obj_symGroupSize(FLA_Obj A, dim_t symgroup);
+dim_t		FLA_Obj_sym_pos_of_mode(FLA_Obj A, dim_t mode);
+dim_t FLA_Obj_sym_group_of_mode( FLA_Obj A, dim_t mode);
 
 //--------------------------------------------------------------------------
 // --- FLA_View functions -------------------------------

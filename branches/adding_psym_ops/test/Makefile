@@ -143,6 +143,9 @@ tensor_ttm: $(TEST_OBJS)
 tensor_sym: $(TEST_OBJS)
 		$(LINKER) $(TEST_OBJ_PATH)/tensor_sym.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_sym.x
 
+tensor_psym: $(TEST_OBJS)
+		$(LINKER) $(TEST_OBJ_PATH)/tensor_psym.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_psym.x
+
 sttsm_dense: $(TEST_OBJS)
 		$(LINKER) $(TEST_OBJ_PATH)/test_sttsm_dense.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm_dense.x
 

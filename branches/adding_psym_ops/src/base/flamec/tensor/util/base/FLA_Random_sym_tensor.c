@@ -32,10 +32,6 @@
 
 #include "FLAME.h"
 
-int compare_dim_t(const void* a, const void* b){
-	return ((dim_t*)a)[0] - ((dim_t*)b)[0];
-}
-
 FLA_Bool next_permutation(dim_t nElem, dim_t perm[]){
 	dim_t k = -1;
 	dim_t i;
@@ -277,8 +273,6 @@ FLA_Error FLA_Random_sym_tensor(FLA_Obj obj){
 		double* curObjBuf = (double*)FLA_Obj_base_buffer(curObj);
 		double* tmpBlkBuf = (double*)FLA_Obj_base_buffer(tmpBlk);
 		memcpy(&(curObjBuf[0]), &(tmpBlkBuf[0]), FLA_Obj_num_elem_alloc(tmpBlk) * sizeof(double));
-//		uniqueBuffers[count] = (double*)FLA_malloc(FLA_Obj_num_elem_alloc(tmpBlk) * sizeof(double));
-//		memcpy(&(((double*)uniqueBuffers[count])[0]), &(((double*)FLA_Obj_base_buffer(tmpBlk))[0]), FLA_Obj_num_elem_alloc(tmpBlk) * sizeof(double));
 
 		FLA_Obj_free_buffer(&tmpBlk);
 		FLA_Obj_free_without_buffer(&tmpBlk);		
@@ -301,6 +295,110 @@ FLA_Error FLA_Random_sym_tensor(FLA_Obj obj){
 			//and reset pointer
 			for(i = update_ptr+1; i < order; i++)
 				curIndex[i] = curIndex[update_ptr];
+			update_ptr = order - 1;
+		}
+	}
+
+	FLA_free(size);
+	FLA_free(stride);
+	return FLA_SUCCESS;
+}
+
+FLA_Error FLA_Random_psym_tensor(FLA_Obj obj){
+	dim_t i,j;
+	dim_t order = FLA_Obj_order(obj);
+
+	if(FLA_Obj_elemtype(obj) == FLA_SCALAR){
+		FLA_Random_scalar_psym_tensor(obj);
+		return FLA_SUCCESS;
+	}
+
+	dim_t* size = FLA_Obj_size(obj);
+	dim_t* stride = FLA_Obj_stride(obj);
+	dim_t blkSize[order];
+	dim_t blkStride[order];
+	dim_t curIndex[order];
+	dim_t endIndex[order];
+	dim_t linIndex;
+	dim_t nSymGroups = obj.nSymGroups;
+	dim_t symGroupLens[order];
+	dim_t symModes[order];
+	
+	memcpy(&(symGroupLens[0]), &(obj.symGroupLens[0]), nSymGroups * sizeof(dim_t));
+	memcpy(&(symModes[0]), &(obj.symModes[0]), order * sizeof(dim_t));
+
+
+	dim_t b = FLA_Obj_dimsize(((FLA_Obj*)FLA_Obj_base_buffer(obj))[0],0);
+	blkSize[0] = b;
+	blkStride[0] = 1;
+	memset(&(curIndex[0]), 0, order * sizeof(dim_t));
+	endIndex[0] = size[0];
+	for(i = 1; i < order; i++){
+		blkSize[i] = b;
+		endIndex[i] = size[i];
+		blkStride[i] = blkStride[i-1]*blkSize[i-1];
+	}
+
+	FLA_Obj tmpBlk;
+
+	dim_t update_ptr = order - 1;
+	while(TRUE){
+	
+		//Check if index is unique (otherwise no need to set up the random data
+		dim_t isUnique = TRUE;
+		dim_t count = 0;
+		for(i = 0; i < nSymGroups; i++)
+			if(symGroupLens[i] > 1){
+				for(j = 1; j < symGroupLens[i]; j++){
+					if(curIndex[symModes[count - 1]] > curIndex[symModes[count]]){
+						isUnique = FALSE;
+						break;
+					}
+					count++;
+				}
+				if(isUnique == FALSE)
+					break;
+			}else{
+				count++;
+			}
+
+		if(isUnique){		
+			//Create blk
+			FLA_Obj_create_tensor(FLA_DOUBLE, order, blkSize, blkStride, &tmpBlk);
+
+			//Determine symm groups
+			create_sym_groups(order, curIndex, &(tmpBlk.nSymGroups), &(tmpBlk.symGroupLens[0]), &(tmpBlk.symModes[0]));
+		
+			FLA_Random_scalar_psym_tensor(tmpBlk);
+			//Fill data
+
+			FLA_TIndex_to_LinIndex(order, stride, curIndex, &linIndex);
+			FLA_Obj curObj = ((FLA_Obj*)FLA_Obj_base_buffer(obj))[linIndex];
+			double* curObjBuf = (double*)FLA_Obj_base_buffer(curObj);
+			double* tmpBlkBuf = (double*)FLA_Obj_base_buffer(tmpBlk);
+			memcpy(&(curObjBuf[0]), &(tmpBlkBuf[0]), FLA_Obj_num_elem_alloc(tmpBlk) * sizeof(double));
+
+			FLA_Obj_free_buffer(&tmpBlk);
+			FLA_Obj_free_without_buffer(&tmpBlk);		
+		}
+		//Update
+		curIndex[update_ptr]++;
+		//Hit the end of this index
+		if(curIndex[update_ptr] == endIndex[update_ptr]){
+			//Keep updating previous index loops until we get a value that hasn't hit the end
+			while(update_ptr < order && curIndex[update_ptr] == endIndex[update_ptr]){
+				update_ptr--;
+				if (update_ptr < order) {
+					curIndex[update_ptr]++;
+				}
+			}
+			//We are done if we run off the edge
+			if(update_ptr >= order)
+				break;
+			//Otherwise, reset all upper indices to this value
+			//and reset pointer
+			for(i = update_ptr+1; i < order; i++)
+				curIndex[i] = 0;
 			update_ptr = order - 1;
 		}
 	}
