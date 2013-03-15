@@ -36,9 +36,11 @@ FLA_Error FLA_Set_zero_tensor( FLA_Obj A );
 FLA_Error FLA_Adjust_2D_info( FLA_Obj *A );
 FLA_Error FLA_Random_tensor(FLA_Obj A);
 FLA_Error FLA_Random_sym_tensor(FLA_Obj obj);
+FLA_Error FLA_Random_psym_tensor(FLA_Obj obj);
 
 //---  Non-FLA utils ---------------
 int compare_pairwise_sort(const void* a, const void* b);
+int compare_dim_t(const void* a, const void* b);
 dim_t binomial(dim_t n, dim_t k);
 FLA_Error FLA_get_unique_info( dim_t order, dim_t index[order], dim_t* sortedIndex, dim_t* permutation);
 FLA_Error FLA_Set_tensor_stride( dim_t order, dim_t size[order], dim_t* stride);

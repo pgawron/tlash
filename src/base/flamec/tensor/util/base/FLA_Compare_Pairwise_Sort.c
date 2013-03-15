@@ -33,5 +33,14 @@
 #include "FLAME.h"
 
 int compare_pairwise_sort(const void* a, const void* b){
-	return ((const FLA_Paired_Sort*)a)->val - ((const FLA_Paired_Sort*)b)->val;
+	dim_t va = ((const FLA_Paired_Sort*)a)->val;
+	dim_t vb = ((const FLA_Paired_Sort*)b)->val;
+	return (va > vb) - (va < vb);
 }
+
+int compare_dim_t(const void* a, const void* b){
+	dim_t va = *((const dim_t*)a);
+	dim_t vb = *((const dim_t*)b);
+	return (va > vb) - (va < vb);
+}
+

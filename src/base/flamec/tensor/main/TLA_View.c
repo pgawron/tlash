@@ -79,7 +79,6 @@ FLA_Error FLA_Part_2powm( FLA_Obj A,  FLA_Obj Apart[], dim_t sizes[], FLA_Side s
 	return FLA_SUCCESS;
 }
 
-
 //
 // --- FLA_Part_1xmode2() ----------------------------------------------------------
 //
@@ -113,6 +112,12 @@ FLA_Error FLA_Part_1xmode2( FLA_Obj A,  FLA_Obj *A1,
   (A2->offset)[mode] += b;
   A2->base = A.base;
   memcpy(&((A2->permutation)[0]), &(A.permutation[0]), A.order * sizeof(dim_t));
+
+  //Update symmetries
+  dim_t sym_group = FLA_Obj_sym_group_of_mode(A, mode);
+
+  TLA_Obj_split_sym_group(A1, sym_group, mode);
+  TLA_Obj_split_sym_group(A2, sym_group, mode);
 
   FLA_Adjust_2D_info(A1);
   FLA_Adjust_2D_info(A2);
