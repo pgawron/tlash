@@ -116,8 +116,8 @@ FLA_Error FLA_Part_1xmode2( FLA_Obj A,  FLA_Obj *A1,
   //Update symmetries
   dim_t sym_group = FLA_Obj_sym_group_of_mode(A, mode);
 
-  TLA_Obj_split_sym_group(A1, sym_group, mode);
-  TLA_Obj_split_sym_group(A2, sym_group, mode);
+  TLA_Obj_split_sym_group(A, sym_group, mode, A1);
+  TLA_Obj_split_sym_group(A, sym_group, mode, A2);
 
   FLA_Adjust_2D_info(A1);
   FLA_Adjust_2D_info(A2);

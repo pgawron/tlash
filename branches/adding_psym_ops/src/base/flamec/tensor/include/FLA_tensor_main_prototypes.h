@@ -46,7 +46,7 @@ FLA_Error FLA_Obj_create_tensor_without_buffer( FLA_Datatype datatype, dim_t ord
 FLA_Error FLA_Obj_create_blocked_sym_tensor_without_buffer(FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t blkSize, FLA_Obj *obj);
 FLA_Error FLA_Obj_create_blocked_sym_tensor(FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t stride[order], dim_t blkSize, FLA_Obj *obj);
 FLA_Error FLA_Obj_create_blocked_psym_tensor(FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t stride[order], dim_t blkSize, dim_t nSymGroups, dim_t symGroupLens[nSymGroups], dim_t symModes[order], FLA_Obj *obj);
-FLA_Error	TLA_Obj_split_sym_group(FLA_Obj A, dim_t sym_group, dim_t split_mode);
+FLA_Error	TLA_Obj_split_sym_group(FLA_Obj A, dim_t sym_group, dim_t split_mode, FLA_Obj* A1);
 
 //--- Query functions --------------
 

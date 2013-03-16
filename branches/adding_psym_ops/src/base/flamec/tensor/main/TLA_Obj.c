@@ -360,6 +360,11 @@ FLA_Error FLA_Obj_create_blocked_psym_tensor(FLA_Datatype datatype, dim_t order,
 	//First set up the hierarchy without buffers
 	FLA_Obj_create_blocked_sym_tensor_without_buffer(datatype, order, size, blkSize, obj);
 
+	//Add symmetry to object
+	obj->nSymGroups = nSymGroups;
+	memcpy(&((obj->symGroupLens)[0]), &(symGroupLens[0]), nSymGroups * sizeof(dim_t));
+	memcpy(&((obj->symModes)[0]), &(symModes[0]), order * sizeof(dim_t));
+	
 	//Set up the data buffers for psym tensor
 	dim_t i;
 	dim_t nBlockElems = 1;
@@ -521,9 +526,15 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 	//By looping correctly we will hit the unique before any dupes (I think)
 	updateIndex = order - 1;
 	
+	print_array("symGroupLens", nSymGroups, symGroupLens);
+	print_array("symModes", order, symModes);
+	printf("-----------------------------------\n");
+	
 	while(TRUE){
 	
 	//FIX THIS FOR PSYM, ended here!!!!!!
+		print_array("curIndex", order, curIndex);
+		
 		FLA_TIndex_to_LinIndex(order, stride_obj, curIndex, &objLinIndex);
 
 		dim_t modeOffset = 0;
@@ -546,14 +557,17 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 			
 			modeOffset += symGroupLens[i];
 		}
-	
+		
+		print_array("sortedIndex", order, sortedIndex);
+		print_array("permutation", order, permutation);
+		
 		//Check if this is unique or not
 		dim_t uniqueIndex = TRUE;
 		dim_t count = 0;
 		for(i = 0; i < nSymGroups; i++)
 			if(symGroupLens[i] > 1){
-				for(j = 1; j < symGroupLens[i]; j++){
-					if(curIndex[symModes[count - 1]] > curIndex[symModes[count]]){
+				for(j = 0; j < symGroupLens[i] - 1; j++){
+					if(curIndex[symModes[count]] > curIndex[symModes[count+1]]){
 						uniqueIndex = FALSE;
 						break;
 					}
@@ -626,7 +640,7 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 //More of Util functions follow
 ////////////////////////////////
 
-FLA_Error TLA_Obj_split_sym_group(FLA_Obj A, dim_t sym_group, dim_t split_mode){
+FLA_Error TLA_Obj_split_sym_group(FLA_Obj A, dim_t sym_group, dim_t split_mode, FLA_Obj* A1){
 	if(FLA_Obj_symGroupSize(A, sym_group) == 1)
 		return FLA_SUCCESS;
 		
@@ -636,14 +650,16 @@ FLA_Error TLA_Obj_split_sym_group(FLA_Obj A, dim_t sym_group, dim_t split_mode){
 		symGroupOffset += FLA_Obj_symGroupSize(A, i);
 
 	//Reorder modes to indicate the split
-	A.symModes[FLA_Obj_sym_pos_of_mode(A, split_mode)] = A.symModes[symGroupOffset];
-	A.symModes[symGroupOffset] = split_mode;
+	memcpy(&((A1->symModes)[0]), &(A.symModes[0]), (FLA_Obj_order(A)) * sizeof(dim_t));
+	(A1->symModes)[FLA_Obj_sym_pos_of_mode(*A1, split_mode)] = (A1->symModes)[symGroupOffset];
+	(A1->symModes)[symGroupOffset] = split_mode;
 	
 	//Update sym_group_info
-	A.symGroupLens[sym_group]--;
-	for(i = A.nSymGroups - 1; i >= sym_group; i--)
-		A.symGroupLens[i+1] = A.symGroupLens[i];
-	A.symGroupLens[sym_group] = 1;
-	A.nSymGroups++;
+	memcpy(&((A1->symGroupLens)[0]), &(A.symGroupLens[0]), (A.nSymGroups) * sizeof(dim_t));
+	(A1->symGroupLens)[sym_group] = A.symGroupLens[sym_group] - 1;
+	for(i = A.nSymGroups - 1; i >= sym_group && i < A.nSymGroups; i--)
+		(A1->symGroupLens)[i+1] = (A1->symGroupLens)[i];
+	(A1->symGroupLens)[sym_group] = 1;
+	(A1->nSymGroups) = A.nSymGroups + 1;
 	return FLA_SUCCESS;
 }

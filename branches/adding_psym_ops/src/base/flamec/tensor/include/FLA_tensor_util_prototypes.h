@@ -48,4 +48,4 @@ FLA_Error FLA_Set_tensor_permutation( dim_t order, dim_t permutation[order], FLA
 FLA_Error FLA_TIndex_to_LinIndex( dim_t order, dim_t stride[order], dim_t index[order], dim_t* linIndex);
 FLA_Error FLA_Permute_array( dim_t order, dim_t arrfrom[order], dim_t permutation[order], dim_t* arrto);
 dim_t FLA_Ttm_Ops( dim_t order, dim_t size_A[order], dim_t size_B[2], dim_t mode);
-
+void print_array(const char* header, dim_t nElem, dim_t arr[nElem]);
