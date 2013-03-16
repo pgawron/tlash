@@ -349,8 +349,8 @@ FLA_Error FLA_Random_psym_tensor(FLA_Obj obj){
 		dim_t count = 0;
 		for(i = 0; i < nSymGroups; i++)
 			if(symGroupLens[i] > 1){
-				for(j = 1; j < symGroupLens[i]; j++){
-					if(curIndex[symModes[count - 1]] > curIndex[symModes[count]]){
+				for(j = 0; j < symGroupLens[i] - 1; j++){
+					if(curIndex[symModes[count]] > curIndex[symModes[count + 1]]){
 						isUnique = FALSE;
 						break;
 					}
