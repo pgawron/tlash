@@ -249,6 +249,10 @@ FLA_Error FLA_Repart_1xmode2_to_1xmode3( FLA_Obj AT,   FLA_Obj *A0,
     memcpy(&((A2->offset)[0]), &(AB.offset[0]), AB.order * sizeof(dim_t));
 	memcpy(&((A2->permutation)[0]), &(AB.permutation[0]), AB.order * sizeof(dim_t));
     A2->base = AB.base;
+
+    A2->nSymGroups = AB.nSymGroups;
+    memcpy(&((A2->symGroupLens)[0]), &(AB.symGroupLens[0]), AB.nSymGroups * sizeof(dim_t));
+    memcpy(&((A2->symModes)[0]), &(AB.symModes[0]), AB.order * sizeof(dim_t));
   }
   else
   {
@@ -258,13 +262,17 @@ FLA_Error FLA_Repart_1xmode2_to_1xmode3( FLA_Obj AT,   FLA_Obj *A0,
 	memcpy(&((A0->permutation)[0]), &(AT.permutation[0]), AT.order * sizeof(dim_t));
     A0->base = AT.base;
 
+    A0->nSymGroups = AT.nSymGroups;
+    memcpy(&((A0->symGroupLens)[0]), &(AT.symGroupLens[0]), AT.nSymGroups * sizeof(dim_t));
+    memcpy(&((A0->symModes)[0]), &(AT.symModes[0]), AT.order * sizeof(dim_t));
+
     FLA_Part_1xmode2 ( AB,    A1,
                               A2,    mode, b, FLA_TOP );
   }
 
-	FLA_Adjust_2D_info(A0);
-	FLA_Adjust_2D_info(A1);
-	FLA_Adjust_2D_info(A2);
+  FLA_Adjust_2D_info(A0);
+  FLA_Adjust_2D_info(A1);
+  FLA_Adjust_2D_info(A2);
 	
   return FLA_SUCCESS;
 }
@@ -357,6 +365,10 @@ FLA_Error FLA_Cont_with_1xmode3_to_1xmode2( FLA_Obj *AT,  FLA_Obj A0,
                                                     A1,
                                             AB,     A2, mode, side );
 
+  AT->nSymGroups = A0.nSymGroups;
+  memcpy(&((AT->symGroupLens)[0]), &((A0.symGroupLens)[0]), A0.nSymGroups * sizeof(dim_t));
+  memcpy(&((AT->symModes)[0]), &((A0.symModes)[0]), A0.order * sizeof(dim_t));
+
   if ( side == FLA_TOP )
   {
     AT->order = A0.order;
@@ -371,6 +383,11 @@ FLA_Error FLA_Cont_with_1xmode3_to_1xmode2( FLA_Obj *AT,  FLA_Obj A0,
     memcpy(&((AB->offset)[0]), &(A2.offset[0]), A2.order * sizeof(dim_t));
     AB->base = A2.base;
     memcpy(&((AB->permutation)[0]), &(A2.permutation[0]), A2.order * sizeof(dim_t));
+
+    AB->nSymGroups = A2.nSymGroups;
+    memcpy(&((AB->symGroupLens)[0]), &((A2.symGroupLens)[0]), A2.nSymGroups * sizeof(dim_t));
+    memcpy(&((AB->symModes)[0]), &((A2.symModes)[0]), A2.order * sizeof(dim_t));
+
   }
   else
   {
@@ -386,6 +403,10 @@ FLA_Error FLA_Cont_with_1xmode3_to_1xmode2( FLA_Obj *AT,  FLA_Obj A0,
     memcpy(&((AB->offset)[0]), &(A1.offset[0]), A1.order * sizeof(dim_t));
     AB->base = A1.base;
     memcpy(&((AB->permutation)[0]), &(A1.permutation[0]), A1.order * sizeof(dim_t));
+
+    AB->nSymGroups = A1.nSymGroups;
+    memcpy(&((AB->symGroupLens)[0]), &((A1.symGroupLens)[0]), A1.nSymGroups * sizeof(dim_t));
+    memcpy(&((AB->symModes)[0]), &((A1.symModes)[0]), A1.order * sizeof(dim_t));
   }
 	FLA_Adjust_2D_info(AT);
 	FLA_Adjust_2D_info(AB);
@@ -398,7 +419,7 @@ FLA_Error FLA_Cont_with_1xmode3_to_1xmode2( FLA_Obj *AT,  FLA_Obj A0,
 //
 
 FLA_Error FLA_Merge_1xmode2( FLA_Obj AT,
-                         FLA_Obj AB,  FLA_Obj *A, dim_t mode )
+                             FLA_Obj AB,  FLA_Obj *A, dim_t mode )
 {
   if ( FLA_Check_error_level() == FLA_FULL_ERROR_CHECKING )
     FLA_Merge_1xmode2_check( AT,

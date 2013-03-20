@@ -5,7 +5,7 @@ void Usage()
 {
     printf("Test psym tensor operations.\n\n");
     printf("  tensor_psym <m> <nA> <bA> <nGroups> <group1Len> ... <groupNLen> <symMode1> ... <symModeM>\n\n");
-    printf("  m: order of hyper-symmetric tensors\n");
+    printf("  m: order of symmetric tensor\n");
     printf("  nA: mode-length of tensor A\n");
     printf("  bA: mode-length of block of A\n");
 	printf("  nGroups: number of symmetric groups\n");

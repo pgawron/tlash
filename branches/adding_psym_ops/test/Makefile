@@ -68,7 +68,7 @@ CONFIG_MK_FRAGMENT  := $(CONFIG_DIRPATH)/$(HOST)/config.mk
 # LINKER         := $(CC)
  CFLAGS         := -ggdb -O0 -Wall -Wno-comment
  LDFLAGS        := 
-# INSTALL_PREFIX := $(HOME)/flame
+ INSTALL_PREFIX := $(HOME)/flame
 
 
 
@@ -126,34 +126,34 @@ test_$(FNAME): $(TEST_OBJS)
 		$(LINKER) $(TEST_OBJS) $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o $(TEST_BIN)
 
 sttsm: $(TEST_OBJS)
-		$(LINKER) $(TEST_OBJ_PATH)/test_sttsm.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm.x
+		$(LINKER) $(TEST_OBJ_PATH)/test_sttsm.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm
 
 tensor_print: $(TEST_OBJS)
-		$(LINKER) $(TEST_OBJ_PATH)/test_tensor_print.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_print.x
+		$(LINKER) $(TEST_OBJ_PATH)/test_tensor_print.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_print
 
 tensor_part: $(TEST_OBJS)
-		$(LINKER) $(TEST_OBJ_PATH)/test_tensor_part.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_part.x
+		$(LINKER) $(TEST_OBJ_PATH)/test_tensor_part.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_part
 
 tensor_permute: $(TEST_OBJS)
-		$(LINKER) $(TEST_OBJ_PATH)/tensor_permute.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_permute.x
+		$(LINKER) $(TEST_OBJ_PATH)/tensor_permute.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_permute
 
 tensor_ttm: $(TEST_OBJS)
-		$(LINKER) $(TEST_OBJ_PATH)/tensor_ttm.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_ttm.x
+		$(LINKER) $(TEST_OBJ_PATH)/tensor_ttm.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_ttm
 
 tensor_sym: $(TEST_OBJS)
-		$(LINKER) $(TEST_OBJ_PATH)/tensor_sym.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_sym.x
+		$(LINKER) $(TEST_OBJ_PATH)/tensor_sym.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_sym
 
 tensor_psym: $(TEST_OBJS)
-		$(LINKER) $(TEST_OBJ_PATH)/tensor_psym.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_psym.x
+		$(LINKER) $(TEST_OBJ_PATH)/tensor_psym.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_psym
 
 sttsm_dense: $(TEST_OBJS)
-		$(LINKER) $(TEST_OBJ_PATH)/test_sttsm_dense.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm_dense.x
+		$(LINKER) $(TEST_OBJ_PATH)/test_sttsm_dense.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm_dense
 
 sttsm_prof: $(TEST_OBJS)
-		$(LINKER) -pg $(TEST_OBJ_PATH)/test_sttsm.o $(LDFLAGS) $(LIBFLAME_PROF) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm_prof.x
+		$(LINKER) -pg $(TEST_OBJ_PATH)/test_sttsm.o $(LDFLAGS) $(LIBFLAME_PROF) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm_prof
 
 sttsm_dense_prof: $(TEST_OBJS)
-		$(LINKER) -pg $(TEST_OBJ_PATH)/test_sttsm_dense.o $(LDFLAGS) $(LIBFLAME_PROF) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm_dense_prof.x
+		$(LINKER) -pg $(TEST_OBJ_PATH)/test_sttsm_dense.o $(LDFLAGS) $(LIBFLAME_PROF) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm_dense_prof
 
 clean:
 		$(RM_F) $(TEST_OBJS) $(TEST_BIN)

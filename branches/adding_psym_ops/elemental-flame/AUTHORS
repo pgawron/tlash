@@ -1,8 +1,0 @@
-Authors of Elemental-FLAME
-
-Jack Poulson <jack.poulson@gmail.com>:
-  The entire library (outside contributions were stripped out for the FLAME 
-  version), with the exception of the Axpy interface.
-
-Martin Schatz <martin.schatz@mail.utexas.edu>:
-  The AxpyInterface class for easily filling distributed matrices.
