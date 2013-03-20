@@ -201,7 +201,7 @@ dim_t FLA_Obj_sym_group_of_pos( FLA_Obj A, dim_t pos ){
 	dim_t nSymGroups = A.nSymGroups;
 	for(i = 0; i < nSymGroups; i++){
 		passedModes += A.symGroupLens[i];
-		if(pos <= passedModes)
+		if(pos < passedModes)
 			return i;
 	}
 	return -1;

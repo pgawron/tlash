@@ -64,19 +64,22 @@ FLA_Error FLA_Random_scalar_psym_tensor(FLA_Obj obj){
 	FLA_Random_tensor(obj);
 
 	FLA_Obj tmpBlk;
-	FLA_Obj_create_tensor(FLA_DOUBLE, FLA_Obj_order(obj), size, stride, &tmpBlk);
+	FLA_Obj_create_psym_tensor(FLA_DOUBLE, FLA_Obj_order(obj), size, stride, obj.nSymGroups, obj.symGroupLens, obj.symModes, &tmpBlk);
 	FLA_Set_zero_tensor(tmpBlk);
 	
 	FLA_Obj permC;
-	FLA_Obj_create_tensor(FLA_DOUBLE, FLA_Obj_order(obj), size, stride, &permC);
+	FLA_Obj_create_psym_tensor(FLA_DOUBLE, FLA_Obj_order(obj), size, stride, obj.nSymGroups, obj.symGroupLens, obj.symModes, &permC);
 
 	dim_t i,j;
 	dim_t modeOffset = 0;
+	dim_t addedToTmpBlk = FALSE;
 	for(i = 0; i < obj.nSymGroups; i++){
 		dim_t lenGroup = obj.symGroupLens[i];
 		if(lenGroup == 1){
 			modeOffset++;
 			continue;
+		}else{
+		    addedToTmpBlk = TRUE;
 		}
 
 		dim_t perm[lenGroup];
@@ -110,7 +113,8 @@ FLA_Error FLA_Random_scalar_psym_tensor(FLA_Obj obj){
 		for(j = 0; j < order; j++)
 			permC.permutation[j] = j;
 	}
-	memcpy(&(((double*)FLA_Obj_base_buffer(obj))[0]), &(((double*)FLA_Obj_base_buffer(tmpBlk))[0]), FLA_Obj_num_elem_alloc(obj) * sizeof(double));
+	if(addedToTmpBlk)
+	    memcpy(&(((double*)FLA_Obj_base_buffer(obj))[0]), &(((double*)FLA_Obj_base_buffer(tmpBlk))[0]), FLA_Obj_num_elem_alloc(obj) * sizeof(double));
 	FLA_Obj_free_buffer(&tmpBlk);
 	FLA_Obj_free_without_buffer(&tmpBlk);
 
@@ -197,33 +201,48 @@ FLA_Error FLA_Random_dense_sym_tensor(dim_t b, FLA_Obj* obj)
 }
 */
 
-void create_sym_groups(dim_t order, dim_t index[order], dim_t* nGroups, dim_t* groupLens, dim_t* groups){
-	dim_t i;
+void create_sym_groups_helper(dim_t order, dim_t index[order], dim_t symGroupNum, dim_t mode_offset, FLA_Obj A, FLA_Obj* B){
+    if(symGroupNum < A.nSymGroups){
+        dim_t i;
 
-	(*nGroups) = 0;
+        dim_t nModesToCheck = A.symGroupLens[symGroupNum];
+        dim_t nModesSkipped = 0;
+        dim_t checkModes[A.symGroupLens[symGroupNum]];
+        dim_t skippedModes[A.symGroupLens[symGroupNum]];
+        memcpy(&(checkModes[0]), &(A.symModes[mode_offset]), A.symGroupLens[symGroupNum] * sizeof(dim_t));
+        dim_t mode_B_offset = 0;
 
-	dim_t match = index[0];
-	dim_t curGroupLen = 0;
-	curGroupLen++;
+        while(nModesToCheck > 0){
+            dim_t match_index = index[checkModes[0]];
+            B->symModes[mode_B_offset + mode_offset] = checkModes[0];
+            B->symGroupLens[B->nSymGroups] += 1;
+            mode_B_offset++;
 
-	for(i = 0; i < order; i++)
-		groups[i] = i;
+            for(i = 1; i < nModesToCheck; i++){
+                if(match_index == index[checkModes[i]]){
+                    B->symModes[mode_B_offset + mode_offset] = checkModes[i];
+                    B->symGroupLens[B->nSymGroups] += 1;
+                    mode_B_offset++;
+                }else{
+                    skippedModes[nModesSkipped++] = checkModes[i];
+                }
+            }
+            memcpy(&(checkModes[0]), &(skippedModes[0]), nModesSkipped * sizeof(dim_t));
+            nModesToCheck = nModesSkipped;
+            nModesSkipped = 0;
+            B->nSymGroups += 1;
+        }
 
-	for(i = 1; i < order; i++){
-		if(index[i] == match){
-			curGroupLen++;
-		}
-		else{
-			match = index[i];
-			groupLens[*nGroups] = curGroupLen;
-			//Update variables for next group
-			(*nGroups)++;
-			curGroupLen = 1;
-		}
-	}
-	//Do final update
-	groupLens[*nGroups] = curGroupLen;
-	(*nGroups)++;
+        create_sym_groups_helper(order, index, symGroupNum + 1, mode_offset + A.symGroupLens[symGroupNum], A, B);
+    }
+    return;
+}
+
+void create_sym_groups(dim_t order, dim_t index[order], FLA_Obj A, FLA_Obj* B){
+    B->nSymGroups = 0;
+    memset(&((B->symGroupLens)[0]), 0, (order) * sizeof(dim_t));
+
+    create_sym_groups_helper(order, index, 0, 0, A, B);
 }
 
 FLA_Error FLA_Random_sym_tensor(FLA_Obj obj){
@@ -231,7 +250,7 @@ FLA_Error FLA_Random_sym_tensor(FLA_Obj obj){
 	dim_t order = FLA_Obj_order(obj);
 
 	if(FLA_Obj_elemtype(obj) == FLA_SCALAR){
-		create_sym_groups(order, &(obj.offset[0]), &(obj.nSymGroups), &(obj.symGroupLens[0]), &(obj.symModes[0]));
+		create_sym_groups(order, &(obj.offset[0]), obj, &obj);
 		FLA_Random_scalar_psym_tensor(obj);
 		return FLA_SUCCESS;
 	}
@@ -263,7 +282,7 @@ FLA_Error FLA_Random_sym_tensor(FLA_Obj obj){
 		FLA_Obj_create_tensor(FLA_DOUBLE, order, blkSize, blkStride, &tmpBlk);
 
 		//Determine symm groups
-		create_sym_groups(order, curIndex, &(tmpBlk.nSymGroups), &(tmpBlk.symGroupLens[0]), &(tmpBlk.symModes[0]));
+		create_sym_groups(order, curIndex, obj, &tmpBlk);
 		
 		FLA_Random_scalar_psym_tensor(tmpBlk);
 		//Fill data
@@ -344,6 +363,9 @@ FLA_Error FLA_Random_psym_tensor(FLA_Obj obj){
 	dim_t update_ptr = order - 1;
 	while(TRUE){
 	
+	    print_array("curIndex", order, curIndex);
+	    print_array("symGroupLens", nSymGroups, symGroupLens);
+
 		//Check if index is unique (otherwise no need to set up the random data
 		dim_t isUnique = TRUE;
 		dim_t count = 0;
@@ -367,10 +389,22 @@ FLA_Error FLA_Random_psym_tensor(FLA_Obj obj){
 			FLA_Obj_create_tensor(FLA_DOUBLE, order, blkSize, blkStride, &tmpBlk);
 
 			//Determine symm groups
-			create_sym_groups(order, curIndex, &(tmpBlk.nSymGroups), &(tmpBlk.symGroupLens[0]), &(tmpBlk.symModes[0]));
+			create_sym_groups(order, curIndex, obj, &(tmpBlk));
 		
+			printf("nSymGroups: %d\n", tmpBlk.nSymGroups);
+			print_array("symGroupLens", tmpBlk.nSymGroups, tmpBlk.symGroupLens);
+			print_array("symModes", tmpBlk.order, tmpBlk.symModes);
+
 			FLA_Random_scalar_psym_tensor(tmpBlk);
-			//Fill data
+
+		    printf("tensor([");
+		    FLA_Obj_print_tensor(tmpBlk);
+		    printf("],[");
+		    for(i = 0; i < FLA_Obj_order(tmpBlk); i++)
+		        printf("%d ", FLA_Obj_dimsize(tmpBlk,i));
+		    printf("]);\n\n");
+
+		    //Fill data
 
 			FLA_TIndex_to_LinIndex(order, stride, curIndex, &linIndex);
 			FLA_Obj curObj = ((FLA_Obj*)FLA_Obj_base_buffer(obj))[linIndex];
@@ -381,6 +415,7 @@ FLA_Error FLA_Random_psym_tensor(FLA_Obj obj){
 			FLA_Obj_free_buffer(&tmpBlk);
 			FLA_Obj_free_without_buffer(&tmpBlk);		
 		}
+		printf("------------------\n");
 		//Update
 		curIndex[update_ptr]++;
 		//Hit the end of this index

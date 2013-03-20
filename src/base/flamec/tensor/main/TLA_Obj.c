@@ -48,6 +48,17 @@ FLA_Error FLA_Obj_create_tensor( FLA_Datatype datatype, dim_t order, dim_t size[
   return FLA_SUCCESS;
 }
 
+FLA_Error FLA_Obj_create_psym_tensor(FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t stride[order], dim_t nSymGroups, dim_t symGroupLens[nSymGroups], dim_t symModes[order], FLA_Obj *obj){
+  FLA_Obj_create_tensor( datatype, order, size, stride, obj);
+
+  //Update symmetries
+  obj->nSymGroups = nSymGroups;
+  memcpy(&((obj->symGroupLens)[0]), &(symGroupLens[0]), nSymGroups * sizeof(dim_t));
+  memcpy(&((obj->symModes)[0]), &(symModes[0]), order  * sizeof(dim_t));
+
+  return FLA_SUCCESS;
+}
+
 FLA_Error FLA_Obj_create_blocked_tensor_ext( FLA_Datatype datatype, FLA_Elemtype elemtype, dim_t order, dim_t size[order], dim_t size_inner[order], dim_t stride[order], dim_t blkSize[order], FLA_Obj *obj )
 {
   dim_t i,j;
@@ -108,8 +119,17 @@ FLA_Error FLA_Obj_create_tensor_ext( FLA_Datatype datatype, FLA_Elemtype elemtyp
 
   for(i = 0; i < order; i++)
 	obj->permutation[i] = i;
+
+  //Update symmetries
+  obj->nSymGroups = order;
+  for(i = 0; i < obj->nSymGroups; i++)
+        (obj->symGroupLens)[i] = 1;
+  for(i = 0; i < order; i++)
+      (obj->symModes)[i] = i;
+
   return FLA_SUCCESS;
 }
+
 
 
 FLA_Error FLA_Obj_create_tensor_without_buffer( FLA_Datatype datatype, dim_t order, dim_t size[order], FLA_Obj *obj ){
@@ -136,6 +156,13 @@ FLA_Error FLA_Obj_create_tensor_without_buffer( FLA_Datatype datatype, dim_t ord
 	obj->base->n_elem_alloc = size[0] * nSecondDim;
 	for(i = 0; i < order; i++)
 		(obj->permutation)[i] = i;
+
+    //Update symmetries
+    obj->nSymGroups = order;
+    for(i = 0; i < obj->nSymGroups; i++)
+        (obj->symGroupLens)[i] = 1;
+    for(i = 0; i < order; i++)
+        (obj->symModes)[i] = i;
 
 	return FLA_SUCCESS;
 }
@@ -213,8 +240,8 @@ FLA_Error FLA_Obj_blocked_psym_tensor_free_buffer( FLA_Obj *obj)
 		dim_t count = 0;
 		for(i = 0; i < nSymGroups; i++)
 			if(symGroupLens[i] > 1){
-				for(j = 1; j < symGroupLens[i]; j++){
-					if(curIndex[symModes[count - 1]] > curIndex[symModes[count]]){
+				for(j = 0; j < symGroupLens[i] - 1; j++){
+					if(curIndex[symModes[count]] > curIndex[symModes[count + 1]]){
 						isUnique = FALSE;
 						break;
 					}
@@ -226,9 +253,10 @@ FLA_Error FLA_Obj_blocked_psym_tensor_free_buffer( FLA_Obj *obj)
 				count++;
 			}
 
-		if(isUnique)
+		if(isUnique){
 			FLA_Obj_free_buffer(&(buf[linIndex]));
-		FLA_Obj_free_without_buffer(&(buf[linIndex]));
+			FLA_Obj_free_without_buffer(&(buf[linIndex]));
+		}
 		
 		//Update
 		curIndex[update_ptr]++;
@@ -541,14 +569,14 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 		for(i = 0; i < nSymGroups; i++){
 			
 			for(j = 0; j < symGroupLens[i]; j++)
-				orderedSymModes[j+modeOffset] = symModes[j+modeOffset];
-			qsort(&(orderedSymModes[modeOffset]), symGroupLens[i], sizeof(dim_t), compare_dim_t);
+				orderedSymModes[j] = symModes[j+modeOffset];
+			qsort(&(orderedSymModes[0]), symGroupLens[i], sizeof(dim_t), compare_dim_t);
 		
 			for(j = 0; j < symGroupLens[i]; j++){
 				index_pairs[j].index = orderedSymModes[j];
 				index_pairs[j].val = curIndex[orderedSymModes[j]];
 			}
-			qsort(index_pairs, order, sizeof(FLA_Paired_Sort), compare_pairwise_sort);
+			qsort(index_pairs, symGroupLens[i], sizeof(FLA_Paired_Sort), compare_pairwise_sort);
 			
 			for(j = 0; j < symGroupLens[i]; j++){
 				permutation[orderedSymModes[j]] = index_pairs[j].index;
@@ -641,9 +669,14 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 ////////////////////////////////
 
 FLA_Error TLA_Obj_split_sym_group(FLA_Obj A, dim_t sym_group, dim_t split_mode, FLA_Obj* A1){
-	if(FLA_Obj_symGroupSize(A, sym_group) == 1)
-		return FLA_SUCCESS;
+	if(FLA_Obj_symGroupSize(A, sym_group) == 1){
+	    A1->nSymGroups = A.nSymGroups;
+	    memcpy(&((A1->symGroupLens)[0]), &(A.symGroupLens[0]), A.nSymGroups * sizeof(dim_t));
+	    memcpy(&((A1->symModes)[0]), &(A.symModes[0]), A.order * sizeof(dim_t));
+	    return FLA_SUCCESS;
+	}
 		
+
 	dim_t i;
 	dim_t symGroupOffset = 0;
 	for(i = 0; i < sym_group; i++)

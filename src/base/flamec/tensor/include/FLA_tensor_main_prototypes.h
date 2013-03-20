@@ -39,6 +39,7 @@ FLA_Error FLA_Obj_create_tensor( FLA_Datatype datatype, dim_t order, dim_t size[
 FLA_Error FLA_Obj_create_tensor_ext( FLA_Datatype datatype, FLA_Elemtype elemtype, dim_t order, dim_t size[order], dim_t size_inner[order], dim_t stride[order], FLA_Obj *obj );
 FLA_Error FLA_Obj_create_blocked_tensor( FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t stride[order], dim_t blkSize[order], FLA_Obj *obj);
 FLA_Error FLA_Obj_create_blocked_tensor_ext( FLA_Datatype datatype, FLA_Elemtype elemtype, dim_t order, dim_t size[order], dim_t size_inner[order], dim_t stride[order], dim_t blkSize[order], FLA_Obj *obj );
+FLA_Error FLA_Obj_create_psym_tensor( FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t stride[order], dim_t nSymGroups, dim_t symGroupLens[nSymGroups], dim_t symModes[order], FLA_Obj *obj);
 FLA_Error FLA_Obj_attach_buffer_to_tensor( void *buffer, dim_t order, dim_t stride[order], FLA_Obj *obj );
 FLA_Error FLA_Obj_attach_buffer_to_blocked_sym_tensor( void *buffer[], dim_t order, dim_t stride[order], FLA_Obj *obj );
 FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t order, dim_t stride[order], FLA_Obj *obj );
@@ -74,14 +75,16 @@ dim_t FLA_Obj_sym_group_of_mode( FLA_Obj A, dim_t mode);
 
 //--------------------------------------------------------------------------
 // --- FLA_View functions -------------------------------
-FLA_Error	FLA_Part_1xmode2( FLA_Obj A,  FLA_Obj *A1,
-                                          FLA_Obj *A2,
-                              dim_t mode, dim_t  b,  FLA_Side side );
+FLA_Error FLA_Part_1xmode2( FLA_Obj A, FLA_Obj *A1,
+                                       /**/
+                                       FLA_Obj *A2,
+                            dim_t mode, dim_t b, FLA_Side side );
 
 FLA_Error	FLA_Part_2powm( FLA_Obj A,  FLA_Obj Apart[], 
-							  dim_t sizes[], FLA_Side sides[]);
+							dim_t sizes[], FLA_Side sides[]);
 
 FLA_Error	FLA_Merge_1xmode2( FLA_Obj AT,
+         	                   /**/
                                FLA_Obj AB,  FLA_Obj *A, dim_t mode );
 
 FLA_Error	FLA_Merge_2powm(FLA_Obj Aparts[], FLA_Obj* A);
