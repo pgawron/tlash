@@ -232,6 +232,7 @@ FLA_Error FLA_Obj_blocked_psym_tensor_free_buffer( FLA_Obj *obj)
 	memcpy(&(symModes[0]), &((obj->symModes)[0]), order * sizeof(dim_t));
 
 	dim_t update_ptr = order - 1;
+
 	while(TRUE){
 		dim_t linIndex;
 		FLA_TIndex_to_LinIndex(order, curIndex, stride, &linIndex);
@@ -371,7 +372,7 @@ FLA_Error FLA_Obj_create_blocked_sym_tensor(FLA_Datatype datatype, dim_t order, 
 	for(i = 0; i < order; i++)
 		nBlockElems *= blkSize;
 
-	dim_t nUniques = binomial(order + size[0] - 1,order);
+	dim_t nUniques = binomial(order + (size[0] / blkSize) - 1,order);
 	void** dataBuffers = (void**)FLA_malloc(nUniques * sizeof(void*));
 
 	for(i = 0; i < nUniques; i++)
@@ -379,6 +380,7 @@ FLA_Error FLA_Obj_create_blocked_sym_tensor(FLA_Datatype datatype, dim_t order, 
 
 	//Attach empty buffers to the sym tensor
 	FLA_Obj_attach_buffer_to_blocked_sym_tensor(dataBuffers, order, stride, obj);
+	FLA_free(dataBuffers);
 
 	return FLA_SUCCESS;
 }
@@ -394,22 +396,28 @@ FLA_Error FLA_Obj_create_blocked_psym_tensor(FLA_Datatype datatype, dim_t order,
 	memcpy(&((obj->symModes)[0]), &(symModes[0]), order * sizeof(dim_t));
 	
 	//Set up the data buffers for psym tensor
-	dim_t i;
+	dim_t i,j;
 	dim_t nBlockElems = 1;
 	for(i = 0; i < order; i++)
 		nBlockElems *= blkSize;
 
 	dim_t nUniques = 1;
-	for(i = 0; i < nSymGroups; i++)
-		nUniques *= binomial(symGroupLens[i] + size[0] - 1, symGroupLens[i]);
+	dim_t modeOffset = 0;
+	for(i = 0; i < nSymGroups; i++){
+		nUniques *= binomial(symGroupLens[i] + (size[modeOffset] / blkSize) - 1, symGroupLens[i]);
+		modeOffset += symGroupLens[i];
+	}
 
 	void** dataBuffers = (void**)FLA_malloc(nUniques * sizeof(void*));
-	for(i = 0; i < nUniques; i++)
+	for(i = 0; i < nUniques; i++){
 		dataBuffers[i] = (double*)FLA_malloc(nBlockElems * sizeof(double));
-
+		for(j = 0; j < nBlockElems; j++)
+		    ((double*)dataBuffers[i])[j] = 0.0;
+	}
 	//Attach empty buffers to the sym tensor
 	FLA_Obj_attach_buffer_to_blocked_psym_tensor(dataBuffers, order, stride, obj);
 
+	FLA_free(dataBuffers);
 	return FLA_SUCCESS;
 }
 
@@ -554,40 +562,34 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 	//By looping correctly we will hit the unique before any dupes (I think)
 	updateIndex = order - 1;
 	
-	print_array("symGroupLens", nSymGroups, symGroupLens);
-	print_array("symModes", order, symModes);
-	printf("-----------------------------------\n");
-	
 	while(TRUE){
 	
 	//FIX THIS FOR PSYM, ended here!!!!!!
-		print_array("curIndex", order, curIndex);
 		
 		FLA_TIndex_to_LinIndex(order, stride_obj, curIndex, &objLinIndex);
 
 		dim_t modeOffset = 0;
+
 		for(i = 0; i < nSymGroups; i++){
 			
 			for(j = 0; j < symGroupLens[i]; j++)
-				orderedSymModes[j] = symModes[j+modeOffset];
+				orderedSymModes[modeOffset + j] = symModes[j+modeOffset];
 			qsort(&(orderedSymModes[0]), symGroupLens[i], sizeof(dim_t), compare_dim_t);
 		
 			for(j = 0; j < symGroupLens[i]; j++){
-				index_pairs[j].index = orderedSymModes[j];
-				index_pairs[j].val = curIndex[orderedSymModes[j]];
+				index_pairs[j].index = orderedSymModes[modeOffset + j];
+				index_pairs[j].val = curIndex[orderedSymModes[modeOffset + j]];
 			}
 			qsort(index_pairs, symGroupLens[i], sizeof(FLA_Paired_Sort), compare_pairwise_sort);
 			
+
 			for(j = 0; j < symGroupLens[i]; j++){
-				permutation[orderedSymModes[j]] = index_pairs[j].index;
-				sortedIndex[orderedSymModes[j]] = index_pairs[j].val;
+				permutation[orderedSymModes[modeOffset + j]] = index_pairs[j].index;
+				sortedIndex[orderedSymModes[modeOffset + j]] = index_pairs[j].val;
 			}
-			
+
 			modeOffset += symGroupLens[i];
 		}
-		
-		print_array("sortedIndex", order, sortedIndex);
-		print_array("permutation", order, permutation);
 		
 		//Check if this is unique or not
 		dim_t uniqueIndex = TRUE;
@@ -606,13 +608,16 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 			}else{
 				count++;
 			}
-		
+
+
 		if(uniqueIndex){
 			(buffer_obj[objLinIndex].base)->buffer = buffer[countBuffer];
 			//Update stride - TODO: MOVE THIS ELSEWHERE
 			((buffer_obj[objLinIndex].base)->stride)[0] = 1;
 			for(i = 1; i < order; i++)
 				((buffer_obj[objLinIndex].base)->stride)[i] = ((buffer_obj[objLinIndex].base)->stride)[i-1] * ((buffer_obj[objLinIndex].base)->size)[i-1];
+			for(i = 0; i < order; i++)
+			    ((buffer_obj[objLinIndex]).permutation)[i] = i;
 			countBuffer++;
 		}else{
 			dim_t ipermutation[order];
@@ -628,15 +633,14 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 			modeOffset = 0;
 			for(i = 0; i < nSymGroups; i++){
 				for(j = 0; j < symGroupLens[i]; j++){
-					ipermutation[permutation[symModes[j]]] = orderedSymModes[j+modeOffset];
+					ipermutation[permutation[symModes[j+modeOffset]]] = orderedSymModes[j+modeOffset];
 				}
 				modeOffset += symGroupLens[i];
 			}
-
-//			memcpy(&(((buffer_obj[objLinIndex]).permutation)[0]), &(permutation[0]), order * sizeof(dim_t));
 			memcpy(&(((buffer_obj[objLinIndex]).permutation)[0]), &(ipermutation[0]), order * sizeof(dim_t));
 		}
 		FLA_Adjust_2D_info(&(buffer_obj[objLinIndex]));
+
 		//Loop update
 		//Update current index
 		curIndex[updateIndex]++;

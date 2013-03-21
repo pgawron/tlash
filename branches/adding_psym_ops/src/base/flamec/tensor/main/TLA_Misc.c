@@ -101,11 +101,18 @@ FLA_Error FLA_Obj_print_hier_tensor_loop_scalar_mode(FLA_Obj A, dim_t mode, dim_
 	if(mode == 0){
 		dim_t i;
 		dim_t order = FLA_Obj_order(A);
+
 		FLA_Obj* buffer = FLA_Obj_tensor_buffer_at_view(A);
 		dim_t* permutation = FLA_Obj_permutation(*buffer);
 		dim_t ipermutation[order];
-		for(i = 0; i < order; i++)
+		memset(&(ipermutation[0]), 0, order * sizeof(dim_t));
+		for(i = 0; i < 12; i++)
+		    permutation[i] = -1;
+		memcpy(&(permutation[0]), &((buffer->permutation)[0]), order * sizeof(dim_t));
+		for(i = 0; i < order; i++){
 			ipermutation[permutation[i]] = i;
+		}
+
 		dim_t printMode = permutation[0];
 		dim_t newIndex[order];
 		for(i = 0; i < order; i++)
@@ -133,11 +140,12 @@ FLA_Error FLA_Obj_print_hier_tensor_repart_mode_at(FLA_Obj A, dim_t repart_mode,
 	FLA_Obj AT, AB;
 	FLA_Obj A0, A1, A2;
 
+
+
 	FLA_Part_1xmode2(A, &AT,
 						 /**/
 						 &AB, repart_mode, 0, FLA_TOP);
 
-	
 	while(FLA_Obj_dimsize(AT,repart_mode) < FLA_Obj_dimsize(A,repart_mode)){
 		FLA_Repart_1xmode2_to_1xmode3(AT, &A0,
 											  &A1,
@@ -169,3 +177,18 @@ FLA_Error FLA_Obj_print_tensor(FLA_Obj A){
 	return FLA_SUCCESS;
 }
 
+FLA_Error FLA_Obj_print(FLA_Obj obj){
+    dim_t order = FLA_Obj_order(obj);
+    dim_t* permutation = FLA_Obj_permutation(obj);
+    printf("FLA_Obj\n");
+    printf("--------------------------\n");
+    printf("  order: %d\n", order);
+    print_array("  offset", order, obj.offset);
+    print_array("  permutation", order, permutation);
+    printf("  nSymGroups: %d\n", obj.nSymGroups);
+    print_array("  symGroupLens", obj.nSymGroups, obj.symGroupLens);
+    print_array("  symModes", order, obj.symModes);
+    printf("--------------------------\n\n");
+    FLA_free(permutation);
+    return FLA_SUCCESS;
+}
