@@ -362,9 +362,6 @@ FLA_Error FLA_Random_psym_tensor(FLA_Obj obj){
 
 	dim_t update_ptr = order - 1;
 	while(TRUE){
-	
-	    print_array("curIndex", order, curIndex);
-	    print_array("symGroupLens", nSymGroups, symGroupLens);
 
 		//Check if index is unique (otherwise no need to set up the random data
 		dim_t isUnique = TRUE;
@@ -390,19 +387,8 @@ FLA_Error FLA_Random_psym_tensor(FLA_Obj obj){
 
 			//Determine symm groups
 			create_sym_groups(order, curIndex, obj, &(tmpBlk));
-		
-			printf("nSymGroups: %d\n", tmpBlk.nSymGroups);
-			print_array("symGroupLens", tmpBlk.nSymGroups, tmpBlk.symGroupLens);
-			print_array("symModes", tmpBlk.order, tmpBlk.symModes);
 
 			FLA_Random_scalar_psym_tensor(tmpBlk);
-
-		    printf("tensor([");
-		    FLA_Obj_print_tensor(tmpBlk);
-		    printf("],[");
-		    for(i = 0; i < FLA_Obj_order(tmpBlk); i++)
-		        printf("%d ", FLA_Obj_dimsize(tmpBlk,i));
-		    printf("]);\n\n");
 
 		    //Fill data
 
@@ -415,7 +401,7 @@ FLA_Error FLA_Random_psym_tensor(FLA_Obj obj){
 			FLA_Obj_free_buffer(&tmpBlk);
 			FLA_Obj_free_without_buffer(&tmpBlk);		
 		}
-		printf("------------------\n");
+
 		//Update
 		curIndex[update_ptr]++;
 		//Hit the end of this index

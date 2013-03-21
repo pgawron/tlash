@@ -127,6 +127,7 @@ void* FLA_Obj_tensor_buffer_at_view( FLA_Obj obj )
 //	for(i = 0; i < order; i++)
 //		printf(" %d", offset[i]);
 //	printf("] to linIndex: ");
+
 	for(i = 0; i < order; i++)
 		byte_offset += offset[i] * stride[i];
 	

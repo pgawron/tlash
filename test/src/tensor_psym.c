@@ -57,6 +57,13 @@ int main(int argc, char* argv[]){
 	const dim_t bA = atoi(argv[++argNum]);
 	const dim_t nSymGroups = atoi(argv[++argNum]);
 	dim_t symGroupLens[nSymGroups];
+
+	if(argc < 5 + nSymGroups + m){
+        Usage();
+        FLA_Finalize();
+        return 0;
+    }
+
 	for(i = 0; i < nSymGroups; i++)
 		symGroupLens[i] = atoi(argv[++argNum]);
 	dim_t symModes[m];
