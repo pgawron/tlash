@@ -223,6 +223,14 @@ dim_t FLA_Obj_sym_group_of_mode( FLA_Obj A, dim_t mode){
 	return FLA_Obj_sym_group_of_pos(A, FLA_Obj_sym_pos_of_mode(A, mode));
 }
 
+dim_t FLA_Obj_sym_group_mode_offset(FLA_Obj A, dim_t symGroup){
+    dim_t i;
+    dim_t offset = 0;
+    for(i = 0; i < symGroup; i++)
+        offset += A.symGroupLens[i];
+    return offset;
+}
+
 dim_t FLA_Obj_symGroupSize(FLA_Obj A, dim_t symGroup){
 	return A.symGroupLens[symGroup];
 }
