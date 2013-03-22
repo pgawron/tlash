@@ -239,7 +239,7 @@ FLA_Error FLA_Obj_blocked_psym_tensor_free_buffer( FLA_Obj *obj)
 
 		dim_t isUnique = TRUE;
 		dim_t count = 0;
-		for(i = 0; i < nSymGroups; i++)
+		for(i = 0; i < nSymGroups; i++){
 			if(symGroupLens[i] > 1){
 				for(j = 0; j < symGroupLens[i] - 1; j++){
 					if(curIndex[symModes[count]] > curIndex[symModes[count + 1]]){
@@ -250,11 +250,14 @@ FLA_Error FLA_Obj_blocked_psym_tensor_free_buffer( FLA_Obj *obj)
 				}
 				if(isUnique == FALSE)
 					break;
-			}else{
-				count++;
 			}
+			count++;
+	    }
 
 		if(isUnique){
+		    printf("at index %d ", linIndex);
+		    print_array("freeing", order, curIndex);
+
 			FLA_Obj_free_buffer(&(buf[linIndex]));
 			FLA_Obj_free_without_buffer(&(buf[linIndex]));
 		}
@@ -594,7 +597,7 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 		//Check if this is unique or not
 		dim_t uniqueIndex = TRUE;
 		dim_t count = 0;
-		for(i = 0; i < nSymGroups; i++)
+		for(i = 0; i < nSymGroups; i++){
 			if(symGroupLens[i] > 1){
 				for(j = 0; j < symGroupLens[i] - 1; j++){
 					if(curIndex[symModes[count]] > curIndex[symModes[count+1]]){
@@ -605,10 +608,9 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 				}
 				if(uniqueIndex == FALSE)
 					break;
-			}else{
-				count++;
 			}
-
+			count++;
+		}
 
 		if(uniqueIndex){
 			(buffer_obj[objLinIndex].base)->buffer = buffer[countBuffer];
@@ -626,6 +628,7 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 
 			//point this non-unique FLA_Obj to the correct base
 			//WARNING: HACK
+			print_array("freeing base of ", order, curIndex);
 			FLA_free(buffer_obj[objLinIndex].base);
 			(buffer_obj[objLinIndex]).base = (buffer_obj[uniqueLinIndex]).base;
 			//Set the right permutation
