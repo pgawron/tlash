@@ -187,21 +187,21 @@ dim_t FLA_Obj_base_scalar_dimsize(FLA_Obj A, dim_t mode){
 
 dim_t FLA_Obj_num_sym_groups(FLA_Obj A){
 
-	return A.nSymGroups;
+	return A.sym.nSymGroups;
 }
 
 
 dim_t FLA_Obj_mode_at_sym_pos( FLA_Obj A, dim_t pos ){
-	return A.symModes[pos];
+	return A.sym.symModes[pos];
 }
 
 
 dim_t FLA_Obj_sym_group_of_pos( FLA_Obj A, dim_t pos ){
 	dim_t i;
 	dim_t passedModes = 0;
-	dim_t nSymGroups = A.nSymGroups;
+	dim_t nSymGroups = A.sym.nSymGroups;
 	for(i = 0; i < nSymGroups; i++){
-		passedModes += A.symGroupLens[i];
+		passedModes += A.sym.symGroupLens[i];
 		if(pos < passedModes)
 			return i;
 	}
@@ -212,7 +212,7 @@ dim_t FLA_Obj_sym_pos_of_mode(FLA_Obj A, dim_t mode){
 	dim_t i;
 	dim_t pos;
 	for(i = 0; i < FLA_Obj_order(A); i++)
-		if(A.symModes[i] == mode){
+		if(A.sym.symModes[i] == mode){
 			pos = i;
 			break;
 		}
@@ -227,10 +227,10 @@ dim_t FLA_Obj_sym_group_mode_offset(FLA_Obj A, dim_t symGroup){
     dim_t i;
     dim_t offset = 0;
     for(i = 0; i < symGroup; i++)
-        offset += A.symGroupLens[i];
+        offset += A.sym.symGroupLens[i];
     return offset;
 }
 
 dim_t FLA_Obj_symGroupSize(FLA_Obj A, dim_t symGroup){
-	return A.symGroupLens[symGroup];
+	return A.sym.symGroupLens[symGroup];
 }
