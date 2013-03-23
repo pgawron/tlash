@@ -185,9 +185,9 @@ FLA_Error FLA_Obj_print(FLA_Obj obj){
     printf("  order: %d\n", order);
     print_array("  offset", order, obj.offset);
     print_array("  permutation", order, permutation);
-    printf("  nSymGroups: %d\n", obj.nSymGroups);
-    print_array("  symGroupLens", obj.nSymGroups, obj.symGroupLens);
-    print_array("  symModes", order, obj.symModes);
+    printf("  nSymGroups: %d\n", obj.sym.nSymGroups);
+    print_array("  symGroupLens", obj.sym.nSymGroups, obj.sym.symGroupLens);
+    print_array("  symModes", order, obj.sym.symModes);
     printf("--------------------------\n\n");
     FLA_free(permutation);
     return FLA_SUCCESS;

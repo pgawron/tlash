@@ -24,7 +24,7 @@ void print_tensor(const char* varName, FLA_Obj A){
 	printf("]);\n\n");
 }
 
-void create_psym_tensor(dim_t order, dim_t nA, dim_t bA, dim_t nSymGroups, dim_t symGroupLens[nSymGroups], dim_t symModes[order], FLA_Obj* A){
+void create_psym_tensor(dim_t order, dim_t nA, dim_t bA, TLA_sym sym, FLA_Obj* A){
 	dim_t i;
 	dim_t flat_size[order];
 	for(i = 0; i < order; i++)
@@ -36,7 +36,7 @@ void create_psym_tensor(dim_t order, dim_t nA, dim_t bA, dim_t nSymGroups, dim_t
 	for(i = 1; i < order; i++)
 		blocked_stride[i] = flat_size[i-1]/bA * blocked_stride[i-1];
 
-	FLA_Obj_create_blocked_psym_tensor(FLA_DOUBLE, order, flat_size, blocked_stride, bA, nSymGroups, symGroupLens, symModes, A);
+	FLA_Obj_create_blocked_psym_tensor(FLA_DOUBLE, order, flat_size, blocked_stride, bA, sym, A);
 	FLA_Random_psym_tensor(*A);
 }
 
@@ -51,24 +51,23 @@ int main(int argc, char* argv[]){
 		return 0;
 	}
 		
+	TLA_sym sym;
 	int argNum = 0;
 	const dim_t m = atoi(argv[++argNum]);
 	const dim_t nA = atoi(argv[++argNum]);
 	const dim_t bA = atoi(argv[++argNum]);
-	const dim_t nSymGroups = atoi(argv[++argNum]);
-	dim_t symGroupLens[nSymGroups];
+	sym.nSymGroups = atoi(argv[++argNum]);
 
-	if(argc < 5 + nSymGroups + m){
+	if(argc < 5 + sym.nSymGroups + m){
         Usage();
         FLA_Finalize();
         return 0;
     }
 
-	for(i = 0; i < nSymGroups; i++)
-		symGroupLens[i] = atoi(argv[++argNum]);
-	dim_t symModes[m];
+	for(i = 0; i < sym.nSymGroups; i++)
+		sym.symGroupLens[i] = atoi(argv[++argNum]);
 	for(i = 0; i < m; i++)
-		symModes[i] = atoi(argv[++argNum]);
+		sym.symModes[i] = atoi(argv[++argNum]);
 
 
 	if(nA % bA != 0){
@@ -84,7 +83,7 @@ int main(int argc, char* argv[]){
 
 	FLA_Obj T;
 
-	create_psym_tensor(m, nA, bA, nSymGroups, symGroupLens, symModes, &T);
+	create_psym_tensor(m, nA, bA, sym, &T);
 	print_tensor("T", T);
 	
 	FLA_Obj_blocked_psym_tensor_free_buffer(&T);
