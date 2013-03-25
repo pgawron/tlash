@@ -105,7 +105,7 @@ EMPTY_FILE := /dev/null
 CC           := gcc
 CPPROCFLAGS  := -DHAVE_CONFIG_H -DBLIS_FROM_LIBFLAME
 CMISCFLAGS   := -std=c99  
-CDBGFLAGS    := -ggdb
+CDBGFLAGS    := -g
 CWARNFLAGS   := -Wall -Wno-comment
 COPTFLAGS    := -O0
 CVECFLAGS    := 
