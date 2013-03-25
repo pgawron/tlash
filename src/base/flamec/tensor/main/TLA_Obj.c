@@ -147,6 +147,7 @@ FLA_Error FLA_Obj_create_tensor_without_buffer( FLA_Datatype datatype, dim_t ord
     memcpy(&((obj->size)[0]), &(size[0]), order * sizeof( dim_t ) );
     memcpy(&((obj->size_inner)[0]), &(size[0]), order * sizeof( dim_t ) );
     memset(&((obj->offset)[0]), 0, order * sizeof( dim_t ) );
+    obj->isStored = FALSE;
 
     obj->base->order = order;
     memcpy(&((obj->base->size)[0]), &(size[0]), order * sizeof( dim_t ) );
@@ -238,22 +239,7 @@ FLA_Error FLA_Obj_blocked_psym_tensor_free_buffer( FLA_Obj *obj)
 		dim_t linIndex;
 		FLA_TIndex_to_LinIndex(order, curIndex, stride, &linIndex);
 
-		dim_t isUnique = TRUE;
-		dim_t count = 0;
-		for(i = 0; i < nSymGroups; i++){
-			if(symGroupLens[i] > 1){
-				for(j = 0; j < symGroupLens[i] - 1; j++){
-					if(curIndex[symModes[count]] > curIndex[symModes[count + 1]]){
-						isUnique = FALSE;
-						break;
-					}
-					count++;
-				}
-				if(isUnique == FALSE)
-					break;
-			}
-			count++;
-	    }
+		dim_t isUnique = buf[linIndex].isStored;
 
 		if(isUnique){
 		    printf("at index %d ", linIndex);
@@ -622,6 +608,7 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 				((buffer_obj[objLinIndex].base)->stride)[i] = ((buffer_obj[objLinIndex].base)->stride)[i-1] * ((buffer_obj[objLinIndex].base)->size)[i-1];
 			for(i = 0; i < order; i++)
 			    ((buffer_obj[objLinIndex]).permutation)[i] = i;
+			(buffer_obj[objLinIndex]).isStored = TRUE;
 			countBuffer++;
 		}else{
 			dim_t ipermutation[order];
@@ -643,6 +630,7 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 				modeOffset += symGroupLens[i];
 			}
 			memcpy(&(((buffer_obj[objLinIndex]).permutation)[0]), &(ipermutation[0]), order * sizeof(dim_t));
+			(buffer_obj[objLinIndex]).isStored = FALSE;
 		}
 		FLA_Adjust_2D_info(&(buffer_obj[objLinIndex]));
 

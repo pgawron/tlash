@@ -198,6 +198,7 @@ typedef struct FLA_Obj_view
   dim_t         size_inner[FLA_MAX_ORDER];
   dim_t			permutation[FLA_MAX_ORDER];
   TLA_sym       sym;
+  dim_t         isStored;
 
   FLA_Base_obj* base;
 
