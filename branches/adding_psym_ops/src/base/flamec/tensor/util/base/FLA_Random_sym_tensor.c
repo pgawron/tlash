@@ -303,25 +303,9 @@ FLA_Error FLA_Random_psym_tensor(FLA_Obj obj){
 
 	dim_t update_ptr = order - 1;
 	while(TRUE){
-
 		//Check if index is unique (otherwise no need to set up the random data
-		dim_t isUnique = TRUE;
-		dim_t count = 0;
-		for(i = 0; i < nSymGroups; i++){
-			if(symGroupLens[i] > 1){
-				for(j = 0; j < symGroupLens[i] - 1; j++){
-					if(curIndex[symModes[count]] > curIndex[symModes[count + 1]]){
-						isUnique = FALSE;
-						break;
-					}
-					count++;
-				}
-				if(isUnique == FALSE)
-					break;
-			}
-			count++;
-		}
-
+	    FLA_TIndex_to_LinIndex(order, stride, curIndex, &linIndex);
+		dim_t isUnique = ((FLA_Obj*)FLA_Obj_base_buffer(obj))[linIndex].isStored;
 
 		if(isUnique){		
 			//Create blk
@@ -330,21 +314,9 @@ FLA_Error FLA_Random_psym_tensor(FLA_Obj obj){
 			//Determine symm groups
 			create_sym_groups(order, curIndex, obj, &(tmpBlk));
 
-	        printf("creating tensor block\n");
-	        printf("---------------------\n");
-	        print_array("curIndex", order, curIndex);
-
 			FLA_Random_scalar_psym_tensor(tmpBlk);
 
-	        printf("%s = tensor([", "T");
-	        FLA_Obj_print_tensor(tmpBlk);
-	        printf("],[");
-	        for(i = 0; i < FLA_Obj_order(tmpBlk); i++)
-	            printf("%d ", FLA_Obj_dimsize(tmpBlk,i));
-	        printf("]);\n\n");
 		    //Fill data
-
-			FLA_TIndex_to_LinIndex(order, stride, curIndex, &linIndex);
 			FLA_Obj curObj = ((FLA_Obj*)FLA_Obj_base_buffer(obj))[linIndex];
 			double* curObjBuf = (double*)FLA_Obj_base_buffer(curObj);
 			double* tmpBlkBuf = (double*)FLA_Obj_base_buffer(tmpBlk);
