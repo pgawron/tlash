@@ -45,7 +45,7 @@ FLA_Error FLA_Psttsm( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Ob
     FLA_Part_1xmode2(C, &CT,
                      &CB, mode, 0, FLA_TOP);
 
-    while(FLA_Obj_dimsize(CT, mode) <= FLA_Obj_dimsize(C)){
+    while(FLA_Obj_dimsize(CT, mode) <= FLA_Obj_dimsize(C, mode)){
         dim_t b = 1;
         FLA_Repart_1xmode2_to_1xmode3(BT, &B0,
                                       /**/ /**/
