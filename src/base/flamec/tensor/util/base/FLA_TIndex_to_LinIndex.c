@@ -32,7 +32,7 @@
 
 #include "FLAME.h"
 
-FLA_Error FLA_TIndex_to_LinIndex( dim_t order, dim_t stride[order], dim_t index[order], dim_t* linIndex)
+FLA_Error FLA_TIndex_to_LinIndex( dim_t order, dim_t const stride[order], dim_t const index[order], dim_t* linIndex)
 {
 	dim_t i;
 	*linIndex = 0;

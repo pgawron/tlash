@@ -564,9 +564,6 @@ FLA_Error FLA_Ttm_single_mode( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj bet
 		dim_t singleElemC = TRUE;
 		dim_t nonUnitA = -1;
 		dim_t nonUnitC = -1;
-		void* buf_A = FLA_Obj_base_buffer(A);
-		void* buf_B = FLA_Obj_base_buffer(B);
-		void* buf_C = FLA_Obj_base_buffer(C);
 
 		for(i = 0; i < FLA_Obj_order(A); i++)
 			if(FLA_Obj_dimsize(A, i) != 1){

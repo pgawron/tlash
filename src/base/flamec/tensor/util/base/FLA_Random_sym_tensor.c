@@ -123,12 +123,12 @@ FLA_Error FLA_Random_scalar_psym_tensor(FLA_Obj obj){
         tmpSym->symGroupLens[0] = objSym.symGroupLens[i];
         for(j = 1; j < tmpSym->nSymGroups; j++)
             tmpSym->symGroupLens[j] = 1;
-        dim_t symGroupModeOffset = FLA_Obj_sym_group_mode_offset(obj, i);
+        dim_t symGroupModeOffset = TLA_sym_group_mode_offset(obj.sym, i);
         for(j = 0; j < objSym.symGroupLens[i]; j++)
             tmpSym->symModes[j] = objSym.symModes[j + symGroupModeOffset];
         for(j = 0; j < symGroupModeOffset; j++)
             tmpSym->symModes[symGroupModeOffset + j] = objSym.symModes[j];
-        dim_t nextGroupOffset = FLA_Obj_sym_group_mode_offset(obj,i+1);
+        dim_t nextGroupOffset = TLA_sym_group_mode_offset(obj.sym,i+1);
         memcpy(&((tmpSym->symModes)[nextGroupOffset]), &(objSym.symModes[nextGroupOffset]), (FLA_Obj_order(obj) - nextGroupOffset) * sizeof(dim_t));
         FLA_Random_scalar_psym_tensor_helper(tmp);
     }
@@ -179,6 +179,7 @@ void create_sym_groups_helper(dim_t order, dim_t index[order], dim_t symGroupNum
 }
 
 void create_sym_groups(dim_t order, dim_t index[order], FLA_Obj A, FLA_Obj* B){
+    (B->sym).order = A.order;
     (B->sym).nSymGroups = 0;
     memset(&(((B->sym).symGroupLens)[0]), 0, (order) * sizeof(dim_t));
 
@@ -265,7 +266,7 @@ FLA_Error FLA_Random_sym_tensor(FLA_Obj obj){
 }
 
 FLA_Error FLA_Random_psym_tensor(FLA_Obj obj){
-	dim_t i,j;
+	dim_t i;
 	dim_t order = FLA_Obj_order(obj);
 
 	if(FLA_Obj_elemtype(obj) == FLA_SCALAR){

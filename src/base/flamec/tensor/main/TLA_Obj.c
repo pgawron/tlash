@@ -52,10 +52,8 @@ FLA_Error FLA_Obj_create_psym_tensor(FLA_Datatype datatype, dim_t order, dim_t s
   FLA_Obj_create_tensor( datatype, order, size, stride, obj);
 
   //Update symmetries
+  obj->groupToPartition = 0;
   obj->sym = sym;
-  //(obj->sym).nSymGroups = nSymGroups;
-  //memcpy(&(((obj->sym).symGroupLens)[0]), &(symGroupLens[0]), nSymGroups * sizeof(dim_t));
-  //memcpy(&(((obj->sym).symModes)[0]), &(symModes[0]), order  * sizeof(dim_t));
 
   return FLA_SUCCESS;
 }
@@ -122,6 +120,8 @@ FLA_Error FLA_Obj_create_tensor_ext( FLA_Datatype datatype, FLA_Elemtype elemtyp
 	obj->permutation[i] = i;
 
   //Update symmetries
+  obj->groupToPartition = 0;
+  (obj->sym).order = order;
   (obj->sym).nSymGroups = order;
   for(i = 0; i < (obj->sym).nSymGroups; i++)
         ((obj->sym).symGroupLens)[i] = 1;
@@ -160,6 +160,8 @@ FLA_Error FLA_Obj_create_tensor_without_buffer( FLA_Datatype datatype, dim_t ord
 		(obj->permutation)[i] = i;
 
     //Update symmetries
+	obj->groupToPartition = 0;
+	(obj->sym).order = order;
     (obj->sym).nSymGroups = order;
     for(i = 0; i < (obj->sym).nSymGroups; i++)
         ((obj->sym).symGroupLens)[i] = 1;
@@ -219,7 +221,6 @@ FLA_Error FLA_Obj_blocked_sym_tensor_free_buffer( FLA_Obj *obj)
 
 FLA_Error FLA_Obj_blocked_psym_tensor_free_buffer( FLA_Obj *obj)
 {
-	dim_t i,j;
 	dim_t order = FLA_Obj_order(*obj);
 	dim_t* endIndex = FLA_Obj_size(*obj);
 	dim_t curIndex[order];
@@ -351,6 +352,88 @@ FLA_Error FLA_Obj_create_blocked_sym_tensor_without_buffer(FLA_Datatype datatype
 	return FLA_SUCCESS;
 }
 
+FLA_Error FLA_Obj_create_blocked_psym_tensor_without_buffer(FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t blkSize, FLA_Obj *obj){
+    dim_t i;
+    dim_t nTBlks;
+    FLA_Obj* t_blks;
+    dim_t curIndex[order];
+    dim_t endIndex[order];
+    dim_t updateIndex;
+    dim_t objLinIndex;
+    dim_t sizeBlock[order];
+
+//    if ( FLA_Check_error_level() >= FLA_MIN_ERROR_CHECKING )
+//        FLA_Obj_create_blocked_sym_tensor_without_buffer_check( datatype, order, size, blkSize, obj );
+
+    //Figure out how many FLA_Objs we need for intermediate level
+    nTBlks = 1;
+
+    for(i = 0; i < order; i++)
+        nTBlks *= size[i] / blkSize;
+
+    for(i = 0; i < order; i++)
+        sizeBlock[i] = blkSize;
+
+    //Create the FLA_Objs
+    t_blks = (FLA_Obj*)FLA_malloc(nTBlks * sizeof(FLA_Obj));
+
+    //curIndex is our counter for each block's logical index
+    //We loop over this until we hit endIndex  and create the apropriate FLA_Objs
+    //updateIndex tells us which index in curIndex we need to update
+    //objLinIndex tells us which linear object we are dealing with
+    memset(curIndex, 0, order * sizeof(dim_t));
+    for(i = 0; i < order; i++)
+        endIndex[i] = size[i] / blkSize;
+    updateIndex = 0;
+    objLinIndex = 0;
+
+    while(TRUE){
+        //Set up the FLA_Obj at this index
+        FLA_Obj *curObj = &(t_blks[objLinIndex]);
+
+        FLA_Obj_create_tensor_without_buffer( datatype, order, sizeBlock, curObj);
+        //Set the offset array (we will use as an index identifier)
+        memset(&((curObj->offset)[0]), 0, order * sizeof(dim_t));
+        //memcpy(&((curObj->offset)[0]), &(curIndex[0]), order * sizeof(dim_t));
+
+        //Loop update
+        //Update current index
+        curIndex[updateIndex]++;
+        objLinIndex++;
+        //If we hit the end, loop until we find the index to update
+        while(updateIndex < order && curIndex[updateIndex] == endIndex[updateIndex]){
+            updateIndex++;
+            if(updateIndex < order)
+                curIndex[updateIndex]++;
+        }
+        //If we run off the edge, we know we are at the end, so break out
+        if(updateIndex >= order)
+            break;
+        //Otherwise, update current index, and reset all others
+        for(i = updateIndex - 1; i < order; i--)
+            curIndex[i] = 0;
+        updateIndex = 0;
+    }
+
+    //Buffer of tensor blocks created, set the main obj to represent this hierarchy
+
+    FLA_Obj_create_tensor_without_buffer( datatype, order, endIndex, obj);
+    obj->base->elemtype = FLA_TENSOR;
+
+    dim_t* size_obj = FLA_Obj_size(*obj);
+    dim_t stride_obj[order];
+    stride_obj[0] = 1;
+    for(i = 1; i < order; i++)
+        stride_obj[i] = stride_obj[i-1]*size_obj[i-1];
+
+    FLA_Obj_attach_buffer_to_tensor(t_blks, order, stride_obj, obj);
+
+    FLA_Adjust_2D_info(obj);
+
+    FLA_free(size_obj);
+    return FLA_SUCCESS;
+}
+
 FLA_Error FLA_Obj_create_blocked_sym_tensor(FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t stride[order], dim_t blkSize, FLA_Obj *obj){
 
 	//First set up the hierarchy without buffers
@@ -378,13 +461,11 @@ FLA_Error FLA_Obj_create_blocked_sym_tensor(FLA_Datatype datatype, dim_t order, 
 FLA_Error FLA_Obj_create_blocked_psym_tensor(FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t stride[order], dim_t blkSize, TLA_sym sym, FLA_Obj *obj){
 
 	//First set up the hierarchy without buffers
-	FLA_Obj_create_blocked_sym_tensor_without_buffer(datatype, order, size, blkSize, obj);
+	FLA_Obj_create_blocked_psym_tensor_without_buffer(datatype, order, size, blkSize, obj);
 
 	//Add symmetry to object
+	obj->groupToPartition = 0;
 	obj->sym = sym;
-	//(obj->sym).nSymGroups = nSymGroups;
-	//memcpy(&(((obj->sym).symGroupLens)[0]), &(symGroupLens[0]), nSymGroups * sizeof(dim_t));
-	//memcpy(&(((obj->sym).symModes)[0]), &(symModes[0]), order * sizeof(dim_t));
 	
 	//Set up the data buffers for psym tensor
 	dim_t i,j;
@@ -556,7 +637,8 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 	while(TRUE){
 	
 	//FIX THIS FOR PSYM, ended here!!!!!!
-		
+	    print_array("attaching index", order, curIndex);
+
 		FLA_TIndex_to_LinIndex(order, stride_obj, curIndex, &objLinIndex);
 
 		dim_t modeOffset = 0;
@@ -601,6 +683,7 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 		}
 
 		if(uniqueIndex){
+		    print_array("attaching to uniqueIndex", order, curIndex);
 			(buffer_obj[objLinIndex].base)->buffer = buffer[countBuffer];
 			//Update stride - TODO: MOVE THIS ELSEWHERE
 			((buffer_obj[objLinIndex].base)->stride)[0] = 1;
@@ -665,34 +748,77 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 //More of Util functions follow
 ////////////////////////////////
 
-FLA_Error TLA_Obj_split_sym_group(FLA_Obj A, dim_t sym_group, dim_t split_mode, FLA_Obj* A1){
-    TLA_sym* A1sym = &(A1->sym);
-    TLA_sym Asym = A.sym;
+//Note: Only splits modes within the same symmetric group...
+FLA_Error TLA_split_sym_group(TLA_sym S, dim_t nSplit_modes, dim_t split_modes[nSplit_modes], TLA_sym* S1){
 
-    if(FLA_Obj_symGroupSize(A, sym_group) == 1){
-	    A1sym->nSymGroups = Asym.nSymGroups;
-	    memcpy(&((A1sym->symGroupLens)[0]), &(Asym.symGroupLens[0]), Asym.nSymGroups * sizeof(dim_t));
-	    memcpy(&((A1sym->symModes)[0]), &(Asym.symModes[0]), A.order * sizeof(dim_t));
+    if(nSplit_modes == 0){
+        *S1 = S;
+        return FLA_SUCCESS;
+    }
+
+    dim_t sym_group = TLA_sym_group_of_mode(S, split_modes[0]);
+    if(TLA_sym_group_size(S, sym_group) == 1){
+        S1->order = S.order;
+	    S1->nSymGroups = S.nSymGroups;
+	    memcpy(&((S1->symGroupLens)[0]), &(S.symGroupLens[0]), S.nSymGroups * sizeof(dim_t));
+	    memcpy(&((S1->symModes)[0]), &(S.symModes[0]), S.order * sizeof(dim_t));
 	    return FLA_SUCCESS;
 	}
 
-
 	dim_t i;
-	dim_t symGroupOffset = 0;
-	for(i = 0; i < sym_group; i++)
-		symGroupOffset += FLA_Obj_symGroupSize(A, i);
+	dim_t symGroupOffset = TLA_sym_group_mode_offset(S, sym_group);
 
 	//Reorder modes to indicate the split
-	memcpy(&((A1sym->symModes)[0]), &(Asym.symModes[0]), (FLA_Obj_order(A)) * sizeof(dim_t));
-	(A1sym->symModes)[FLA_Obj_sym_pos_of_mode(*A1, split_mode)] = (A1sym->symModes)[symGroupOffset];
-	(A1sym->symModes)[symGroupOffset] = split_mode;
+	S1->order = S.order;
+	memcpy(&((S1->symModes)[0]), &(S.symModes[0]), S.order * sizeof(dim_t));
+	dim_t symModePos[nSplit_modes];
+	for(i = 0; i < nSplit_modes; i++)
+	    symModePos[i] = TLA_sym_pos_of_mode(*S1, split_modes[i]);
+
+	for(i = 0; i < nSplit_modes; i++){
+	    (S1->symModes)[symModePos[i]] = (S1->symModes)[symGroupOffset + i];
+	    (S1->symModes)[symGroupOffset+i] = split_modes[i];
+	}
 	
 	//Update sym_group_info
-	memcpy(&((A1sym->symGroupLens)[0]), &(Asym.symGroupLens[0]), (Asym.nSymGroups) * sizeof(dim_t));
-	(A1sym->symGroupLens)[sym_group] = Asym.symGroupLens[sym_group] - 1;
-	for(i = A.sym.nSymGroups - 1; i >= sym_group && i < Asym.nSymGroups; i--)
-		(A1sym->symGroupLens)[i+1] = (A1sym->symGroupLens)[i];
-	(A1sym->symGroupLens)[sym_group] = 1;
-	(A1sym->nSymGroups) = Asym.nSymGroups + 1;
+	memcpy(&((S1->symGroupLens)[0]), &(S.symGroupLens[0]), (S.nSymGroups) * sizeof(dim_t));
+	(S1->symGroupLens)[sym_group] = S.symGroupLens[sym_group] - nSplit_modes;
+	for(i = S.nSymGroups - 1; i >= sym_group && i < S.nSymGroups; i--)
+		(S1->symGroupLens)[i+1] = (S1->symGroupLens)[i];
+	(S1->symGroupLens)[sym_group] = nSplit_modes;
+	(S1->nSymGroups) = S.nSymGroups + 1;
+
 	return FLA_SUCCESS;
+}
+
+FLA_Error TLA_update_sym_based_offset(TLA_sym S, FLA_Obj* A){
+
+    //Update symmetries of objects
+    dim_t i, j;
+
+    for(i = 0; i < S.nSymGroups; i++){
+        dim_t nModes_to_split = 0;
+        dim_t modes_to_split[A->order];
+
+        dim_t symGroupModeOffset = TLA_sym_group_mode_offset(S, i);
+        for(j = 0; j < S.symGroupLens[i]; j++){
+            if((A->offset)[S.symModes[symGroupModeOffset + j]] == 0){
+                modes_to_split[nModes_to_split] = S.symModes[symGroupModeOffset + j];
+                nModes_to_split++;
+            }
+        }
+
+        TLA_split_sym_group(S, nModes_to_split, modes_to_split, &(A->sym));
+        //Logically what happens
+        /*
+        if(nModes_to_split == 0 || nModes_to_split == order){
+            //All ones in offset meaning we retain full symmetry of the group
+            A.sym = origSym;
+        }else{
+            //At least one 0 in the offset, so we have to split the group
+            TLA_split_sym_group(origSym, nModes_to_split, modes_to_split, &(A.sym));
+        }
+        */
+    }
+    return FLA_SUCCESS;
 }
