@@ -54,6 +54,7 @@ int main(int argc, char* argv[]){
 	TLA_sym sym;
 	int argNum = 0;
 	const dim_t m = atoi(argv[++argNum]);
+	sym.order = m;
 	const dim_t nA = atoi(argv[++argNum]);
 	const dim_t bA = atoi(argv[++argNum]);
 	sym.nSymGroups = atoi(argv[++argNum]);

@@ -122,16 +122,9 @@ void* FLA_Obj_tensor_buffer_at_view( FLA_Obj obj )
 	
 	byte_offset = 0;
 
-//	printf("\ntensor_buffer_at_view\n");
-//	printf("offset: [");
-//	for(i = 0; i < order; i++)
-//		printf(" %d", offset[i]);
-//	printf("] to linIndex: ");
-
 	for(i = 0; i < order; i++)
 		byte_offset += offset[i] * stride[i];
 	
-//	printf("%lu\n", byte_offset);
 	byte_offset *= elem_size;
 	
 	buffer      = ( char * ) (obj.base)->buffer;
@@ -184,53 +177,55 @@ dim_t FLA_Obj_base_scalar_dimsize(FLA_Obj A, dim_t mode){
 	return size_base;
 }
 
-
-dim_t FLA_Obj_num_sym_groups(FLA_Obj A){
-
-	return A.sym.nSymGroups;
+dim_t TLA_mode_at_sym_pos( TLA_sym S, dim_t pos ){
+	return S.symModes[pos];
 }
 
-
-dim_t FLA_Obj_mode_at_sym_pos( FLA_Obj A, dim_t pos ){
-	return A.sym.symModes[pos];
-}
-
-
-dim_t FLA_Obj_sym_group_of_pos( FLA_Obj A, dim_t pos ){
+dim_t TLA_sym_group_of_pos( TLA_sym S, dim_t pos ){
 	dim_t i;
 	dim_t passedModes = 0;
-	dim_t nSymGroups = A.sym.nSymGroups;
-	for(i = 0; i < nSymGroups; i++){
-		passedModes += A.sym.symGroupLens[i];
+
+	for(i = 0; i < S.nSymGroups; i++){
+		passedModes += S.symGroupLens[i];
 		if(pos < passedModes)
 			return i;
 	}
 	return -1;
 }
 
-dim_t FLA_Obj_sym_pos_of_mode(FLA_Obj A, dim_t mode){
+dim_t TLA_sym_pos_of_mode(TLA_sym S, dim_t mode){
 	dim_t i;
-	dim_t pos;
-	for(i = 0; i < FLA_Obj_order(A); i++)
-		if(A.sym.symModes[i] == mode){
-			pos = i;
-			break;
-		}
-	return pos;
+	for(i = 0; i < S.order; i++)
+	    if(S.symModes[i] == mode)
+	        return i;
+	return -1;
 }
 
-dim_t FLA_Obj_sym_group_of_mode( FLA_Obj A, dim_t mode){
-	return FLA_Obj_sym_group_of_pos(A, FLA_Obj_sym_pos_of_mode(A, mode));
+dim_t TLA_sym_group_of_mode( TLA_sym S, dim_t mode){
+	return TLA_sym_group_of_pos(S, TLA_sym_pos_of_mode(S, mode));
 }
 
-dim_t FLA_Obj_sym_group_mode_offset(FLA_Obj A, dim_t symGroup){
+dim_t TLA_sym_group_mode_offset(TLA_sym S, dim_t symGroup){
     dim_t i;
     dim_t offset = 0;
     for(i = 0; i < symGroup; i++)
-        offset += A.sym.symGroupLens[i];
+        offset += S.symGroupLens[i];
     return offset;
 }
 
-dim_t FLA_Obj_symGroupSize(FLA_Obj A, dim_t symGroup){
-	return A.sym.symGroupLens[symGroup];
+dim_t TLA_sym_group_of_mode_size(TLA_sym S, dim_t mode){
+    dim_t i,j;
+    dim_t count = 0;
+    for(i = 0; i < S.nSymGroups; i++){
+        for(j = 0; j < S.symGroupLens[i]; j++){
+            if(S.symModes[count++] == mode){
+                return S.symGroupLens[i];
+            }
+        }
+    }
+    return -1;
+}
+
+dim_t TLA_sym_group_size(TLA_sym S, dim_t symGroup){
+	return S.symGroupLens[symGroup];
 }

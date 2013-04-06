@@ -32,7 +32,7 @@
 
 #include "FLAME.h"
 
-FLA_Error FLA_Psttsm( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C )
+FLA_Error FLA_Psttm( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C )
 {
     FLA_Obj BT, BB;
     FLA_Obj B0, B1, B2;

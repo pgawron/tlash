@@ -80,7 +80,11 @@ void test_tlash_part_routines(dim_t m, dim_t nA, dim_t bA){
   printf("];\n");
 
   printf("Partitioning A\n");
-  FLA_Part_2powm(A, Apart, partSize, sides);
+  dim_t nModes_repart = m;
+  dim_t repart_modes[m];
+  for(i = 0; i < m; i++)
+      repart_modes[i] = i;
+  FLA_Part_2powm(A, Apart, nModes_repart, repart_modes, partSize, sides);
 
   print_Part(A, Apart);
 

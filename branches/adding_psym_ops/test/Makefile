@@ -64,7 +64,7 @@ CONFIG_MK_FRAGMENT  := $(CONFIG_DIRPATH)/$(HOST)/config.mk
 
 # Uncomment and modify these definitions if you wish to override the values
 # present in the master config makefile fragment.
-# CC             := gcc
+ CC             := /opt/local/bin/gcc-mp-4.8
 # LINKER         := $(CC)
  CFLAGS         := -ggdb -O0 -Wall -Wno-comment
  LDFLAGS        := 
@@ -143,8 +143,14 @@ tensor_ttm: $(TEST_OBJS)
 tensor_sym: $(TEST_OBJS)
 		$(LINKER) $(TEST_OBJ_PATH)/tensor_sym.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_sym
 
+tensor_sym_view: $(TEST_OBJS)
+		$(LINKER) $(TEST_OBJ_PATH)/tensor_sym_view.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_sym_view
+
 tensor_psym: $(TEST_OBJS)
 		$(LINKER) $(TEST_OBJ_PATH)/tensor_psym.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_psym
+
+tensor_psttm: $(TEST_OBJS)
+		$(LINKER) $(TEST_OBJ_PATH)/tensor_psttm.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_psttm
 
 sttsm_dense: $(TEST_OBJS)
 		$(LINKER) $(TEST_OBJ_PATH)/test_sttsm_dense.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm_dense

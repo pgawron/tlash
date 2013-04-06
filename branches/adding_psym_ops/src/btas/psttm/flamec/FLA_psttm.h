@@ -31,4 +31,4 @@
 */
 #include "FLAME.h"
 
-FLA_Error FLA_Psttm( FLA_Obj alpha, FLA_Obj A, FLA_Obj beta, dim_t nSymGroups, dim_t* symGroupLens, dim_t** symGroups, FLA_Obj B[nSymGroups], FLA_Obj C );
+FLA_Error FLA_Psttm( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C );

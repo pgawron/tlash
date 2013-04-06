@@ -96,6 +96,7 @@ FLA_Error FLA_Obj_print_scalar_tensor_mode_at(FLA_Obj A, dim_t mode, dim_t index
 	return FLA_SUCCESS;
 }
 
+//Loop over mode in scalar object
 FLA_Error FLA_Obj_print_hier_tensor_loop_scalar_mode(FLA_Obj A, dim_t mode, dim_t index[]){
 
 	if(mode == 0){
@@ -136,6 +137,7 @@ FLA_Error FLA_Obj_print_hier_tensor_loop_scalar_mode(FLA_Obj A, dim_t mode, dim_
 	return FLA_SUCCESS;
 }
 
+//Loop over the mode in blocked object
 FLA_Error FLA_Obj_print_hier_tensor_repart_mode_at(FLA_Obj A, dim_t repart_mode, dim_t index[]){
 	FLA_Obj AT, AB;
 	FLA_Obj A0, A1, A2;
