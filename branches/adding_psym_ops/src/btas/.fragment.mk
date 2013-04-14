@@ -40,7 +40,7 @@
 # These two mmakefile variables need to be set in order for the recursive
 # include process to work!
 CURRENT_DIR_NAME := btas
-CURRENT_SUB_DIRS := copy_col_mode permute psttm sttsm sttv ttm
+CURRENT_SUB_DIRS := copy_col_mode permute psttm psttv sttsm ttm
 
 # Source files local to this fragment
 LOCAL_SRC_FILES  := 
