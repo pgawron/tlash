@@ -792,33 +792,68 @@ FLA_Error TLA_split_sym_group(TLA_sym S, dim_t nSplit_modes, dim_t split_modes[n
 }
 
 FLA_Error TLA_update_sym_based_offset(TLA_sym S, FLA_Obj* A){
+    TLA_sym* Asym = &(A->sym);
+    *Asym = S;
 
     //Update symmetries of objects
     dim_t i, j;
 
-    for(i = 0; i < S.nSymGroups; i++){
+    for(i = 0; i < Asym->nSymGroups; i++){
         dim_t nModes_to_split = 0;
         dim_t modes_to_split[A->order];
 
-        dim_t symGroupModeOffset = TLA_sym_group_mode_offset(S, i);
-        for(j = 0; j < S.symGroupLens[i]; j++){
-            if((A->offset)[S.symModes[symGroupModeOffset + j]] == 0){
-                modes_to_split[nModes_to_split] = S.symModes[symGroupModeOffset + j];
+        dim_t symGroupModeOffset = TLA_sym_group_mode_offset(*Asym, i);
+        for(j = 0; j < (Asym->symGroupLens)[i]; j++){
+            if((A->offset)[(Asym->symModes)[symGroupModeOffset + j]] == 0){
+                modes_to_split[nModes_to_split] = (Asym->symModes)[symGroupModeOffset + j];
                 nModes_to_split++;
             }
         }
+        if(nModes_to_split == 0 || nModes_to_split == (Asym->symGroupLens)[i]){
 
-        TLA_split_sym_group(S, nModes_to_split, modes_to_split, &(A->sym));
-        //Logically what happens
-        /*
-        if(nModes_to_split == 0 || nModes_to_split == order){
-            //All ones in offset meaning we retain full symmetry of the group
-            A.sym = origSym;
         }else{
-            //At least one 0 in the offset, so we have to split the group
-            TLA_split_sym_group(origSym, nModes_to_split, modes_to_split, &(A.sym));
+            TLA_split_sym_group(*Asym, nModes_to_split, modes_to_split, Asym);
+            //inc i by 1 since created a new group that will not split in next iteration?
         }
-        */
+    }
+    return FLA_SUCCESS;
+}
+
+FLA_Error TLA_update_sym_based_lin_offset(TLA_sym S, dim_t linOffset, TLA_sym* S1){
+    dim_t i, j;
+    *S1 = S;
+
+    dim_t offset[S1->order];
+    memset(&(offset[0]), 0, (S1->order) * sizeof(dim_t));
+    dim_t stride = 1 << (S1->order - 1);
+    for(i = S1->order - 1; i < S1->order; i--){
+        if(linOffset >= stride){
+            offset[i] = 1;
+            linOffset -= stride;
+        }
+        stride /= 2;
+    }
+
+    //Update symmetries of objects
+
+
+    for(i = 0; i < S1->nSymGroups; i++){
+        dim_t nModes_to_split = 0;
+        dim_t modes_to_split[S1->order];
+
+        dim_t symGroupModeOffset = TLA_sym_group_mode_offset(*S1, i);
+        for(j = 0; j < (S1->symGroupLens)[i]; j++){
+            if((offset)[(S1->symModes)[symGroupModeOffset + j]] == 0){
+                modes_to_split[nModes_to_split] = (S1->symModes)[symGroupModeOffset + j];
+                nModes_to_split++;
+            }
+        }
+        if(nModes_to_split == 0 || nModes_to_split == (S1->symGroupLens)[i]){
+
+        }else{
+            TLA_split_sym_group(*S1, nModes_to_split, modes_to_split, S1);
+            //inc i by 1 since created a new group that will not split in next iteration?
+        }
     }
     return FLA_SUCCESS;
 }

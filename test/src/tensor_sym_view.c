@@ -4,14 +4,15 @@
 void Usage()
 {
     printf("Test psym tensor view operations.\n\n");
-    printf("  tensor_psym <m> <nA> <bA> <nGroups> <group1Len> ... <groupNLen> <symMode1> ... <symModeM> <splitGroup>\n\n");
+    printf("  tensor_psym <m> <nA> <bA> <nGroups> <group1Len> ... <groupNLen> <symMode1> ... <symModeN> <nPartModes> <partMode1> ... <partModeK>\n\n");
     printf("  m: order of symmetric tensor\n");
     printf("  nA: mode-length of tensor A\n");
     printf("  bA: mode-length of block of A\n");
 	printf("  nGroups: number of symmetric groups\n");
 	printf("  groupKLen: length of symmetric group K\n");
 	printf("  symModeK: Kth mode in symmetric group ordering\n");
-	printf("  splitGroup: symmetric group to partition\n");
+	printf("  nPartModes: number modes to partition\n");
+	printf("  partModeK: Kth mode to partition\n");
 }
 
 void print_tensor(const char* varName, FLA_Obj A){
@@ -41,10 +42,7 @@ void create_psym_tensor(dim_t order, dim_t nA, dim_t bA, TLA_sym sym, FLA_Obj* A
 	FLA_Random_psym_tensor(*A);
 }
 
-void test_repart_routines(FLA_Obj A, dim_t splitGroup){
-    dim_t nModes_repart = A.sym.symGroupLens[splitGroup];
-    dim_t repart_modes[nModes_repart];
-    memcpy(&(repart_modes[0]), &(A.sym.symModes[TLA_sym_group_mode_offset(A.sym, splitGroup)]), nModes_repart * sizeof(dim_t));
+void test_repart_routines(FLA_Obj A, dim_t nModes_repart, dim_t repart_modes[nModes_repart]){
 
     dim_t i;
     dim_t nParts = 1 << nModes_repart;
@@ -89,7 +87,8 @@ void test_repart_routines(FLA_Obj A, dim_t splitGroup){
         /*********************************/
 
         for(i = 0; i < nParts; i++){
-            printf("A[%d]:\n", i);
+            printf("A[%d] ", i);
+            print_array("offset", Apart[i]->order, (Apart[i]->offset));
             print_tensor("", *(Apart[i]));
             printf("\n");
         }
@@ -114,6 +113,11 @@ void test_repart_routines(FLA_Obj A, dim_t splitGroup){
     printf("A final:");
     print_tensor("", A);
     printf("\n");
+
+    for(i = 0; i < nParts; i++)
+        FLA_free(Apart[i]);
+    for(i = 0; i < nReparts; i++)
+        FLA_free(Arepart[i]);
 }
 
 int main(int argc, char* argv[]){
@@ -121,7 +125,7 @@ int main(int argc, char* argv[]){
 
 	FLA_Init();
 
-	if(argc < 7){
+	if(argc < 5){
 		Usage();
 		FLA_Finalize();
 		return 0;
@@ -135,7 +139,7 @@ int main(int argc, char* argv[]){
 	const dim_t bA = atoi(argv[++argNum]);
 	sym.nSymGroups = atoi(argv[++argNum]);
 
-	if(argc < 5 + sym.nSymGroups + m + 1){
+	if(argc < 5 + sym.nSymGroups + m){
         Usage();
         FLA_Finalize();
         return 0;
@@ -146,7 +150,18 @@ int main(int argc, char* argv[]){
 	for(i = 0; i < m; i++)
 		sym.symModes[i] = atoi(argv[++argNum]);
 
-	const dim_t splitGroup = atoi(argv[++argNum]);
+	const dim_t nPartModes = atoi(argv[++argNum]);
+
+    if(argc != 5 + sym.nSymGroups + m + 1 + nPartModes){
+        Usage();
+        FLA_Finalize();
+        return 0;
+    }
+
+	dim_t partModes[nPartModes];
+	for(i = 0; i < nPartModes; i++)
+	    partModes[i] = atoi(argv[++argNum]);
+
 
 	if(nA % bA != 0){
 		printf("bA must evenly divide nA\n");
@@ -164,7 +179,7 @@ int main(int argc, char* argv[]){
 	create_psym_tensor(m, nA, bA, sym, &T);
 	print_tensor("T", T);
 	
-	test_repart_routines(T, splitGroup);
+	test_repart_routines(T, nPartModes, partModes);
 
 	FLA_Obj_blocked_psym_tensor_free_buffer(&T);
 	FLA_Obj_free_without_buffer(&T);

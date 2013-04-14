@@ -60,8 +60,8 @@ FLA_Error TLA_Copy_col_mode(FLA_Obj A, dim_t mode_A, FLA_Obj B, dim_t mode_B);
 FLA_Error FLA_Psttm( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C );
 
 // --- Sttv routines --------------------------------------------------------
-FLA_Error FLA_Sttv_helper(FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C, TLA_sym origSym, dim_t origSymGroupIgnore, dim_t origSymGroupsPartitioned);
-FLA_Error FLA_Sttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C );
+//FLA_Error FLA_Sttv_helper(FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C, TLA_sym origSym, dim_t origSymGroupIgnore, dim_t origSymGroupsPartitioned);
+FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C );
 
 // --- check routine prototypes ------------------------------------------------
 

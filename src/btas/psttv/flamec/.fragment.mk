@@ -39,14 +39,14 @@
 
 # These two mmakefile variables need to be set in order for the recursive
 # include process to work!
-CURRENT_DIR_NAME := sttv
-CURRENT_SUB_DIRS := flamec
+CURRENT_DIR_NAME := flamec
+CURRENT_SUB_DIRS := 
 
 # Source files local to this fragment
-LOCAL_SRC_FILES  := 
+LOCAL_SRC_FILES  := FLA_psttv.c
 
 # Add the fragment's local source files to the _global_variable_ variable.
-MK_BTAS_SRC += $(addprefix $(PARENT_PATH)/$(CURRENT_DIR_NAME)/, $(LOCAL_SRC_FILES))
+MK_BTAS_FLAMEC_SRC += $(addprefix $(PARENT_PATH)/$(CURRENT_DIR_NAME)/, $(LOCAL_SRC_FILES))
 
 
 

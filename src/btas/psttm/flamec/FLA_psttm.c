@@ -31,7 +31,17 @@
 */
 
 #include "FLAME.h"
-
+void print_matlab_tensor1(const char* varName, FLA_Obj A){
+    dim_t i;
+    printf("%s tensor\n", varName);
+    printf("%s = tensor([", varName);
+    FLA_Obj_print_tensor(A);
+    printf("],[");
+    for(i = 0; i < FLA_Obj_order(A); i++)
+        printf("%d ", FLA_Obj_dimsize(((FLA_Obj*)(FLA_Obj_base_buffer(A)))[0],i) * FLA_Obj_dimsize(A,i));
+    printf("]);\n\n");
+}
+//NOTE: FIX for breaking/retaining symmetry
 FLA_Error FLA_Psttm( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C )
 {
     FLA_Obj BT, BB;
@@ -45,7 +55,7 @@ FLA_Error FLA_Psttm( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
     FLA_Part_1xmode2(C, &CT,
                      &CB, mode, 0, FLA_TOP);
 
-    while(FLA_Obj_dimsize(CT, mode) <= FLA_Obj_dimsize(C, mode)){
+    while(FLA_Obj_dimsize(CT, mode) < FLA_Obj_dimsize(C, mode)){
         dim_t b = 1;
         FLA_Repart_1xmode2_to_1xmode3(BT, &B0,
                                       /**/ /**/
@@ -56,7 +66,13 @@ FLA_Error FLA_Psttm( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
                                           &C1,
                                       CB, &C2, mode, b, FLA_BOTTOM);
         /*********************************/
-        FLA_Sttv(alpha, A, mode, beta, B1, C1);
+
+        printf("Calling psttv\n");
+        printf("-------------\n\n");
+        print_matlab_tensor1("A",A);
+        print_matlab_tensor1("B1",B1);
+        print_matlab_tensor1("C1",C1);
+        FLA_Psttv(alpha, A, mode, beta, B1, C1);
         /*********************************/
         FLA_Cont_with_1xmode3_to_1xmode2( &CT, C0,
                                                C1,

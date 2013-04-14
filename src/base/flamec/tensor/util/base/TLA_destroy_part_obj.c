@@ -29,8 +29,14 @@
    1 University Station C0500
    Austin TX 78712
 */
+
 #include "FLAME.h"
 
+FLA_Error TLA_destroy_part_obj( dim_t nPart, FLA_Obj* partitions[])
+{
+  dim_t i;
+  for(i = 0; i < nPart; i++)
+      FLA_free(partitions[i]);
 
-FLA_Error FLA_Sttv_helper(FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C, dim_t symGroupsToPartition[], dim_t symGroupsPartitioned);
-FLA_Error FLA_Sttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C );
+  return FLA_SUCCESS;
+}

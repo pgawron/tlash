@@ -98,9 +98,14 @@ FLA_Error FLA_Obj_print_scalar_tensor_mode_at(FLA_Obj A, dim_t mode, dim_t index
 
 //Loop over mode in scalar object
 FLA_Error FLA_Obj_print_hier_tensor_loop_scalar_mode(FLA_Obj A, dim_t mode, dim_t index[]){
+    dim_t i;
+
+    for(i = 0; i < FLA_Obj_order(A); i++)
+        if(FLA_Obj_dimsize(A,i) == 0)
+            return FLA_SUCCESS;
 
 	if(mode == 0){
-		dim_t i;
+
 		dim_t order = FLA_Obj_order(A);
 
 		FLA_Obj* buffer = FLA_Obj_tensor_buffer_at_view(A);
@@ -124,7 +129,6 @@ FLA_Error FLA_Obj_print_hier_tensor_loop_scalar_mode(FLA_Obj A, dim_t mode, dim_
 		return FLA_Obj_print_scalar_tensor_mode_at(*buffer, printMode, newIndex);
 	}
 	
-	dim_t i;
 	dim_t order = FLA_Obj_order(A);
 	dim_t newIndex[order];
 	memcpy(&(newIndex[0]), &(index[0]), order * sizeof(dim_t));

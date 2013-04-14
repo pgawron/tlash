@@ -75,6 +75,7 @@ dim_t       TLA_sym_group_of_mode( TLA_sym S, dim_t mode);
 dim_t       TLA_sym_group_mode_offset( TLA_sym S, dim_t symGroup);
 dim_t       TLA_sym_group_of_mode_size( TLA_sym S, dim_t mode);
 FLA_Error   TLA_update_sym_based_offset( TLA_sym S, FLA_Obj* A);
+FLA_Error   TLA_update_sym_based_lin_offset( TLA_sym S, dim_t linOffset, TLA_sym* S1);
 FLA_Error   TLA_split_sym_group(TLA_sym S, dim_t nSplit_modes, dim_t split_modes[nSplit_modes], TLA_sym* S1);
 
 //--------------------------------------------------------------------------
