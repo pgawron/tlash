@@ -198,3 +198,17 @@ FLA_Error FLA_Obj_print(FLA_Obj obj){
     FLA_free(permutation);
     return FLA_SUCCESS;
 }
+
+FLA_Error FLA_Obj_print_matlab(const char * varName, FLA_Obj obj){
+    dim_t i;
+    if(FLA_Obj_order(obj) <= 2)
+        printf("%s = reshape([", varName);
+    else
+        printf("%s = tensor([", varName);
+    FLA_Obj_print_tensor(obj);
+    printf("],[");
+    for(i = 0; i < FLA_Obj_order(obj); i++)
+        printf("%d ", FLA_Obj_dimsize(((FLA_Obj*)(FLA_Obj_base_buffer(obj)))[0],i) * FLA_Obj_dimsize(obj,i));
+    printf("]);\n\n");
+    return FLA_SUCCESS;
+}

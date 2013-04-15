@@ -15,17 +15,6 @@ void Usage()
     printf("  bA: block-size of A\n");
 }
 
-void print_tensor(const char* varName, FLA_Obj A){
-    dim_t i;
-    printf("%s tensor\n", varName);
-    printf("%s = tensor([", varName);
-    FLA_Obj_print_tensor(A);
-    printf("],[");
-    for(i = 0; i < FLA_Obj_order(A); i++)
-        printf("%d ", FLA_Obj_dimsize(((FLA_Obj*)(FLA_Obj_base_buffer(A)))[0],i) * FLA_Obj_dimsize(A,i));
-    printf("]);\n\n");
-}
-
 void create_random_psym_tensor(dim_t order, dim_t size[order], dim_t b, TLA_sym sym, FLA_Obj* obj){
     dim_t i;
     dim_t blocked_stride[order];
@@ -81,12 +70,12 @@ void test_psttm(dim_t order, TLA_sym sym, dim_t size_A[order], dim_t bA, dim_t m
     dim_t size_B[] = {size_C[mode], size_A[mode]};
     create_random_matrix(size_B, bA, &B);
 
-    print_tensor("A", A);
-    print_tensor("B", B);
-    print_tensor("C", C);
+    FLA_Obj_print_matlab("A", A);
+    FLA_Obj_print_matlab("B", B);
+    FLA_Obj_print_matlab("preC", C);
 
     FLA_Psttm(FLA_ONE, A, mode, FLA_ONE, B, C);
-    print_tensor("C", C);
+    FLA_Obj_print_matlab("C", C);
 
 }
 
@@ -132,8 +121,6 @@ int main(int argc, char* argv[]){
 	const int mode = atoi(argv[++argNum]);
 	const int nC = atoi(argv[++argNum]);
 	const int bA = atoi(argv[++argNum]);
-
-
 
 	test_psttm(m, sym, nA, bA, mode, nC);
 

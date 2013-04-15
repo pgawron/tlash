@@ -417,7 +417,7 @@ FLA_Error FLA_Ttm_hierAB_single_repart_mode( FLA_Obj alpha, FLA_Obj A, dim_t mod
 										  &A1,
 									  AB, &A2, repart_mode, b, FLA_BOTTOM);
 
-		FLA_Ttm_single_mode(alpha, A1, mode, beta, B1, C);
+		FLA_Ttm_single_mode(alpha, A1, mode, beta, B1, tmpC);
 		//Stationary C calls nopermC I think...
 
 
@@ -600,7 +600,7 @@ FLA_Error FLA_Ttm_single_mode( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj bet
 			dim_t order = FLA_Obj_order(B);
 			FLA_TIndex_to_LinIndex(order, &(((B.base)->stride)[0]), &(B.offset[0]), &linIndex);
 			//FLA_Ttm_single_mode(alpha, A, mode, beta, ((FLA_Obj*)buf_B)[linIndex], C);
-			FLA_Ttm_single_mode(alpha, A, mode, beta, *((FLA_Obj*)FLA_Obj_buffer_at_view(B)), C);
+			FLA_Ttm_single_mode(alpha, A, mode, beta, *((FLA_Obj*)FLA_Obj_tensor_buffer_at_view(B)), C);
 		}else{
 			if(elemtype_C != FLA_SCALAR){
 				if(elemtype_B != FLA_SCALAR){
