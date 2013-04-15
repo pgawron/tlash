@@ -178,3 +178,4 @@ FLA_Error	FLA_Obj_print_hier_tensor_repart_mode_at(FLA_Obj A, dim_t repart_mode,
 FLA_Error	FLA_Obj_print_tensor(FLA_Obj A);
 FLA_Error	FLA_Obj_print_flat_tensor(FLA_Obj A);
 FLA_Error   FLA_Obj_print(FLA_Obj A);
+FLA_Error   FLA_Obj_print_matlab(const char * varName, FLA_Obj obj);

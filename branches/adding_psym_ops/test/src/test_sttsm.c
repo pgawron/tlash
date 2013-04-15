@@ -13,8 +13,20 @@ void Usage()
 }
 
 void initSymmTensor(dim_t order, dim_t size[order], dim_t b, FLA_Obj* obj){
-  FLA_Obj_create_symm_tensor_without_buffer(FLA_DOUBLE, order, size, b, obj);
-  FLA_Obj_create_Random_symm_tensor_data(b, *obj);
+    dim_t i;
+    dim_t blocked_stride[order];
+    blocked_stride[0] = 1;
+    for(i = 1; i < order; i++)
+        blocked_stride[i] = blocked_stride[i-1] * (size[i-1] / b);
+
+    TLA_sym sym;
+    sym.order = FLA_Obj_order(*obj);
+    sym.nSymGroups = 1;
+    sym.symGroupLens[0] = sym.order;
+    for(i = 0; i < sym.order; i++)
+        (sym.symModes)[i] = i;
+  FLA_Obj_create_blocked_psym_tensor(FLA_DOUBLE, order, size, blocked_stride, b, sym, obj);
+  FLA_Random_psym_tensor(*obj);
 }
 
 void initMatrix(dim_t size[2], dim_t bC, dim_t bA, FLA_Obj* obj){
@@ -119,9 +131,9 @@ void test_sttsm(int m, int nA, int nC, int bA, int bC, double* elapsedTime){
   FLA_Obj_blocked_free_buffer(&B);
   FLA_Obj_free_without_buffer(&B);
 
-  FLA_Obj_blocked_symm_free_buffer(&A);
+  FLA_Obj_blocked_psym_tensor_free_buffer(&A);
   FLA_Obj_free_without_buffer(&A);
-  FLA_Obj_blocked_symm_free_buffer(&C);
+  FLA_Obj_blocked_psym_tensor_free_buffer(&C);
   FLA_Obj_free_without_buffer(&C);
 }
 
