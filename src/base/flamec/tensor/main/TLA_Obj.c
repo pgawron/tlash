@@ -476,7 +476,7 @@ FLA_Error FLA_Obj_create_blocked_psym_tensor(FLA_Datatype datatype, dim_t order,
 	dim_t nUniques = 1;
 	dim_t modeOffset = 0;
 	for(i = 0; i < (obj->sym).nSymGroups; i++){
-		nUniques *= binomial((obj->sym).symGroupLens[i] + (size[modeOffset] / blkSize) - 1, (obj->sym).symGroupLens[i]);
+		nUniques *= binomial((obj->sym).symGroupLens[i] + (size[((obj->sym).symModes)[modeOffset]] / blkSize) - 1, (obj->sym).symGroupLens[i]);
 		modeOffset += (obj->sym).symGroupLens[i];
 	}
 
@@ -546,6 +546,7 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_sym_tensor( void *buffer[], dim_t ord
 			}
 		}
 		if(uniqueIndex){
+			
 			(buffer_obj[objLinIndex].base)->buffer = buffer[countBuffer];
 			//Update stride - TODO: MOVE THIS ELSEWHERE
 			((buffer_obj[objLinIndex].base)->stride)[0] = 1;
@@ -637,6 +638,7 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 	while(TRUE){
 	
 	//FIX THIS FOR PSYM, ended here!!!!!!
+	    //BUG HERE, need to fix
 	    print_array("attaching index", order, curIndex);
 
 		FLA_TIndex_to_LinIndex(order, stride_obj, curIndex, &objLinIndex);
@@ -646,19 +648,19 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 		for(i = 0; i < nSymGroups; i++){
 			
 			for(j = 0; j < symGroupLens[i]; j++)
-				orderedSymModes[modeOffset + j] = symModes[j+modeOffset];
-			qsort(&(orderedSymModes[0]), symGroupLens[i], sizeof(dim_t), compare_dim_t);
+				orderedSymModes[j+modeOffset] = symModes[j+modeOffset];
+			qsort(&(orderedSymModes[j+modeOffset]), symGroupLens[i], sizeof(dim_t), compare_dim_t);
 		
 			for(j = 0; j < symGroupLens[i]; j++){
-				index_pairs[j].index = orderedSymModes[modeOffset + j];
-				index_pairs[j].val = curIndex[orderedSymModes[modeOffset + j]];
+				index_pairs[j].index = orderedSymModes[j+modeOffset];
+				index_pairs[j].val = curIndex[orderedSymModes[j+modeOffset]];
 			}
 			qsort(index_pairs, symGroupLens[i], sizeof(FLA_Paired_Sort), compare_pairwise_sort);
 			
 
 			for(j = 0; j < symGroupLens[i]; j++){
-				permutation[orderedSymModes[modeOffset + j]] = index_pairs[j].index;
-				sortedIndex[orderedSymModes[modeOffset + j]] = index_pairs[j].val;
+				permutation[orderedSymModes[j+modeOffset]] = index_pairs[j].index;
+				sortedIndex[orderedSymModes[j+modeOffset]] = index_pairs[j].val;
 			}
 
 			modeOffset += symGroupLens[i];
@@ -683,7 +685,9 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 		}
 
 		if(uniqueIndex){
+			printf("linIndex: %d ", objLinIndex);
 		    print_array("attaching to uniqueIndex", order, curIndex);
+
 			(buffer_obj[objLinIndex].base)->buffer = buffer[countBuffer];
 			//Update stride - TODO: MOVE THIS ELSEWHERE
 			((buffer_obj[objLinIndex].base)->stride)[0] = 1;
@@ -703,6 +707,8 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 			print_array("freeing base of ", order, curIndex);
 			FLA_free(buffer_obj[objLinIndex].base);
 			(buffer_obj[objLinIndex]).base = (buffer_obj[uniqueLinIndex]).base;
+			print_array("has permutation ", order, permutation);
+
 			//Set the right permutation
 			memcpy(&(ipermutation[0]), &(permutation[0]), order * sizeof(dim_t));
 			modeOffset = 0;
@@ -712,6 +718,7 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 				}
 				modeOffset += symGroupLens[i];
 			}
+			print_array("setting obj to permutation", order, ipermutation);
 			memcpy(&(((buffer_obj[objLinIndex]).permutation)[0]), &(ipermutation[0]), order * sizeof(dim_t));
 			(buffer_obj[objLinIndex]).isStored = FALSE;
 		}
