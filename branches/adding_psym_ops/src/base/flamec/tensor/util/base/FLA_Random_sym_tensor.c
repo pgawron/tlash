@@ -127,7 +127,7 @@ FLA_Error FLA_Random_scalar_psym_tensor(FLA_Obj obj){
         for(j = 0; j < objSym.symGroupLens[i]; j++)
             tmpSym->symModes[j] = objSym.symModes[j + symGroupModeOffset];
         for(j = 0; j < symGroupModeOffset; j++)
-            tmpSym->symModes[symGroupModeOffset + j] = objSym.symModes[j];
+            tmpSym->symModes[objSym.symGroupLens[i] + j] = objSym.symModes[j];
         dim_t nextGroupOffset = TLA_sym_group_mode_offset(obj.sym,i+1);
         memcpy(&((tmpSym->symModes)[nextGroupOffset]), &(objSym.symModes[nextGroupOffset]), (FLA_Obj_order(obj) - nextGroupOffset) * sizeof(dim_t));
         FLA_Random_scalar_psym_tensor_helper(tmp);
@@ -314,7 +314,7 @@ FLA_Error FLA_Random_psym_tensor(FLA_Obj obj){
 
 			//Determine symm groups
 			create_sym_groups(order, curIndex, obj, &(tmpBlk));
-
+			print_array("creating unique block", order, curIndex);
 			FLA_Random_scalar_psym_tensor(tmpBlk);
 
 		    //Fill data

@@ -108,7 +108,7 @@ TEST_OBJ_PATH  := obj
 FLA_LIB_PATH   := $(INSTALL_PREFIX)/lib
 FLA_INC_PATH   := $(INSTALL_PREFIX)/include
 LIBFLAME       := $(FLA_LIB_PATH)/libflame.a
-LIBFLAME_PROF   := $(HOME)/flame_prof/lib/libflame.a
+LIBFLAME_PROF  := $(HOME)/flame_prof/lib/libflame.a
 
 CFLAGS         += -I$(FLA_INC_PATH) -I$(TEST_SRC_PATH)
 
@@ -146,10 +146,10 @@ tensor_sym: $(TEST_OBJS)
 tensor_sym_view: $(TEST_OBJS)
 		$(LINKER) $(TEST_OBJ_PATH)/tensor_sym_view.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_sym_view
 
-tensor_psym: $(TEST_OBJS)
+tensor_psym: $(TEST_OBJS) $(LIBFLAME)
 		$(LINKER) $(TEST_OBJ_PATH)/tensor_psym.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_psym
 
-tensor_psttm: $(TEST_OBJS)
+tensor_psttm: $(TEST_OBJS) $(LIBFLAME)
 		$(LINKER) $(TEST_OBJ_PATH)/tensor_psttm.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_psttm
 
 sttsm_dense: $(TEST_OBJS)

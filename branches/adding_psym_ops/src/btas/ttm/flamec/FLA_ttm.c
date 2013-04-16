@@ -88,23 +88,6 @@ FLA_Error FLA_Ttm_single_mode_new( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj
 		FLA_Obj_create_without_buffer(FLA_DOUBLE, size_C_2D[0], size_C_2D[1], &C_2D);
 		FLA_Obj_attach_buffer(C_buf, stride_C_2D[0], stride_C_2D[1], &C_2D);
 
-		/*
-		if(mode < repart_mode){
-			if(permA[mode] < permA[repart_mode]){
-				FLA_Gemm(FLA_NO_TRANSPOSE, FLA_NO_TRANSPOSE, alpha, B, A_2D, beta, C_2D);
-			}else{
-				FLA_Gemm(FLA_TRANSPOSE, FLA_TRANSPOSE, alpha, A_2D, B, beta, C_2D);				
-			}
-		}else {
-			if (permA[mode] < permA[repart_mode]) {
-				FLA_Gemm(FLA_NO_TRANSPOSE, FLA_TRANSPOSE, alpha, B, A_2D, beta, C_2D);
-
-			}else {
-				FLA_Gemm(FLA_NO_TRANSPOSE, FLA_TRANSPOSE, alpha, A_2D, B, beta, C_2D);
-			}
-
-		}
-		*/
 
 		if (mode < repart_mode) {
 			if(firstModeC == firstModeA){
@@ -119,19 +102,6 @@ FLA_Error FLA_Ttm_single_mode_new( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj
 				FLA_Gemm(FLA_TRANSPOSE, FLA_TRANSPOSE, alpha, A_2D, B, beta, C_2D);				
 			}
 		}
-		/*
-		if(permA[mode] < permA[repart_mode]){
-			if(mode >= repart_mode)
-				FLA_Gemm(FLA_NO_TRANSPOSE, FLA_NO_TRANSPOSE, alpha, B, A_2D, beta, C_2D);
-			else
-				FLA_Gemm(FLA_NO_TRANSPOSE, FLA_TRANSPOSE, alpha, B, A_2D, beta, C_2D);
-		}else{
-			if(mode >= repart_mode)
-				FLA_Gemm(FLA_TRANSPOSE, FLA_TRANSPOSE, alpha, A_2D, B, beta, C_2D);
-			else
-				FLA_Gemm(FLA_NO_TRANSPOSE, FLA_TRANSPOSE, alpha, A_2D, B, beta, C_2D);
-		}
-		*/
 		FLA_Obj_free_without_buffer(&A_2D);
 		FLA_Obj_free_without_buffer(&C_2D);
 	}else{
@@ -186,6 +156,7 @@ FLA_Error FLA_Ttm_single_mode_new( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj
  // End new code
 /*****************/
 
+//Original ttm implementation for no_permC variant (permutes A but assumes C is in permuted form)
 FLA_Error FLA_Ttm_single_no_permC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C )
 {
 	FLA_Datatype datatype = FLA_Obj_datatype(A);
@@ -551,10 +522,11 @@ FLA_Error FLA_Ttm_single_mode( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj bet
 //		FLA_Obj_print_tensor(B);
 //		printf("\nC:\n");
 //		FLA_Obj_print_tensor(C);
-		if(mode == FLA_Obj_order(A) - 1)
-			FLA_Ttm_single_mode_new(alpha, A, mode, beta, B, C, FLA_Obj_order(A) - 2);
-		else
-			FLA_Ttm_single_mode_new(alpha, A, mode, beta, B, C, FLA_Obj_order(A) - 1);
+	    FLA_Ttm_single_mode_no_permC(alpha, A, mode, beta, B, C);
+		//if(mode == FLA_Obj_order(A) - 1)
+		//	FLA_Ttm_single_mode_new(alpha, A, mode, beta, B, C, FLA_Obj_order(A) - 2);
+		//else
+		//	FLA_Ttm_single_mode_new(alpha, A, mode, beta, B, C, FLA_Obj_order(A) - 1);
 //		printf("\npostC:\n");
 //		FLA_Obj_print_tensor(C);
 	}else{
