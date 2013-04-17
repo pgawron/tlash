@@ -5,12 +5,12 @@ void initSymmObj(FLA_Obj* obj){
   dim_t i;
   dim_t order = 3;
   dim_t size[] = {8,8,8};
-  dim_t b = 2;
+  dim_t blkSize[] = {2,2,2};
 
   dim_t blocked_stride[order];
   blocked_stride[0] = 1;
   for(i = 1; i < order; i++)
-      blocked_stride[i] = blocked_stride[i-1] * (size[i-1] / b);
+      blocked_stride[i] = blocked_stride[i-1] * (size[i-1] / blkSize[i-1]);
 
   TLA_sym sym;
   sym.order = FLA_Obj_order(*obj);
@@ -18,7 +18,7 @@ void initSymmObj(FLA_Obj* obj){
   sym.symGroupLens[0] = sym.order;
   for(i = 0; i < sym.order; i++)
       (sym.symModes)[i] = i;
-  FLA_Obj_create_blocked_psym_tensor(FLA_DOUBLE, order, size, blocked_stride, b, sym, obj);
+  FLA_Obj_create_blocked_psym_tensor(FLA_DOUBLE, order, size, blocked_stride, blkSize, sym, obj);
   FLA_Random_psym_tensor(*obj);
 }
 

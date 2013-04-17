@@ -32,34 +32,34 @@
 
 #include "FLAME.h"
 
-FLA_Error FLA_Obj_print_scalar_tensor(FLA_Obj A, dim_t repart_mode){
+FLA_Error FLA_Obj_print_scalar_tensor(FLA_Obj A, dim_t repart_mode_index){
 	FLA_Obj AT, AB;
 	FLA_Obj A0, A1, A2;
 	
 	FLA_Part_1xmode2(A, &AT,
 						/**/
-						&AB, repart_mode, 0, FLA_TOP);
+						&AB, A.permutation[repart_mode_index], 0, FLA_TOP);
 	
-	while(FLA_Obj_dimsize(AT,repart_mode) < FLA_Obj_dimsize(A,repart_mode)){
+	while(FLA_Obj_dimsize(AT,A.permutation[repart_mode_index]) < FLA_Obj_dimsize(A,A.permutation[repart_mode_index])){
 		FLA_Repart_1xmode2_to_1xmode3(AT,   &A0,
 										    &A1,
 									  /**/  /**/
 									  AB,   &A2, 
-									  repart_mode, 1, FLA_BOTTOM);
+									  A.permutation[repart_mode_index], 1, FLA_BOTTOM);
 		/************************/
 		double* buffer = FLA_Obj_tensor_buffer_at_view(A1);
-		if(repart_mode == 0){
+		if(repart_mode_index == 0){
 			printf("%.3f", *buffer);
 			printf(" ");	
 		}else{
-			FLA_Obj_print_scalar_tensor(A1, repart_mode - 1);
+			FLA_Obj_print_scalar_tensor(A1, repart_mode_index - 1);
 		}
 		/************************/
 		FLA_Cont_with_1xmode3_to_1xmode2(&AT, A0,
 											  A1,
 										 /**/ /**/
 										 &AB, A2, 
-										 repart_mode, FLA_TOP);
+										 A.permutation[repart_mode_index], FLA_TOP);
 	}
 	return FLA_SUCCESS;	
 }
@@ -207,8 +207,13 @@ FLA_Error FLA_Obj_print_matlab(const char * varName, FLA_Obj obj){
         printf("%s = tensor([", varName);
     FLA_Obj_print_tensor(obj);
     printf("],[");
-    for(i = 0; i < FLA_Obj_order(obj); i++)
-        printf("%d ", FLA_Obj_dimsize(((FLA_Obj*)(FLA_Obj_base_buffer(obj)))[0],i) * FLA_Obj_dimsize(obj,i));
+    if(FLA_Obj_elemtype(obj) == FLA_SCALAR){
+        for(i = 0; i < FLA_Obj_order(obj); i++)
+            printf("%d ", FLA_Obj_dimsize(obj,obj.permutation[i]));
+    }else{
+        for(i = 0; i < FLA_Obj_order(obj); i++)
+            printf("%d ", FLA_Obj_dimsize(((FLA_Obj*)(FLA_Obj_base_buffer(obj)))[0],((FLA_Obj*)(FLA_Obj_base_buffer(obj)))[0].permutation[i]) * FLA_Obj_dimsize(obj,i));
+    }
     printf("]);\n\n");
     return FLA_SUCCESS;
 }

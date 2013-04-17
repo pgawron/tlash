@@ -201,7 +201,6 @@ typedef struct FLA_Obj_view
   dim_t         isStored;
 
   TLA_sym       sym;
-  dim_t         groupToPartition;
 
   FLA_Base_obj* base;
 

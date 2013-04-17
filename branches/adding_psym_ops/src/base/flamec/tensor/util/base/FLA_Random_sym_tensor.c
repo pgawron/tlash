@@ -89,7 +89,7 @@ FLA_Error FLA_Random_scalar_psym_tensor_helper(FLA_Obj obj){
         for(j = 0; j < lenGroup; j++)
             permC.permutation[symModes[j]] = perm[j];
 
-        FLA_Permute(obj, &(permC.permutation[0]), permC);
+        FLA_Permute(obj, &(permC.permutation[0]), &permC);
         //Wrap the sum into a function that blocks, blah blah...
         for(j = 0; j < FLA_Obj_num_elem_alloc(permC); j++)
             buftmpBlk[j] += bufpermC[j];
@@ -289,13 +289,12 @@ FLA_Error FLA_Random_psym_tensor(FLA_Obj obj){
 	memcpy(&(symModes[0]), &(obj.sym.symModes[0]), order * sizeof(dim_t));
 
 
-	dim_t b = FLA_Obj_dimsize(((FLA_Obj*)FLA_Obj_base_buffer(obj))[0],0);
-	blkSize[0] = b;
+	blkSize[0] = FLA_Obj_dimsize(((FLA_Obj*)FLA_Obj_base_buffer(obj))[0],0);
 	blkStride[0] = 1;
 	memset(&(curIndex[0]), 0, order * sizeof(dim_t));
 	endIndex[0] = size[0];
 	for(i = 1; i < order; i++){
-		blkSize[i] = b;
+		blkSize[i] = FLA_Obj_dimsize(((FLA_Obj*)FLA_Obj_base_buffer(obj))[0],i);
 		endIndex[i] = size[i];
 		blkStride[i] = blkStride[i-1]*blkSize[i-1];
 	}

@@ -426,7 +426,6 @@ FLA_Error FLA_Merge_2powm(FLA_Obj* Apart[], FLA_Obj* A,
                           dim_t nModes_merge, dim_t merge_modes[nModes_merge])
 {
     dim_t i;
-    dim_t const num_part = 1 << nModes_merge;
     dim_t stride = 1;
 
     A->order = Apart[0]->order;
