@@ -35,18 +35,7 @@
 
 // --- Permute routines --------------------------------------------------------
 FLA_Error FLA_Permute_helper( FLA_Obj A, dim_t permutation[], FLA_Obj B, dim_t repart_mode_index);
-FLA_Error FLA_Permute_hier( FLA_Obj A, dim_t permtuation[], FLA_Obj* B);
-FLA_Error FLA_Permute_single_inplace( FLA_Obj* A, dim_t permutation[]);
 FLA_Error FLA_Permute( FLA_Obj A, dim_t permutation[], FLA_Obj* B );
-
-// --- Ttm routines --------------------------------------------------------
-//FLA_Error FLA_Ttm_single_mode_new( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C, dim_t repart_mode );
-//FLA_Error FLA_Ttm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C );
-//FLA_Error FLA_Ttm_single_no_permC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C );
-//FLA_Error FLA_Ttm_single_mode( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C );
-//FLA_Error FLA_Ttm_single_mode_no_permC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C );
-//FLA_Error FLA_Ttm( FLA_Obj alpha, FLA_Obj A, dim_t nModes, dim_t mode[nModes], FLA_Obj beta, FLA_Obj B[nModes], FLA_Obj C );
-//FLA_Error FLA_Ttm_single_mode_basic( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C );
 
 // --- Sttsm routines --------------------------------------------------------
 FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C, dim_t maxIndex );
@@ -59,12 +48,11 @@ FLA_Error TLA_Copy_col_mode(FLA_Obj A, dim_t mode_A, FLA_Obj B, dim_t mode_B);
 FLA_Error FLA_Psttm( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C );
 
 // --- Sttv routines --------------------------------------------------------
-//FLA_Error FLA_Sttv_helper(FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C, TLA_sym origSym, dim_t origSymGroupIgnore, dim_t origSymGroupsPartitioned);
 FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C );
 
 // --- check routine prototypes ------------------------------------------------
 
-// --- Needed ttm routines
+// --- Ttm routines
 FLA_Error FLA_Ttm_single_mode_helper( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, dim_t repart_mode, FLA_Obj C );
 FLA_Error FLA_Ttm_single_mode( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C );
 FLA_Error FLA_Ttm_scalar_permC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C );
