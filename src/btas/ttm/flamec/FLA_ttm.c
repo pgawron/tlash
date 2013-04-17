@@ -33,7 +33,10 @@
 #include "FLAME.h"
 
 //TODO: Handle permuted C
-FLA_Error FLA_Ttm_single_mode_blis( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C, dim_t repart_mode )
+FLA_Error FLA_Ttm_single_mode_blis( FLA_Obj alpha, FLA_Obj A,
+                                    dim_t mode,
+                                    FLA_Obj beta, FLA_Obj B,
+                                    FLA_Obj C, dim_t repart_mode )
 {
 	dim_t order = FLA_Obj_order(A);
 	dim_t i;
@@ -157,7 +160,9 @@ FLA_Error FLA_Ttm_single_mode_blis( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Ob
 /*****************/
 
 //Original ttm implementation for no_permC variant (permutes A but assumes C is in permuted form)
-FLA_Error FLA_Ttm_scalar_no_permC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C )
+FLA_Error FLA_Ttm_scalar_no_permC( FLA_Obj alpha, FLA_Obj A,
+                                   dim_t mode,
+                                   FLA_Obj beta, FLA_Obj B, FLA_Obj C )
 {
 	FLA_Datatype datatype = FLA_Obj_datatype(A);
 	FLA_Elemtype elemtype = FLA_Obj_elemtype(A);
@@ -187,6 +192,7 @@ FLA_Error FLA_Ttm_scalar_no_permC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj
 	FLA_Permute(A, permutation, &P);
 
 	FLA_Adjust_2D_info(&C);
+	FLA_Adjust_2D_info(&P);
 	/*********************************/
 	FLASH_Gemm(FLA_NO_TRANSPOSE, FLA_NO_TRANSPOSE, beta, B, P, alpha, C);
 	/*********************************/
@@ -201,7 +207,10 @@ FLA_Error FLA_Ttm_scalar_no_permC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj
 }
 
 //Original form that permutes C
-FLA_Error FLA_Ttm_scalar_permC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C )
+FLA_Error FLA_Ttm_scalar_permC( FLA_Obj alpha, FLA_Obj A,
+                                dim_t mode,
+                                FLA_Obj beta, FLA_Obj B,
+                                FLA_Obj C )
 {
     FLA_Datatype datatype = FLA_Obj_datatype(A);
     FLA_Elemtype elemtype = FLA_Obj_elemtype(A);
@@ -259,7 +268,10 @@ FLA_Error FLA_Ttm_scalar_permC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj be
     return FLA_SUCCESS;
 }
 
-FLA_Error FLA_Ttm( FLA_Obj alpha, FLA_Obj A, dim_t nModes, dim_t mode[nModes], FLA_Obj beta, FLA_Obj B[nModes], FLA_Obj C )
+FLA_Error FLA_Ttm( FLA_Obj alpha, FLA_Obj A,
+                   dim_t nModes, dim_t mode[nModes],
+                   FLA_Obj beta, FLA_Obj B[nModes],
+                   FLA_Obj C )
 {
 	dim_t i, j;
 	FLA_Obj tmpA, tmpC;
@@ -333,7 +345,10 @@ FLA_Error FLA_Ttm( FLA_Obj alpha, FLA_Obj A, dim_t nModes, dim_t mode[nModes], F
 /*****************
 *****    NOTE: ASSUMES THIS IS COMPUTING STATIONARY C ALGORITHM!!!!!
 *****************/
-FLA_Error FLA_Ttm_hierAB_single_repart_mode( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, dim_t repart_mode, FLA_Obj C )
+FLA_Error FLA_Ttm_hierAB_single_repart_mode( FLA_Obj alpha, FLA_Obj A,
+                                             dim_t mode,
+                                             FLA_Obj beta, FLA_Obj B,
+                                             dim_t repart_mode, FLA_Obj C )
 {
 	//FOR
 	FLA_Obj BT, BB;
@@ -418,7 +433,10 @@ FLA_Error FLA_Ttm_hierAB_single_repart_mode( FLA_Obj alpha, FLA_Obj A, dim_t mod
 	return FLA_SUCCESS;
 }
 
-FLA_Error FLA_Ttm_hierCB_single_repart_mode( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, dim_t repart_mode, FLA_Obj C )
+FLA_Error FLA_Ttm_hierCB_single_repart_mode( FLA_Obj alpha, FLA_Obj A,
+                                             dim_t mode,
+                                             FLA_Obj beta, FLA_Obj B,
+                                             dim_t repart_mode, FLA_Obj C )
 {
 	//FOR
 	FLA_Obj BT, BB;
@@ -464,7 +482,10 @@ FLA_Error FLA_Ttm_hierCB_single_repart_mode( FLA_Obj alpha, FLA_Obj A, dim_t mod
 	return FLA_SUCCESS;
 }
 
-FLA_Error FLA_Ttm_hierCA_single_repart_mode( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, dim_t repart_mode, FLA_Obj C )
+FLA_Error FLA_Ttm_hierCA_single_repart_mode( FLA_Obj alpha, FLA_Obj A,
+                                             dim_t mode,
+                                             FLA_Obj beta, FLA_Obj B,
+                                             dim_t repart_mode, FLA_Obj C )
 {
 	//FOR
 	FLA_Obj AT, AB;
@@ -506,7 +527,11 @@ FLA_Error FLA_Ttm_hierCA_single_repart_mode( FLA_Obj alpha, FLA_Obj A, dim_t mod
 	return FLA_SUCCESS;
 }
 
-FLA_Error FLA_Tensor_innerprod_nopermC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C ){
+FLA_Error FLA_Tensor_innerprod_nopermC( FLA_Obj alpha, FLA_Obj A,
+                                        dim_t mode,
+                                        FLA_Obj beta, FLA_Obj B,
+                                        FLA_Obj C )
+{
     FLA_Obj BT, BB;
     FLA_Obj B0, B1, B2;
     FLA_Obj AT, AB;
@@ -535,16 +560,8 @@ FLA_Error FLA_Tensor_innerprod_nopermC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FL
 
         FLA_Obj A1blk = *((FLA_Obj*)FLA_Obj_tensor_buffer_at_view(A1));
         FLA_Obj B1blk = *((FLA_Obj*)FLA_Obj_tensor_buffer_at_view(B1));
-		printf("    calling ttm scalar no permC\n");
-		printf("    ---------------------------\n\n");
-		FLA_Obj_print_matlab("    A1blk", A1blk);
-		FLA_Obj_print_matlab("    B1blk", B1blk);
-		FLA_Obj_print_matlab("    preC", C);
-        FLA_Ttm_scalar_no_permC(alpha, A1blk, mode, beta, B1blk, C);
 
-		printf("    returning from ttm scalar no permC\n");
-		printf("    ---------------------------\n\n");
-		FLA_Obj_print_matlab("    C", C);
+        FLA_Ttm_scalar_no_permC(alpha, A1blk, mode, beta, B1blk, C);
 		
         FLA_Cont_with_1xmode3_to_1xmode2( &AT, A0,
                                                A1,
@@ -560,7 +577,11 @@ FLA_Error FLA_Tensor_innerprod_nopermC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FL
 }
 
 //C is a vector, B a matrix, A a vector.
-FLA_Error FLA_Tensor_mvmult_nopermC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C ){
+FLA_Error FLA_Tensor_mvmult_nopermC( FLA_Obj alpha, FLA_Obj A,
+                                     dim_t mode,
+                                     FLA_Obj beta, FLA_Obj B,
+                                     FLA_Obj C )
+{
     FLA_Obj BT, BB;
     FLA_Obj B0, B1, B2;
     FLA_Obj CT, CB;
@@ -607,24 +628,14 @@ FLA_Error FLA_Tensor_mvmult_nopermC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_O
         FLA_Permute(*C1blk, permutation, &tmpC1);
 
         /***********************************************/
-		printf("  Calling innerprod_nopermC in mode %d\n", mode);
-		print_array("  permutation", order, permutation);
-		printf("  ------------------------\n\n");
-		FLA_Obj_print_matlab("  A", A);
-		FLA_Obj_print_matlab("  B1", B1);
-		FLA_Obj_print_matlab("  C1", C1);
-		FLA_Obj_print_matlab("  tmpC1", tmpC1);
         FLA_Tensor_innerprod_nopermC(alpha, A, mode, beta, B1, tmpC1);
         /***********************************************/
 
         for(i = 0; i < order; i++)
             ipermutation[permutation[i]] = i;
-		printf("\n\n  ------------------------\n");
-		printf("  returned from innerprod_mopermC in mode%d\n", mode);
-		FLA_Obj_print_matlab("  tmpC1", tmpC1);
+
         FLA_Permute(tmpC1, ipermutation, C1blk);
 
-		FLA_Obj_print_matlab("  C1blk", *C1blk);
         FLA_Cont_with_1xmode3_to_1xmode2( &CT, C0,
                                                C1,
                                         /********/
@@ -638,7 +649,11 @@ FLA_Error FLA_Tensor_mvmult_nopermC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_O
     return FLA_SUCCESS;
 }
 
-FLA_Error FLA_Ttm_single_mode( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C ){
+FLA_Error FLA_Ttm_single_mode( FLA_Obj alpha, FLA_Obj A,
+                               dim_t mode,
+                               FLA_Obj beta, FLA_Obj B,
+                               FLA_Obj C )
+{
 	dim_t i;
 	dim_t do_repart = FALSE;
 	dim_t repart_mode = 0;
@@ -658,7 +673,11 @@ FLA_Error FLA_Ttm_single_mode( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj bet
 }
 
 
-FLA_Error FLA_Ttm_single_mode_no_permC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C ){
+FLA_Error FLA_Ttm_single_mode_no_permC( FLA_Obj alpha, FLA_Obj A,
+                                        dim_t mode,
+                                        FLA_Obj beta, FLA_Obj B,
+                                        FLA_Obj C )
+{
 	FLA_Elemtype elemtype_A = FLA_Obj_elemtype(A);
 	FLA_Elemtype elemtype_B = FLA_Obj_elemtype(B);
 	FLA_Elemtype elemtype_C = FLA_Obj_elemtype(C);

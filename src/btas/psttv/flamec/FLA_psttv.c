@@ -49,15 +49,7 @@ FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
         }
 
 	if(symGroupToSplit == -1){
-	    printf("Calling ttm in mode %d\n", mode);
-	    printf("-----------\n\n");
-	    FLA_Obj_print_matlab("A", A);
-	    FLA_Obj_print_matlab("B", B);
-	    FLA_Obj_print_matlab("preC", C);
 	    FLA_Ttm_single_mode(alpha, A, mode, beta, B, C);
-		printf("\n\n-----------\n");
-		printf("Returning from ttm in mode %d\n", mode);
-	    FLA_Obj_print_matlab("C", C);
 	    return FLA_SUCCESS;
 	}else{
 	    dim_t symGroupToSplitOffset = TLA_sym_group_mode_offset(symC, symGroupToSplit);
@@ -92,13 +84,7 @@ FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
 	    }
 
 	    if(isSingleBlock){
-	        printf("Calling ttm\n");
-	        printf("-----------\n\n");
-	        FLA_Obj_print_matlab("A", A);
-	        FLA_Obj_print_matlab("B", B);
-	        FLA_Obj_print_matlab("preC", C);
 	        FLA_Ttm_single_mode(alpha, A, mode, beta, B, C);
-	        FLA_Obj_print_matlab("C", C);
 	        return FLA_SUCCESS;
 	    }
 
