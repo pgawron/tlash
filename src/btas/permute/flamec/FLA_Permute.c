@@ -33,15 +33,9 @@
 #include "FLA_Permute.h"
 
 
-FLA_Error FLA_Permute_helper(FLA_Obj A, dim_t permutation[], FLA_Obj B, dim_t partitionModes[], dim_t repart_mode_index){
-	dim_t i;
-	dim_t repartModeA = partitionModes[repart_mode_index];
-	
-	dim_t ipermutation[FLA_Obj_order(A)];
-	for(i = 0; i < FLA_Obj_order(A); i++)
-		ipermutation[permutation[i]] = i;
-	
-	dim_t repartModeB = partitionModes[ipermutation[repart_mode_index]];
+FLA_Error FLA_Permute_helper(FLA_Obj A, dim_t permutation[], FLA_Obj B, dim_t repart_mode_index){
+	dim_t repartModeA = A.permutation[permutation[repart_mode_index]];
+	dim_t repartModeB = repart_mode_index;
 
 	//Down to a single column copy, call routine
 	if(repart_mode_index == 0){
@@ -69,7 +63,7 @@ FLA_Error FLA_Permute_helper(FLA_Obj A, dim_t permutation[], FLA_Obj B, dim_t pa
 										  &B1,
 									  BB, &B2, repartModeB, 1, FLA_BOTTOM);
 		/***********************************/
-			FLA_Permute_helper(A1, permutation, B1, partitionModes, repart_mode_index - 1);
+			FLA_Permute_helper(A1, permutation, B1, repart_mode_index - 1);
 		/***********************************/
 		FLA_Cont_with_1xmode3_to_1xmode2(&AT, A0,
 										  	  A1,
@@ -84,19 +78,24 @@ FLA_Error FLA_Permute_helper(FLA_Obj A, dim_t permutation[], FLA_Obj B, dim_t pa
 //TODO: Fix to account for initially permuted A objs
 //NOTE: ONLY WORKS FOR FLA_SCALAR DATA
 
-FLA_Error FLA_Permute(FLA_Obj A, dim_t permutation[], FLA_Obj B){
+FLA_Error FLA_Permute(FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 	if(FLA_Obj_elemtype(A) != FLA_SCALAR){
 		printf("FLA_Permute: Only defined for objects with FLA_SCALAR elements");
 		return FLA_SUCCESS;
 	}
 	
+	dim_t i;
 	dim_t order = FLA_Obj_order(A);
+	for(i = 0; i < order; i++){
+	    (B->permutation)[i] = i;
+	    (B->size)[i] = A.size[A.permutation[permutation[i]]];
+		(B->base->size)[i] = A.size[A.permutation[permutation[i]]];
+	}
+	(B->base->stride)[0] = 1;
+	for(i = 1; i < order; i++)
+	    (B->base->stride)[i] = (B->base->stride)[i-1] * ((B->size)[i-1]);
 
-
-	dim_t partitionModes[order];
-	memcpy(&(partitionModes[0]), &(A.permutation[0]), order * sizeof(dim_t));
-
-	return FLA_Permute_helper(A, permutation, B, partitionModes, order - 1);
+	return FLA_Permute_helper(A, permutation, *B, order - 1);
 }
 
 /***

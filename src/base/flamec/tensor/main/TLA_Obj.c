@@ -52,7 +52,6 @@ FLA_Error FLA_Obj_create_psym_tensor(FLA_Datatype datatype, dim_t order, dim_t s
   FLA_Obj_create_tensor( datatype, order, size, stride, obj);
 
   //Update symmetries
-  obj->groupToPartition = 0;
   obj->sym = sym;
 
   return FLA_SUCCESS;
@@ -120,7 +119,6 @@ FLA_Error FLA_Obj_create_tensor_ext( FLA_Datatype datatype, FLA_Elemtype elemtyp
 	obj->permutation[i] = i;
 
   //Update symmetries
-  obj->groupToPartition = 0;
   (obj->sym).order = order;
   (obj->sym).nSymGroups = order;
   for(i = 0; i < (obj->sym).nSymGroups; i++)
@@ -160,7 +158,6 @@ FLA_Error FLA_Obj_create_tensor_without_buffer( FLA_Datatype datatype, dim_t ord
 		(obj->permutation)[i] = i;
 
     //Update symmetries
-	obj->groupToPartition = 0;
 	(obj->sym).order = order;
     (obj->sym).nSymGroups = order;
     for(i = 0; i < (obj->sym).nSymGroups; i++)
@@ -352,7 +349,7 @@ FLA_Error FLA_Obj_create_blocked_sym_tensor_without_buffer(FLA_Datatype datatype
 	return FLA_SUCCESS;
 }
 
-FLA_Error FLA_Obj_create_blocked_psym_tensor_without_buffer(FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t blkSize, FLA_Obj *obj){
+FLA_Error FLA_Obj_create_blocked_psym_tensor_without_buffer(FLA_Datatype datatype, dim_t order, dim_t flat_size[order], dim_t blk_size[order], FLA_Obj *obj){
     dim_t i;
     dim_t nTBlks;
     FLA_Obj* t_blks;
@@ -360,7 +357,6 @@ FLA_Error FLA_Obj_create_blocked_psym_tensor_without_buffer(FLA_Datatype datatyp
     dim_t endIndex[order];
     dim_t updateIndex;
     dim_t objLinIndex;
-    dim_t sizeBlock[order];
 
 //    if ( FLA_Check_error_level() >= FLA_MIN_ERROR_CHECKING )
 //        FLA_Obj_create_blocked_sym_tensor_without_buffer_check( datatype, order, size, blkSize, obj );
@@ -369,10 +365,7 @@ FLA_Error FLA_Obj_create_blocked_psym_tensor_without_buffer(FLA_Datatype datatyp
     nTBlks = 1;
 
     for(i = 0; i < order; i++)
-        nTBlks *= size[i] / blkSize;
-
-    for(i = 0; i < order; i++)
-        sizeBlock[i] = blkSize;
+        nTBlks *= flat_size[i] / blk_size[i];
 
     //Create the FLA_Objs
     t_blks = (FLA_Obj*)FLA_malloc(nTBlks * sizeof(FLA_Obj));
@@ -383,7 +376,7 @@ FLA_Error FLA_Obj_create_blocked_psym_tensor_without_buffer(FLA_Datatype datatyp
     //objLinIndex tells us which linear object we are dealing with
     memset(curIndex, 0, order * sizeof(dim_t));
     for(i = 0; i < order; i++)
-        endIndex[i] = size[i] / blkSize;
+        endIndex[i] = flat_size[i] / blk_size[i];
     updateIndex = 0;
     objLinIndex = 0;
 
@@ -391,7 +384,7 @@ FLA_Error FLA_Obj_create_blocked_psym_tensor_without_buffer(FLA_Datatype datatyp
         //Set up the FLA_Obj at this index
         FLA_Obj *curObj = &(t_blks[objLinIndex]);
 
-        FLA_Obj_create_tensor_without_buffer( datatype, order, sizeBlock, curObj);
+        FLA_Obj_create_tensor_without_buffer( datatype, order, blk_size, curObj);
         //Set the offset array (we will use as an index identifier)
         memset(&((curObj->offset)[0]), 0, order * sizeof(dim_t));
         //memcpy(&((curObj->offset)[0]), &(curIndex[0]), order * sizeof(dim_t));
@@ -458,36 +451,34 @@ FLA_Error FLA_Obj_create_blocked_sym_tensor(FLA_Datatype datatype, dim_t order, 
 	return FLA_SUCCESS;
 }
 
-FLA_Error FLA_Obj_create_blocked_psym_tensor(FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t stride[order], dim_t blkSize, TLA_sym sym, FLA_Obj *obj){
+FLA_Error FLA_Obj_create_blocked_psym_tensor(FLA_Datatype datatype, dim_t order, dim_t flat_size[order], dim_t blocked_stride[order], dim_t blk_size[order], TLA_sym sym, FLA_Obj *obj){
 
 	//First set up the hierarchy without buffers
-	FLA_Obj_create_blocked_psym_tensor_without_buffer(datatype, order, size, blkSize, obj);
+	FLA_Obj_create_blocked_psym_tensor_without_buffer(datatype, order, flat_size, blk_size, obj);
 
 	//Add symmetry to object
-	obj->groupToPartition = 0;
 	obj->sym = sym;
 	
 	//Set up the data buffers for psym tensor
-	dim_t i,j;
+	dim_t i;
 	dim_t nBlockElems = 1;
 	for(i = 0; i < order; i++)
-		nBlockElems *= blkSize;
+		nBlockElems *= blk_size[i];
 
 	dim_t nUniques = 1;
 	dim_t modeOffset = 0;
 	for(i = 0; i < (obj->sym).nSymGroups; i++){
-		nUniques *= binomial((obj->sym).symGroupLens[i] + (size[((obj->sym).symModes)[modeOffset]] / blkSize) - 1, (obj->sym).symGroupLens[i]);
+		nUniques *= binomial((obj->sym).symGroupLens[i] + (flat_size[((obj->sym).symModes)[modeOffset]] / blk_size[((obj->sym).symModes)[modeOffset]]) - 1, (obj->sym).symGroupLens[i]);
 		modeOffset += (obj->sym).symGroupLens[i];
 	}
 
 	void** dataBuffers = (void**)FLA_malloc(nUniques * sizeof(void*));
 	for(i = 0; i < nUniques; i++){
 		dataBuffers[i] = (double*)FLA_malloc(nBlockElems * sizeof(double));
-		for(j = 0; j < nBlockElems; j++)
-		    ((double*)dataBuffers[i])[j] = 0.0;
+		memset(&(((double*)dataBuffers[i])[0]), 0, nBlockElems * sizeof(double));
 	}
 	//Attach empty buffers to the sym tensor
-	FLA_Obj_attach_buffer_to_blocked_psym_tensor(dataBuffers, order, stride, obj);
+	FLA_Obj_attach_buffer_to_blocked_psym_tensor(dataBuffers, order, blocked_stride, obj);
 
 	FLA_free(dataBuffers);
 	return FLA_SUCCESS;
