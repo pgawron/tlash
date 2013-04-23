@@ -240,8 +240,8 @@ FLA_Error FLA_Obj_blocked_psym_tensor_free_buffer( FLA_Obj *obj)
 		dim_t isUnique = buf[linIndex].isStored;
 
 		if(isUnique){
-		    printf("at index %d ", linIndex);
-		    print_array("freeing", order, curIndex);
+//		    printf("at index %d ", linIndex);
+//		    print_array("freeing", order, curIndex);
 
 			FLA_Obj_free_buffer(&(buf[linIndex]));
 			FLA_Obj_free_without_buffer(&(buf[linIndex]));
@@ -630,7 +630,7 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 	
 	//FIX THIS FOR PSYM, ended here!!!!!!
 	    //BUG HERE, need to fix
-	    print_array("attaching index", order, curIndex);
+//	    print_array("attaching index", order, curIndex);
 
 		FLA_TIndex_to_LinIndex(order, stride_obj, curIndex, &objLinIndex);
 
@@ -676,9 +676,10 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 		}
 
 		if(uniqueIndex){
+/*
 			printf("linIndex: %d ", objLinIndex);
 		    print_array("attaching to uniqueIndex", order, curIndex);
-
+*/
 			(buffer_obj[objLinIndex].base)->buffer = buffer[countBuffer];
 			//Update stride - TODO: MOVE THIS ELSEWHERE
 			((buffer_obj[objLinIndex].base)->stride)[0] = 1;
@@ -695,10 +696,10 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 
 			//point this non-unique FLA_Obj to the correct base
 			//WARNING: HACK
-			print_array("freeing base of ", order, curIndex);
+//			print_array("freeing base of ", order, curIndex);
 			FLA_free(buffer_obj[objLinIndex].base);
 			(buffer_obj[objLinIndex]).base = (buffer_obj[uniqueLinIndex]).base;
-			print_array("has permutation ", order, permutation);
+//			print_array("has permutation ", order, permutation);
 
 			//Set the right permutation
 			memcpy(&(ipermutation[0]), &(permutation[0]), order * sizeof(dim_t));
@@ -709,7 +710,7 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 				}
 				modeOffset += symGroupLens[i];
 			}
-			print_array("setting obj to permutation", order, ipermutation);
+//			print_array("setting obj to permutation", order, ipermutation);
 			memcpy(&(((buffer_obj[objLinIndex]).permutation)[0]), &(ipermutation[0]), order * sizeof(dim_t));
 			(buffer_obj[objLinIndex]).isStored = FALSE;
 		}

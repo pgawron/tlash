@@ -57,10 +57,12 @@ FLA_Bool next_permutation(dim_t nElem, dim_t perm[]){
 }
 
 FLA_Error FLA_Random_scalar_psym_tensor_helper(FLA_Obj obj){
+    dim_t i;
     dim_t order = FLA_Obj_order(obj);
     dim_t* size = FLA_Obj_size(obj);
     dim_t* stride = FLA_Obj_stride(obj);
-
+	dim_t permutation[order];
+	
     FLA_Obj tmpBlk;
     FLA_Obj_create_psym_tensor(FLA_DOUBLE, FLA_Obj_order(obj), size, stride, obj.sym, &tmpBlk);
     memcpy(FLA_Obj_base_buffer(tmpBlk), FLA_Obj_base_buffer(obj), FLA_Obj_num_elem_alloc(obj) * sizeof(double));
@@ -68,31 +70,28 @@ FLA_Error FLA_Random_scalar_psym_tensor_helper(FLA_Obj obj){
     FLA_Obj permC;
     FLA_Obj_create_psym_tensor(FLA_DOUBLE, FLA_Obj_order(obj), size, stride, obj.sym, &permC);
 
-    dim_t j;
-
     dim_t lenGroup = obj.sym.symGroupLens[0];
     dim_t symModes[order];
     memcpy(&(symModes[0]), &(obj.sym.symModes[0]), order * sizeof(dim_t));
 
     dim_t perm[lenGroup];
-    for(j = 0; j < lenGroup; j++)
-        perm[j] = symModes[j];
+    for(i = 0; i < lenGroup; i++)
+        perm[i] = symModes[i];
 
     //Wrap the sum into a function that blocks, blah blah...
-    for(j = 0; j < order; j++)
-        permC.permutation[j] = j;
+    for(i = 0; i < order; i++)
+        permutation[i] = i;
 
     double* bufpermC = (double*)FLA_Obj_base_buffer(permC);
     double* buftmpBlk = (double*)FLA_Obj_base_buffer(tmpBlk);
 
     while(next_permutation(lenGroup, perm) == TRUE){
-        for(j = 0; j < lenGroup; j++)
-            permC.permutation[symModes[j]] = perm[j];
-
-        FLA_Permute(obj, &(permC.permutation[0]), &permC);
+        for(i = 0; i < lenGroup; i++)
+            permutation[symModes[i]] = perm[i];
+        FLA_Permute(obj, permutation, &permC);
         //Wrap the sum into a function that blocks, blah blah...
-        for(j = 0; j < FLA_Obj_num_elem_alloc(permC); j++)
-            buftmpBlk[j] += bufpermC[j];
+        for(i = 0; i < FLA_Obj_num_elem_alloc(permC); i++)
+            buftmpBlk[i] += bufpermC[i];
     }
 
     memcpy(FLA_Obj_base_buffer(obj), FLA_Obj_base_buffer(tmpBlk), FLA_Obj_num_elem_alloc(obj) * sizeof(double));
@@ -113,7 +112,6 @@ FLA_Error FLA_Random_scalar_psym_tensor(FLA_Obj obj){
     FLA_Obj tmp;
     FLA_Obj_create_psym_tensor(FLA_DOUBLE, FLA_Obj_order(obj), obj.size, obj.base->stride, obj.sym, &tmp);
     FLA_Random_tensor(tmp);
-
     TLA_sym objSym = obj.sym;
     TLA_sym* tmpSym = &(tmp.sym);
     for(i = 0; i < objSym.nSymGroups; i++){
@@ -178,12 +176,75 @@ void create_sym_groups_helper(dim_t order, dim_t index[order], dim_t symGroupNum
     return;
 }
 
-void create_sym_groups(dim_t order, dim_t index[order], FLA_Obj A, FLA_Obj* B){
-    (B->sym).order = A.order;
-    (B->sym).nSymGroups = 0;
-    memset(&(((B->sym).symGroupLens)[0]), 0, (order) * sizeof(dim_t));
+void determine_symmetry_based_index(dim_t order, dim_t index[order], TLA_sym* sym){
+	sym->order = order;
+	sym->nSymGroups = 0;
+	
+	dim_t i, j;
+	dim_t nModes_to_check = order;
+	dim_t modes_to_check[nModes_to_check];
+	dim_t nModes_skipped = 0;
+	dim_t skipped_modes[order];
+	
+	dim_t nModes_matched = 0;
+	dim_t matched_modes[order];
+	
+	for(i = 0; i < nModes_to_check; i++)
+		modes_to_check[i] = i;
+	while(nModes_to_check > 0){
+		nModes_matched = 0;
+		nModes_skipped = 0;
+		dim_t match_val = index[modes_to_check[0]];
+		for(j = 0; j < nModes_to_check; j++){
+			if (index[modes_to_check[j]] == match_val) {
+				matched_modes[nModes_matched] = modes_to_check[j];
+				nModes_matched++;
+			}else{
+				skipped_modes[nModes_skipped] = modes_to_check[j];
+				nModes_skipped++;
+			}
+		}
+		//know what values have matched, update sym object
+		sym->symGroupLens[sym->nSymGroups] = nModes_matched;
+		dim_t sym_group_mode_offset = TLA_sym_group_mode_offset(*sym, sym->nSymGroups);
+		memcpy(&((sym->symModes)[sym_group_mode_offset]), &(matched_modes[0]), nModes_matched * sizeof(dim_t));
+		(sym->nSymGroups)++;
+		
+		//Update for next iteration
+		nModes_to_check = nModes_skipped;
+		memcpy(&(modes_to_check[0]), &(skipped_modes[0]), nModes_skipped * sizeof(dim_t));
+	}
+}
 
-    create_sym_groups_helper(order, index, 0, 0, A, B);
+void create_sym_groups(dim_t order, dim_t index[order], FLA_Obj A, FLA_Obj* B){
+	dim_t i, j, k;
+	TLA_sym Asym = A.sym;
+	TLA_sym* Bsym = &(B->sym);
+    Bsym->order = A.order;
+    Bsym->nSymGroups = 0;
+    memset(&((Bsym->symGroupLens)[0]), 0, (order) * sizeof(dim_t));
+	memset(&((Bsym->symModes)[0]), 0, (order) * sizeof(dim_t));
+
+	for(i = 0; i < Asym.nSymGroups; i++){
+		dim_t index_slice[Asym.symGroupLens[i]];
+		dim_t A_group_mode_offset = TLA_sym_group_mode_offset(Asym, i);
+		for(j = 0; j < Asym.symGroupLens[i]; j++)
+			index_slice[j] = index[Asym.symModes[A_group_mode_offset + j]];
+		
+		TLA_sym slice_sym;
+		determine_symmetry_based_index(Asym.symGroupLens[i], index_slice, &slice_sym);
+		
+		//Update B to have correct symmetry based on Asym and index_slice
+		for (j = 0; j < slice_sym.nSymGroups; j++) {
+			(Bsym->symGroupLens)[Bsym->nSymGroups] = slice_sym.symGroupLens[j];
+			dim_t B_group_mode_offset = TLA_sym_group_mode_offset(*Bsym, Bsym->nSymGroups);
+			dim_t slice_group_mode_offset = TLA_sym_group_mode_offset(slice_sym, j);
+			for(k = 0; k < slice_sym.symGroupLens[j]; k++){
+				(Bsym->symModes)[B_group_mode_offset + k] = Asym.symModes[A_group_mode_offset + slice_sym.symModes[slice_group_mode_offset + k]];
+			}
+			Bsym->nSymGroups++;
+		}
+	}
 }
 
 FLA_Error FLA_Random_sym_tensor(FLA_Obj obj){
@@ -313,9 +374,8 @@ FLA_Error FLA_Random_psym_tensor(FLA_Obj obj){
 
 			//Determine symm groups
 			create_sym_groups(order, curIndex, obj, &(tmpBlk));
-			print_array("creating unique block", order, curIndex);
-			FLA_Random_scalar_psym_tensor(tmpBlk);
 
+			FLA_Random_scalar_psym_tensor(tmpBlk);
 		    //Fill data
 			FLA_Obj curObj = ((FLA_Obj*)FLA_Obj_base_buffer(obj))[linIndex];
 			double* curObjBuf = (double*)FLA_Obj_base_buffer(curObj);

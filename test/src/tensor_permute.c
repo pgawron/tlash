@@ -35,7 +35,7 @@ void test_permute_tensor(dim_t order, dim_t nA, dim_t permutation[order]){
 
   FLA_Obj_print_matlab("A", A);
 
-  FLA_Permute(A, permutation, P);
+  FLA_Permute(A, permutation, &P);
 
   FLA_Obj_print_matlab("postA", A);
   FLA_Obj_print_matlab("P", P);
