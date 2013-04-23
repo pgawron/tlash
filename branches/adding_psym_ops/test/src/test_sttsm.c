@@ -15,17 +15,21 @@ void Usage()
 void initSymmTensor(dim_t order, dim_t size[order], dim_t b, FLA_Obj* obj){
     dim_t i;
     dim_t blocked_stride[order];
+	dim_t block_size[order];
     blocked_stride[0] = 1;
-    for(i = 1; i < order; i++)
-        blocked_stride[i] = blocked_stride[i-1] * (size[i-1] / b);
-
+	block_size[0] = b;
+    for(i = 1; i < order; i++){
+        blocked_stride[i] = blocked_stride[i-1] * (size[i-1] / block_size[i-1]);
+		block_size[i] = b;
+	}
+		
     TLA_sym sym;
-    sym.order = FLA_Obj_order(*obj);
+    sym.order = order;
     sym.nSymGroups = 1;
     sym.symGroupLens[0] = sym.order;
     for(i = 0; i < sym.order; i++)
         (sym.symModes)[i] = i;
-  FLA_Obj_create_blocked_psym_tensor(FLA_DOUBLE, order, size, blocked_stride, b, sym, obj);
+  FLA_Obj_create_blocked_psym_tensor(FLA_DOUBLE, order, size, blocked_stride, block_size, sym, obj);
   FLA_Random_psym_tensor(*obj);
 }
 
@@ -90,26 +94,13 @@ void test_sttsm(int m, int nA, int nC, int bA, int bC, double* elapsedTime){
   initMatrix(bSize, bC, bA, &B);
 
   initSymmTensor(m, cSize, bC, &C);
-  setSymmTensorToZero(C);
+//  setSymmTensorToZero(C);
 
-	printf("A tensor\n");
-	printf("a = tensor([");
-	FLA_Obj_print_tensor(A);
-	printf("],[");
-	for(i = 0; i < FLA_Obj_order(A); i++)
-		printf("%d ", FLA_Obj_dimsize(((FLA_Obj*)(FLA_Obj_base_buffer(A)))[0],i) * FLA_Obj_dimsize(A,i));
-	printf("]);\n\n");
+	FLA_Obj_print_matlab("A", A);
 
-	printf("B tensor\n");
-	printf("b = reshape([");
-	FLA_Obj_print_tensor(B);
-	printf("],[");
-	for(i = 0; i < FLA_Obj_order(B); i++)
-		printf("%d ", FLA_Obj_dimsize(((FLA_Obj*)(FLA_Obj_base_buffer(B)))[0],i) * FLA_Obj_dimsize(B,i));
-	printf("]);\n\n");
+	FLA_Obj_print_matlab("B", B);
 
-	printf("C\n");
-	FLA_Obj_print_tensor(C);
+	FLA_Obj_print_matlab("preC", C);
 	
   double startTime = FLA_Clock();
   FLA_Sttsm(alpha, A, beta, B, C);
@@ -118,16 +109,14 @@ void test_sttsm(int m, int nA, int nC, int bA, int bC, double* elapsedTime){
   *elapsedTime = endTime - startTime;
 
 
+	FLA_Obj_print_matlab("C", C);
 
-	printf("c tensor\n");
-	printf("c = tensor([");
-	FLA_Obj_print_tensor(C);
-	printf("],[");
-	for(i = 0; i < FLA_Obj_order(C); i++)
-		printf("%d ", FLA_Obj_dimsize(((FLA_Obj*)(FLA_Obj_base_buffer(C)))[0],i) * FLA_Obj_dimsize(C,i));
-	printf("]);\n\n");
-
-
+	printf("diff = C - (preC + ttm(A,{B");
+	for(i = 1; i < m; i++)
+		printf(",B");
+	printf("}));\n");
+	printf("max(diff(:))\n");
+	
   FLA_Obj_blocked_free_buffer(&B);
   FLA_Obj_free_without_buffer(&B);
 

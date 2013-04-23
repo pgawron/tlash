@@ -107,7 +107,7 @@ FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
 	    FLA_Part_2powm(C, Cpart,
 	                       nModes_part, part_modes,
 	                       sizes, sides);
-
+/*
         printf("---------------\n");
         printf("After Part\n");
         printf("---------------\n");
@@ -118,7 +118,7 @@ FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
             print_array("  offset", (Cpart[i])->order, &(((Cpart[i])->offset)[0]));
             printf("\n");
         }
-
+*/
 	    while(FLA_Obj_dimsize(*(Cpart[0]), part_modes[0]) < FLA_Obj_dimsize(C, part_modes[0])){
 	        FLA_Repart_2powm_to_3powm(Apart, Arepart,
 	                                      nModes_part, part_modes,
@@ -126,6 +126,7 @@ FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
 	        FLA_Repart_2powm_to_3powm(Cpart, Crepart,
 	                                      nModes_part, part_modes,
 	                                      repart_sizes, repart_sides);
+/*
 	        printf("---------------\n");
             printf("After repart\n");
             printf("---------------\n");
@@ -137,15 +138,16 @@ FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
                 print_array("  offset", (Crepart[i])->order, &(((Crepart[i])->offset)[0]));
                 printf("\n");
             }
-	        /******************************/
+*/
+			/******************************/
 	        dim_t update_region_stride = 1;
 	        for(i = 1; i < nModes_part; i++){
 	            update_region_stride *= 3;
 	        }
 	        dim_t update_region = update_region_stride;
 	        for(i = 0; i < nModes_part; i++){
-	            printf("Recurring on region: %d\n", update_region);
-	            printf("-------------------\n");
+//	            printf("Recurring on region: %d\n", update_region);
+//	            printf("-------------------\n");
 	            FLA_Psttv(alpha, *(Arepart[update_region]), mode, beta, B, *(Crepart[update_region]));
 	            update_region_stride /= 3;
 	            update_region += update_region_stride;
@@ -157,6 +159,7 @@ FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
 	        FLA_Cont_with_3powm_to_2powm(Cpart, Crepart,
 	                                         nModes_part, part_modes,
                                              repart_sides);
+/*
 	        printf("---------------\n");
 	        printf("After cont with\n");
             printf("---------------\n");
@@ -167,6 +170,7 @@ FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
                 print_array("  offset", (Cpart[i])->order, &(((Cpart[i])->offset)[0]));
                 printf("\n");
             }
+*/
 	    }
 
 	    TLA_destroy_part_obj(nPart, Apart);
