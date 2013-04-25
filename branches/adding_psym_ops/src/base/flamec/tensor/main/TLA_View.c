@@ -137,8 +137,8 @@ FLA_Error FLA_Part_1xmode2( FLA_Obj A,  FLA_Obj *A1,
   TLA_split_sym_group(A.sym, 1, split_mode_arr, &(A1->sym));
   TLA_split_sym_group(A.sym, 1, split_mode_arr, &(A2->sym));
 
-  FLA_Adjust_2D_info(A1);
-  FLA_Adjust_2D_info(A2);
+  //FLA_Adjust_2D_info(A1);
+  //FLA_Adjust_2D_info(A2);
 
   return FLA_SUCCESS;
 }
@@ -262,9 +262,9 @@ FLA_Error FLA_Repart_1xmode2_to_1xmode3( FLA_Obj AT,   FLA_Obj *A0,
                               A2,    mode, b, FLA_TOP );
   }
 
-  FLA_Adjust_2D_info(A0);
-  FLA_Adjust_2D_info(A1);
-  FLA_Adjust_2D_info(A2);
+  //FLA_Adjust_2D_info(A0);
+  //FLA_Adjust_2D_info(A1);
+  //FLA_Adjust_2D_info(A2);
 	
   return FLA_SUCCESS;
 }
@@ -387,8 +387,8 @@ FLA_Error FLA_Cont_with_1xmode3_to_1xmode2( FLA_Obj *AT,  FLA_Obj A0,
 
     AB->sym = A1.sym;
   }
-	FLA_Adjust_2D_info(AT);
-	FLA_Adjust_2D_info(AB);
+	//FLA_Adjust_2D_info(AT);
+	//FLA_Adjust_2D_info(AB);
 	return FLA_SUCCESS;
 }
 
@@ -412,7 +412,7 @@ FLA_Error FLA_Merge_1xmode2( FLA_Obj AT,
   memcpy(&((A->permutation)[0]), &(AT.permutation[0]), AT.order * sizeof(dim_t));
 
 
-  FLA_Adjust_2D_info(A);
+  //FLA_Adjust_2D_info(A);
   return FLA_SUCCESS;
 }
 

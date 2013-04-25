@@ -115,6 +115,7 @@ FLA_Error FLA_Obj_create_tensor_ext( FLA_Datatype datatype, FLA_Elemtype elemtyp
 
   obj->base->n_elem_alloc = size[0] * nSecondDim;
 
+  obj->isStored = TRUE;
   for(i = 0; i < order; i++)
 	obj->permutation[i] = i;
 
@@ -174,6 +175,7 @@ FLA_Error FLA_Obj_attach_buffer_to_tensor( void *buffer, dim_t order, dim_t stri
 	obj->base->buffer = buffer;
 	memcpy(&((obj->base->stride)[0]), &(stride[0]), order * sizeof(dim_t));
 
+	obj->isStored = TRUE;
 	FLA_Adjust_2D_info(obj);
 	
 	return FLA_SUCCESS;
@@ -421,7 +423,7 @@ FLA_Error FLA_Obj_create_blocked_psym_tensor_without_buffer(FLA_Datatype datatyp
 
     FLA_Obj_attach_buffer_to_tensor(t_blks, order, stride_obj, obj);
 
-    FLA_Adjust_2D_info(obj);
+//    FLA_Adjust_2D_info(obj);
 
     FLA_free(size_obj);
     return FLA_SUCCESS;
@@ -637,10 +639,10 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 		dim_t modeOffset = 0;
 
 		for(i = 0; i < nSymGroups; i++){
-			
-			for(j = 0; j < symGroupLens[i]; j++)
+			for(j = 0; j < symGroupLens[i]; j++){
 				orderedSymModes[j+modeOffset] = symModes[j+modeOffset];
-			qsort(&(orderedSymModes[j+modeOffset]), symGroupLens[i], sizeof(dim_t), compare_dim_t);
+			}
+			qsort(&(orderedSymModes[modeOffset]), symGroupLens[i], sizeof(dim_t), compare_dim_t);
 		
 			for(j = 0; j < symGroupLens[i]; j++){
 				index_pairs[j].index = orderedSymModes[j+modeOffset];
@@ -714,7 +716,7 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 			memcpy(&(((buffer_obj[objLinIndex]).permutation)[0]), &(ipermutation[0]), order * sizeof(dim_t));
 			(buffer_obj[objLinIndex]).isStored = FALSE;
 		}
-		FLA_Adjust_2D_info(&(buffer_obj[objLinIndex]));
+//		FLA_Adjust_2D_info(&(buffer_obj[objLinIndex]));
 
 		//Loop update
 		//Update current index
@@ -768,23 +770,42 @@ FLA_Error TLA_split_sym_group(TLA_sym S, dim_t nSplit_modes, dim_t split_modes[n
 	dim_t symGroupOffset = TLA_sym_group_mode_offset(S, sym_group);
 
 	//Reorder modes to indicate the split
+	//Copy all modes before the split to output
 	S1->order = S.order;
-	memcpy(&((S1->symModes)[0]), &(S.symModes[0]), S.order * sizeof(dim_t));
-	dim_t symModePos[nSplit_modes];
-	for(i = 0; i < nSplit_modes; i++)
-	    symModePos[i] = TLA_sym_pos_of_mode(*S1, split_modes[i]);
+	memcpy(&((S1->symModes)[0]), &(S.symModes[0]), symGroupOffset * sizeof(dim_t));
+	
+	//Copy the modes to be split next
+	memcpy(&((S1->symModes)[symGroupOffset]), &(split_modes[0]), nSplit_modes * sizeof(dim_t));
 
-	for(i = 0; i < nSplit_modes; i++){
-	    (S1->symModes)[symModePos[i]] = (S1->symModes)[symGroupOffset + i];
-	    (S1->symModes)[symGroupOffset+i] = split_modes[i];
+	//Copy the non-split modes in the sym group
+	dim_t split_modes_copied = 0;
+	dim_t index_to_fill = symGroupOffset + nSplit_modes;
+	for(i = 0; i < S.symGroupLens[sym_group]; i++){
+		if(split_modes_copied < nSplit_modes && (S.symModes[symGroupOffset + i] == split_modes[split_modes_copied])){
+			split_modes_copied++;
+		}else{
+			(S1->symModes)[index_to_fill] = S.symModes[symGroupOffset + i];
+			index_to_fill++;
+		}
 	}
+
+	//Copy remaining modes in other sym groups
+	dim_t nextGroupOffset = symGroupOffset + S.symGroupLens[sym_group];
+	dim_t nRemainingModes = S.order - nextGroupOffset;
+	memcpy(&((S1->symModes)[nextGroupOffset]), &(S.symModes[nextGroupOffset]), (nRemainingModes) * sizeof(dim_t));
+
 	
 	//Update sym_group_info
-	memcpy(&((S1->symGroupLens)[0]), &(S.symGroupLens[0]), (S.nSymGroups) * sizeof(dim_t));
-	(S1->symGroupLens)[sym_group] = S.symGroupLens[sym_group] - nSplit_modes;
-	for(i = S.nSymGroups - 1; i >= sym_group && i < S.nSymGroups; i--)
-		(S1->symGroupLens)[i+1] = (S1->symGroupLens)[i];
-	(S1->symGroupLens)[sym_group] = nSplit_modes;
+	//Copy lengths of groups before group in question
+	memcpy(&((S1->symGroupLens)[0]), &(S.symGroupLens[0]), (sym_group) * sizeof(dim_t));
+	//Copy lengths of groups after group in question
+	//Leaving space for the update to the split group
+	memcpy(&((S1->symGroupLens)[sym_group + 2]), &(S.symGroupLens[sym_group + 1]), (S.nSymGroups - (sym_group + 1)) * sizeof(dim_t));
+	//Fill in entries for split group
+	S1->symGroupLens[sym_group] = nSplit_modes;
+	S1->symGroupLens[sym_group+1] = S.symGroupLens[sym_group] - nSplit_modes;
+
+	//Update number of groups
 	(S1->nSymGroups) = S.nSymGroups + 1;
 
 	return FLA_SUCCESS;

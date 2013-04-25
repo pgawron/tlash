@@ -42,3 +42,11 @@ FLA_Error FLA_TIndex_to_LinIndex( dim_t order, dim_t const stride[order], dim_t 
   return FLA_SUCCESS;
 }
 
+FLA_Error FLA_LinIndex_to_TIndex( dim_t order, dim_t const stride[order], dim_t const linIndex, dim_t index[order]){
+	dim_t i;
+	dim_t count = linIndex;
+	for(i = order - 1; i < order; i--){
+		index[i] = count / stride[i];
+		count -= stride[i] * index[i];
+	}
+}

@@ -4,12 +4,13 @@
 void Usage()
 {
     printf("Test sttsm operation.\n\n");
-    printf("  test_sttsm <m> <nA> <nC> <bA> <bC>\n\n");
+    printf("  test_sttsm <m> <nA> <nC> <bA> <bC> <psym_temps>\n\n");
     printf("  m: order of hyper-symmetric tensors\n");
     printf("  nA: mode-length of tensor A\n");
     printf("  nC: mode-length of hyper-symmetric tensor C\n");
     printf("  bA: mode-length of block of A\n");
-    printf("  bC: mode-length of block of C\n\n");
+    printf("  bC: mode-length of block of C\n");
+	printf("  psym_temps: Use psym temps or not\n\n");
 }
 
 void initSymmTensor(dim_t order, dim_t size[order], dim_t b, FLA_Obj* obj){
@@ -74,7 +75,7 @@ void setSymmTensorToZero(FLA_Obj obj){
 	}
 }
 
-void test_sttsm(int m, int nA, int nC, int bA, int bC, double* elapsedTime){
+void test_sttsm(int m, int nA, int nC, int bA, int bC, int psym_temps, double* elapsedTime){
 	dim_t i;
 	dim_t aSize[m];
 	for(i = 0; i < m; i++)
@@ -103,7 +104,12 @@ void test_sttsm(int m, int nA, int nC, int bA, int bC, double* elapsedTime){
 	FLA_Obj_print_matlab("preC", C);
 	
   double startTime = FLA_Clock();
-  FLA_Sttsm(alpha, A, beta, B, C);
+	if(psym_temps == 1)
+		FLA_Sttsm_with_psym_temps(alpha, A, beta, B, C);
+	else {
+		FLA_Sttsm_without_psym_temps(alpha, A, beta, B, C);
+	}
+
   double endTime = FLA_Clock();
 
   *elapsedTime = endTime - startTime;
@@ -155,7 +161,7 @@ double Sttsm_GFlops(dim_t m, dim_t nA, dim_t nC, dim_t bA, dim_t bC, double elap
 int main(int argc, char* argv[]){
 	FLA_Init();
 
-	if(argc < 6){
+	if(argc < 7){
 		Usage();
 		FLA_Finalize();
 		return 0;
@@ -168,7 +174,8 @@ int main(int argc, char* argv[]){
 	const int nC = atoi(argv[++argNum]);
 	const int bA = atoi(argv[++argNum]);
 	const int bC = atoi(argv[++argNum]);
-
+	const int psym_temps = atoi(argv[++argNum]);
+	
 	if(nA % bA != 0 || nC % bC != 0){
 		printf("bA must evenly divide nA and bC must evenly divide nC\n");
 		FLA_Finalize();
@@ -181,7 +188,7 @@ int main(int argc, char* argv[]){
 	}
 
 	double elapsedTime;
-	test_sttsm(m, nA, nC, bA, bC, &elapsedTime);
+	test_sttsm(m, nA, nC, bA, bC, psym_temps, &elapsedTime);
 
 	FLA_Finalize();
 
