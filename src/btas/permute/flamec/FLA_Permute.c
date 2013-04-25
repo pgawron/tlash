@@ -77,7 +77,7 @@ FLA_Error FLA_Permute_helper(FLA_Obj A, dim_t permutation[], FLA_Obj B, dim_t re
 
 //TODO: Fix to account for initially permuted A objs
 //NOTE: ONLY WORKS FOR FLA_SCALAR DATA
-
+/*
 FLA_Error FLA_Permute(FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 	if(FLA_Obj_elemtype(A) != FLA_SCALAR){
 		printf("FLA_Permute: Only defined for objects with FLA_SCALAR elements");
@@ -97,3 +97,108 @@ FLA_Error FLA_Permute(FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 
 	return FLA_Permute_helper(A, permutation, *B, order - 1);
 }
+*/
+
+FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
+	
+	dim_t i;
+	dim_t order;
+	dim_t* stride_A;
+	dim_t* stride_B;
+	dim_t* size_A;
+	dim_t* size_B;
+	
+	order = FLA_Obj_order(A);
+	stride_A = FLA_Obj_stride(A);
+	stride_B = FLA_Obj_stride(*B);
+	size_A = FLA_Obj_size(A);
+	size_B = FLA_Obj_size(*B);
+	dim_t ipermutation[A.order];
+	
+	for(i = 0; i < A.order; i++)
+		ipermutation[permutation[i]] = i;
+	
+	double* buffer = (double*)FLA_Obj_base_buffer(*B);
+	
+    //Explicitly permute the data
+	double* buf_A = (double*)FLA_Obj_base_buffer(A);
+	dim_t curIndex[order];
+	memset(&(curIndex[0]), 0, order * sizeof(dim_t));
+	
+	dim_t updatePtr = 0;
+	dim_t linIndexFro = 0;
+	dim_t linIndexTo = 0;
+    while(TRUE){
+		//Calculate linear index fro and to
+		buffer[linIndexTo] = buf_A[linIndexFro];
+		
+		//Update
+		//dim_t indexFro[A.order];
+		//dim_t indexTo[A.order];
+		//FLA_LinIndex_to_TIndex(A.order, stride_A, linIndexFro, indexFro);
+		//FLA_LinIndex_to_TIndex(A.order, stride_B, linIndexTo, indexTo);
+
+		/*
+		printf("\n\nfro: %d to: %d\n", linIndexFro, linIndexTo);
+		print_array("curIndex", A.order, curIndex);
+		print_array("size A", A.order, size_A);
+		print_array("size B", A.order, size_B);
+		print_array("stride A", A.order, stride_A);
+		print_array("stride B", A.order, stride_B);
+		print_array("index fro", A.order, indexFro);
+		print_array("index to ", A.order, indexTo);
+		*/
+		
+		curIndex[updatePtr]++;
+		linIndexFro += stride_A[updatePtr];
+		linIndexTo += stride_B[ipermutation[updatePtr]];
+		while(updatePtr < order && curIndex[updatePtr] == size_A[updatePtr]){
+			updatePtr++;
+			if(updatePtr < order){
+				curIndex[updatePtr]++;
+				linIndexFro += stride_A[updatePtr];
+				linIndexTo += stride_B[ipermutation[updatePtr]];
+			}
+		}
+		if(updatePtr >= order)
+			break;
+		for(dim_t i = updatePtr-1; i < order; i--){
+			curIndex[i] = 0;
+			linIndexFro -= stride_A[i]*size_A[i];
+			linIndexTo -= stride_B[ipermutation[i]]*size_B[ipermutation[i]];
+		}
+		updatePtr = 0;
+	}
+	
+	FLA_free(stride_A);
+	FLA_free(stride_B);
+	FLA_free(size_A);
+	FLA_free(size_B);
+	
+	return FLA_SUCCESS;
+}
+
+FLA_Error FLA_Permute(FLA_Obj A, dim_t permutation[], FLA_Obj* B){
+	if(FLA_Obj_elemtype(A) != FLA_SCALAR){
+		printf("FLA_Permute: Only defined for objects with FLA_SCALAR elements");
+		return FLA_SUCCESS;
+	}
+
+	dim_t order = A.order;
+	dim_t i;
+	for(i = 0; i < order; i++){
+	    (B->permutation)[i] = i;
+	    (B->size)[i] = A.size[A.permutation[permutation[i]]];
+		(B->base->size)[i] = A.size[A.permutation[permutation[i]]];
+	}
+	(B->base->stride)[0] = 1;
+	for(i = 1; i < order; i++)
+	    (B->base->stride)[i] = (B->base->stride)[i-1] * ((B->size)[i-1]);
+	
+	/*Check this*/
+	dim_t full_perm[order];
+	for(i = 0; i < order; i++)
+		full_perm[i] = A.permutation[permutation[i]];
+	return FLA_Permute_single(A, full_perm, B);
+}	
+

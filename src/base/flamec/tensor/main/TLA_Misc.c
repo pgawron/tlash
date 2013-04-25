@@ -84,7 +84,7 @@ FLA_Error FLA_Obj_print_scalar_tensor_mode_at(FLA_Obj A, dim_t mode, dim_t index
 									  AB,   &A2, mode, 1, FLA_BOTTOM);
 		/************************/
 		double* buffer = FLA_Obj_tensor_buffer_at_view(A1);
-		printf("%.3f", *buffer);
+		printf("%.6f", *buffer);
 		printf(" ");
 		/************************/
 		FLA_Cont_with_1xmode3_to_1xmode2(&AT, A0,

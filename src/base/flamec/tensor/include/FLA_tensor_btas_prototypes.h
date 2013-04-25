@@ -38,8 +38,9 @@ FLA_Error FLA_Permute_helper( FLA_Obj A, dim_t permutation[], FLA_Obj B, dim_t r
 FLA_Error FLA_Permute( FLA_Obj A, dim_t permutation[], FLA_Obj* B );
 
 // --- Sttsm routines --------------------------------------------------------
-FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C, dim_t maxIndex );
-FLA_Error FLA_Sttsm( FLA_Obj alpha, FLA_Obj A, FLA_Obj beta, FLA_Obj B, FLA_Obj C );
+FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C, dim_t maxIndex, FLA_Obj* temps[] );
+FLA_Error FLA_Sttsm_without_psym_temps( FLA_Obj alpha, FLA_Obj A, FLA_Obj beta, FLA_Obj B, FLA_Obj C );
+FLA_Error FLA_Sttsm_with_psym_temps( FLA_Obj alpha, FLA_Obj A, FLA_Obj beta, FLA_Obj B, FLA_Obj C );
 
 // --- Copy_col routine --------------------------------------------------------
 FLA_Error TLA_Copy_col_mode(FLA_Obj A, dim_t mode_A, FLA_Obj B, dim_t mode_B);

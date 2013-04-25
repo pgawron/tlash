@@ -191,7 +191,6 @@ int main(int argc, char* argv[]){
 	    return 0;
 	}
 
-
 	//Error check
 	if(check_errors(order, sym, n, b, permutation) == FLA_FAILURE){
 	    FLA_free(n);
@@ -209,7 +208,6 @@ int main(int argc, char* argv[]){
 	
 
 	test_permute_tensor(permutation, T);
-
 
 
     FLA_Obj_blocked_psym_tensor_free_buffer(&T);
