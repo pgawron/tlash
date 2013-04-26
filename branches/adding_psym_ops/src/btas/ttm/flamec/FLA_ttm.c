@@ -248,6 +248,9 @@ FLA_Error FLA_Ttm_scalar_permC( FLA_Obj alpha, FLA_Obj A,
   FLA_Permute(A, permutation, &P);
   FLA_Permute(C, permutation, &tmpC);
 
+  FLA_Adjust_2D_info(&P);
+  FLA_Adjust_2D_info(&tmpC);
+	FLA_Adjust_2D_info(&B);
   FLASH_Gemm(FLA_NO_TRANSPOSE, FLA_NO_TRANSPOSE, beta, B, P, alpha, tmpC);
 
   for(i = 0; i < order; i++)
@@ -587,6 +590,9 @@ FLA_Error FLA_Tensor_mvmult_nopermC( FLA_Obj alpha, FLA_Obj A,
     FLA_Obj CT, CB;
     FLA_Obj C0, C1, C2;
 
+	FLA_Obj tmpC1;
+
+	
     FLA_Part_1xmode2(B, &BT,
                         &BB, 0, 0, FLA_TOP);
     FLA_Part_1xmode2(C, &CT,
@@ -621,9 +627,8 @@ FLA_Error FLA_Tensor_mvmult_nopermC( FLA_Obj alpha, FLA_Obj A,
             permutation[i+1] = i;
         for(i = mode+1; i < order; i++)
             permutation[i] = i;
-
-        FLA_Obj tmpC1;
-        FLA_Obj_create_tensor(FLA_DOUBLE, C1blk->order, size_C1blk, stride_C1blk, &tmpC1);
+		if(loopCount == 0)
+			FLA_Obj_create_tensor(FLA_DOUBLE, C1blk->order, size_C1blk, stride_C1blk, &tmpC1);
 
         FLA_Permute(*C1blk, permutation, &tmpC1);
 
@@ -636,6 +641,8 @@ FLA_Error FLA_Tensor_mvmult_nopermC( FLA_Obj alpha, FLA_Obj A,
 
         FLA_Permute(tmpC1, ipermutation, C1blk);
 
+		FLA_free(size_C1blk);
+		FLA_free(stride_C1blk);
         FLA_Cont_with_1xmode3_to_1xmode2( &CT, C0,
                                                C1,
                                         /********/
@@ -646,6 +653,9 @@ FLA_Error FLA_Tensor_mvmult_nopermC( FLA_Obj alpha, FLA_Obj A,
                                           &BB, B2, 0, FLA_TOP);
         loopCount++;
     }
+	
+	FLA_Obj_free_buffer(&tmpC1);
+	FLA_Obj_free_without_buffer(&tmpC1);
     return FLA_SUCCESS;
 }
 
