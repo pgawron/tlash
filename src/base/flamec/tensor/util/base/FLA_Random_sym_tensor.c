@@ -106,7 +106,7 @@ FLA_Error FLA_Random_scalar_psym_tensor_helper(FLA_Obj obj){
     FLA_free(stride);
     return FLA_SUCCESS;
 }
-
+/*
 FLA_Error FLA_Random_scalar_psym_tensor(FLA_Obj obj){
     dim_t i,j;
     FLA_Obj tmp;
@@ -136,6 +136,63 @@ FLA_Error FLA_Random_scalar_psym_tensor(FLA_Obj obj){
     FLA_Obj_free_without_buffer(&tmp);
     return FLA_SUCCESS;
 }
+*/
+
+FLA_Error FLA_Random_scalar_psym_tensor(FLA_Obj obj){
+	dim_t i,j,k;
+	dim_t order = FLA_Obj_order(obj);
+	FLA_Obj tmp;
+	dim_t tmpSize[order];
+	dim_t tmpStride[order];
+	for(i = 0; i < order; i++){
+		tmpSize[i] = 1;
+		tmpStride[i] = 1;
+	}
+	FLA_Obj_create_tensor(FLA_DOUBLE, order, tmpSize, tmpStride, &tmp);
+	((double*)((tmp.base)->buffer))[0] = 1;
+	
+	TLA_sym objSym = obj.sym;
+	for(i = 0; i < objSym.nSymGroups; i++){
+		//Create vector to multiply by
+		FLA_Obj vec;
+		dim_t symGroupOffset = TLA_sym_group_mode_offset(objSym, i);
+		dim_t out_mode_size = FLA_Obj_dimsize(obj, symGroupOffset);
+		dim_t vecSize[] = {out_mode_size, 1};
+		dim_t vecStride[] = {1, out_mode_size};
+		FLA_Obj_create_tensor(FLA_DOUBLE, 2, vecSize, vecStride, &vec);
+		FLA_Random_tensor(vec);
+		//Set up the temporary result to store the intermediate
+		for(j = 0; j < objSym.symGroupLens[i]; j++){
+			dim_t mode_mult = objSym.symModes[symGroupOffset + j];
+			FLA_Obj tmpRes;
+			dim_t tmpResSize[order];
+			dim_t tmpResStride[order];
+			memcpy(&(tmpResSize[0]), &(tmp.size[0]), order * sizeof(dim_t));
+			tmpResSize[mode_mult] = out_mode_size;
+			tmpResStride[0] = 1;
+			for(k = 1; k < order; k++)
+				tmpResStride[k] = tmpResStride[k-1] * tmpResSize[k-1];
+			FLA_Obj_create_tensor(FLA_DOUBLE, order, tmpResSize, tmpResStride, &tmpRes);
+			FLA_Set_zero_tensor(tmpRes);
+			//Perform multiply
+			FLA_Ttm_scalar_permC(FLA_ONE, tmp, mode_mult, FLA_ONE, vec, tmpRes);
+			//FLA_Obj_print_matlab("tmpBlk", tmpRes);
+			//Set up temporaries for next iteration
+			FLA_Obj_free_buffer(&tmp);
+			FLA_Obj_free_without_buffer(&tmp);
+			tmp = tmpRes;
+		}
+		FLA_Obj_free_buffer(&vec);
+		FLA_Obj_free_without_buffer(&vec);
+	}
+	void* tmpBuffer = FLA_Obj_base_buffer(tmp);
+	void* objBuffer = FLA_Obj_base_buffer(obj);
+	memcpy(objBuffer, tmpBuffer, FLA_Obj_num_elem_alloc(obj) * sizeof(double));
+	FLA_Obj_free_buffer(&tmp);
+	FLA_Obj_free_without_buffer(&tmp);
+	return FLA_SUCCESS;
+}
+
 
 void create_sym_groups_helper(dim_t order, dim_t index[order], dim_t symGroupNum, dim_t mode_offset, FLA_Obj A, FLA_Obj* B){
     TLA_sym Asym = A.sym;
