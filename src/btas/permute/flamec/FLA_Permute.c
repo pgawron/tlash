@@ -33,15 +33,9 @@
 #include "FLA_Permute.h"
 
 
-FLA_Error FLA_Permute_helper(FLA_Obj A, dim_t permutation[], FLA_Obj B, dim_t partitionModes[], dim_t repart_mode_index){
-	dim_t i;
-	dim_t repartModeA = partitionModes[repart_mode_index];
-	
-	dim_t ipermutation[FLA_Obj_order(A)];
-	for(i = 0; i < FLA_Obj_order(A); i++)
-		ipermutation[permutation[i]] = i;
-	
-	dim_t repartModeB = partitionModes[ipermutation[repart_mode_index]];
+FLA_Error FLA_Permute_helper(FLA_Obj A, dim_t permutation[], FLA_Obj B, dim_t repart_mode_index){
+	dim_t repartModeA = A.permutation[permutation[repart_mode_index]];
+	dim_t repartModeB = repart_mode_index;
 
 	//Down to a single column copy, call routine
 	if(repart_mode_index == 0){
@@ -69,7 +63,7 @@ FLA_Error FLA_Permute_helper(FLA_Obj A, dim_t permutation[], FLA_Obj B, dim_t pa
 										  &B1,
 									  BB, &B2, repartModeB, 1, FLA_BOTTOM);
 		/***********************************/
-			FLA_Permute_helper(A1, permutation, B1, partitionModes, repart_mode_index - 1);
+			FLA_Permute_helper(A1, permutation, B1, repart_mode_index - 1);
 		/***********************************/
 		FLA_Cont_with_1xmode3_to_1xmode2(&AT, A0,
 										  	  A1,
@@ -83,128 +77,78 @@ FLA_Error FLA_Permute_helper(FLA_Obj A, dim_t permutation[], FLA_Obj B, dim_t pa
 
 //TODO: Fix to account for initially permuted A objs
 //NOTE: ONLY WORKS FOR FLA_SCALAR DATA
-
-FLA_Error FLA_Permute(FLA_Obj A, dim_t permutation[], FLA_Obj B){
+/*
+FLA_Error FLA_Permute(FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 	if(FLA_Obj_elemtype(A) != FLA_SCALAR){
 		printf("FLA_Permute: Only defined for objects with FLA_SCALAR elements");
 		return FLA_SUCCESS;
 	}
 	
+	dim_t i;
 	dim_t order = FLA_Obj_order(A);
+	for(i = 0; i < order; i++){
+	    (B->permutation)[i] = i;
+	    (B->size)[i] = A.size[A.permutation[permutation[i]]];
+		(B->base->size)[i] = A.size[A.permutation[permutation[i]]];
+	}
+	(B->base->stride)[0] = 1;
+	for(i = 1; i < order; i++)
+	    (B->base->stride)[i] = (B->base->stride)[i-1] * ((B->size)[i-1]);
 
-
-	dim_t partitionModes[order];
-	memcpy(&(partitionModes[0]), &(A.permutation[0]), order * sizeof(dim_t));
-
-	return FLA_Permute_helper(A, permutation, B, partitionModes, order - 1);
+	return FLA_Permute_helper(A, permutation, *B, order - 1);
 }
+*/
 
-/***
- *
- *  PERMUTES A SCALAR TENSOR ONLY!!!!!
- *	TODO: Need consistency between what a View is.  Right now, I need to permute
- *  data first based on the permutation array in the View, then based on the
- *  permutation given in the parameter.
- *  Does this mean that the FLA_View size value should reflect the already
- *  permuted data? (same with other associated fields.
- *
- ***/
-/*
 FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 	
 	dim_t i;
-	FLA_Datatype datatype = FLA_Obj_datatype(A);
 	dim_t order;
 	dim_t* stride_A;
+	dim_t* stride_B;
 	dim_t* size_A;
-	dim_t* offset_A;
 	dim_t* size_B;
-	dim_t nElem_A;
-
+	
 	order = FLA_Obj_order(A);
 	stride_A = FLA_Obj_stride(A);
-	offset_A = FLA_Obj_offset(A);
+	stride_B = FLA_Obj_stride(*B);
 	size_A = FLA_Obj_size(A);
-	nElem_A = FLA_Obj_num_elem_alloc(A);
 	size_B = FLA_Obj_size(*B);
-	dim_t stride_B[order];
-
-	dim_t ipermutation[order];
-	for(i = 0; i < order; i++)
+	dim_t ipermutation[A.order];
+	
+	for(i = 0; i < A.order; i++)
 		ipermutation[permutation[i]] = i;
 	
-	dim_t viewPermuted = FALSE;
-	for(i = 0; i < order; i++){
-		if(A.permutation[i] != i){
-			viewPermuted = TRUE;
-			break;
-		}
-	}
-
-	if(viewPermuted){
-		FLA_Obj unpermA, tmp;
-		dim_t sizeTmp[order];
-		dim_t strideTmp[order];
-		FLA_Permute_array(order, size_A, A.permutation, &(sizeTmp[0]));
-		FLA_Set_tensor_stride(order, sizeTmp, &(strideTmp[0]));
-
-		FLA_Obj_create_tensor_without_buffer(datatype, order, size_A, &unpermA);
-		FLA_Obj_create_tensor_without_buffer(datatype, order, sizeTmp, &tmp);
-
-		dim_t numElemTmp = 1;
-		for(i = 0; i < order; i++)
-			numElemTmp *= sizeTmp[i];
-
-		void* tmpBuf = FLA_malloc(numElemTmp * sizeof(double));
-
-		//WARNING: HACK NEED TO FIX THIS
-		FLA_free(unpermA.base);
-		unpermA.base = A.base;
-		memcpy(&(unpermA.offset[0]), &(A.offset[0]), order * sizeof(dim_t));
-		FLA_Adjust_2D_info(&unpermA);
-
-		FLA_Obj_attach_buffer_to_tensor(tmpBuf, order, strideTmp, &tmp);
-		FLA_Permute_single(unpermA, A.permutation, &tmp);
-		FLA_Permute_single(tmp, permutation, B);
-
-		FLA_Obj_free_buffer(&tmp);
-		FLA_Obj_free_without_buffer(&tmp);
-		FLA_free(stride_A);
-		FLA_free(size_A);
-		FLA_free(offset_A);
-		FLA_free(size_B);
-		return FLA_SUCCESS;
-	}
+	double* buffer = (double*)FLA_Obj_base_buffer(*B);
 	
-	FLA_Set_tensor_stride(order, size_B, &(stride_B[0]));
-	
-	void* buffer;
-	buffer = FLA_malloc(nElem_A * sizeof(double));
-
-    //Explicitely permute the data
-	void* buf_A = FLA_Obj_base_buffer(A);
+    //Explicitly permute the data
+	double* buf_A = (double*)FLA_Obj_base_buffer(A);
 	dim_t curIndex[order];
 	memset(&(curIndex[0]), 0, order * sizeof(dim_t));
-
+	
 	dim_t updatePtr = 0;
 	dim_t linIndexFro = 0;
 	dim_t linIndexTo = 0;
     while(TRUE){
 		//Calculate linear index fro and to
-//		dim_t linIndexFro = 0;
-//		dim_t linIndexTo = 0;
-
-//		FLA_TIndex_to_LinIndex(order, stride_A, curIndex, &(linIndexFro));
-
-//		dim_t permutedIndex[order];
-//		FLA_Permute_array(order, curIndex, permutation, &(permutedIndex[0]));
-		//Check if this math is right.
-//		FLA_TIndex_to_LinIndex(order, stride_B, permutedIndex, &(linIndexTo));
-
-
-		((double*)buffer)[linIndexTo] = ((double*)buf_A)[linIndexFro];
-
+		buffer[linIndexTo] = buf_A[linIndexFro];
+		
 		//Update
+		//dim_t indexFro[A.order];
+		//dim_t indexTo[A.order];
+		//FLA_LinIndex_to_TIndex(A.order, stride_A, linIndexFro, indexFro);
+		//FLA_LinIndex_to_TIndex(A.order, stride_B, linIndexTo, indexTo);
+
+		/*
+		printf("\n\nfro: %d to: %d\n", linIndexFro, linIndexTo);
+		print_array("curIndex", A.order, curIndex);
+		print_array("size A", A.order, size_A);
+		print_array("size B", A.order, size_B);
+		print_array("stride A", A.order, stride_A);
+		print_array("stride B", A.order, stride_B);
+		print_array("index fro", A.order, indexFro);
+		print_array("index to ", A.order, indexTo);
+		*/
+		
 		curIndex[updatePtr]++;
 		linIndexFro += stride_A[updatePtr];
 		linIndexTo += stride_B[ipermutation[updatePtr]];
@@ -225,24 +169,36 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 		}
 		updatePtr = 0;
 	}
-
-	dim_t nElemB = 1;
-	for(i = 0; i < order; i++)
-		nElemB *= FLA_Obj_dimsize(*B, i);
 	
-	double* buf_B = FLA_Obj_base_buffer(*B);
-	memcpy(&(buf_B[0]), &(((double*)buffer)[0]), nElemB * sizeof(double));
-
-	memcpy(&((B->permutation)[0]), &(A.permutation[0]), order * sizeof(dim_t));
-
-	FLA_Adjust_2D_info(B);
-
-	FLA_free(buffer);	
 	FLA_free(stride_A);
+	FLA_free(stride_B);
 	FLA_free(size_A);
-	FLA_free(offset_A);
 	FLA_free(size_B);
-
+	
 	return FLA_SUCCESS;
 }
-*/
+
+FLA_Error FLA_Permute(FLA_Obj A, dim_t permutation[], FLA_Obj* B){
+	if(FLA_Obj_elemtype(A) != FLA_SCALAR){
+		printf("FLA_Permute: Only defined for objects with FLA_SCALAR elements");
+		return FLA_SUCCESS;
+	}
+
+	dim_t order = A.order;
+	dim_t i;
+	for(i = 0; i < order; i++){
+	    (B->permutation)[i] = i;
+	    (B->size)[i] = A.size[A.permutation[permutation[i]]];
+		(B->base->size)[i] = A.size[A.permutation[permutation[i]]];
+	}
+	(B->base->stride)[0] = 1;
+	for(i = 1; i < order; i++)
+	    (B->base->stride)[i] = (B->base->stride)[i-1] * ((B->size)[i-1]);
+	
+	/*Check this*/
+	dim_t full_perm[order];
+	for(i = 0; i < order; i++)
+		full_perm[i] = A.permutation[permutation[i]];
+	return FLA_Permute_single(A, full_perm, B);
+}	
+

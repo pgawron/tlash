@@ -34,17 +34,22 @@
 
 FLA_Error FLA_Set_zero_tensor( FLA_Obj A );
 FLA_Error FLA_Adjust_2D_info( FLA_Obj *A );
-FLA_Error FLA_Obj_create_Random_symm_tensor_data(dim_t b, FLA_Obj obj);
-FLA_Error FLA_Random_dense_symm_tensor(dim_t nSymmGroups, dim_t symmGroupLens[nSymmGroups], dim_t** symmetries, FLA_Obj *obj);
 FLA_Error FLA_Random_tensor(FLA_Obj A);
+FLA_Error FLA_Random_sym_tensor(FLA_Obj obj);
+FLA_Error FLA_Random_psym_tensor(FLA_Obj obj);
 
 //---  Non-FLA utils ---------------
 int compare_pairwise_sort(const void* a, const void* b);
+int compare_dim_t(const void* a, const void* b);
 dim_t binomial(dim_t n, dim_t k);
 FLA_Error FLA_get_unique_info( dim_t order, dim_t index[order], dim_t* sortedIndex, dim_t* permutation);
 FLA_Error FLA_Set_tensor_stride( dim_t order, dim_t size[order], dim_t* stride);
 FLA_Error FLA_Set_tensor_permutation( dim_t order, dim_t permutation[order], FLA_Obj* A);
-FLA_Error FLA_TIndex_to_LinIndex( dim_t order, dim_t stride[order], dim_t index[order], dim_t* linIndex);
+FLA_Error FLA_TIndex_to_LinIndex( dim_t order, dim_t const stride[order], dim_t const index[order], dim_t* linIndex);
+FLA_Error FLA_LinIndex_to_TIndex( dim_t order, dim_t const stride[order], dim_t const linIndex, dim_t index[order]);
 FLA_Error FLA_Permute_array( dim_t order, dim_t arrfrom[order], dim_t permutation[order], dim_t* arrto);
 dim_t FLA_Ttm_Ops( dim_t order, dim_t size_A[order], dim_t size_B[2], dim_t mode);
+void print_array(const char* header, dim_t nElem, dim_t arr[nElem]);
 
+FLA_Error TLA_create_part_obj( dim_t nPart, FLA_Obj* partitions[]);
+FLA_Error TLA_destroy_part_obj( dim_t nPart, FLA_Obj* partitions[]);

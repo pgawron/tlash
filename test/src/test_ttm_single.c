@@ -112,5 +112,4 @@ void test_ttm_single(){
 
 	printf("c tensor\n");
 	FLA_Obj_print_tensor(c);
-  double* res = (double*)((c.base)->buffer);
 }

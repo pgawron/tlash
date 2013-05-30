@@ -12,54 +12,21 @@ void Usage()
 
 void initSymmTensor(dim_t order, dim_t size[order], FLA_Obj* obj){
   dim_t i;
-  FLA_Obj_create_tensor_without_buffer(FLA_DOUBLE, order, size, obj);
-  dim_t numel = 1;
-  for(i = 0; i < order; i++)
-	numel *= size[i];
-
-  dim_t stride[order];
-  stride[0] = 1;
+  dim_t blocked_stride[order];
+  blocked_stride[0] = 1;
   for(i = 1; i < order; i++)
-	stride[i] = size[i-1] * stride[i-1];
+      blocked_stride[i] = blocked_stride[i-1] * (size[i-1] / size[0]);
 
-  double* buf = (double*)FLA_malloc(numel * sizeof(double));
-  FLA_Obj_attach_buffer_to_tensor(buf, order, stride, obj);
+  TLA_sym sym;
+  sym.order = FLA_Obj_order(*obj);
+  sym.nSymGroups = 1;
+  sym.symGroupLens[0] = sym.order;
+  for(i = 0; i < sym.order; i++)
+      (sym.symModes)[i] = i;
+  FLA_Obj_create_blocked_psym_tensor(FLA_DOUBLE, order, size, blocked_stride, size[0], sym, obj);
 
-  dim_t** symmetries = (dim_t**)FLA_malloc(1 * sizeof(dim_t*));
-  symmetries[0] = (dim_t*)FLA_malloc(order * sizeof(dim_t));
-  for(i = 0; i < order; i++)
-	symmetries[0][i] = i;
+  FLA_Random_psym_tensor(*obj);
 
-  dim_t size_symmetries[] = {order};
- /*
-  dim_t sizeB[] = {size[0],1};
-  dim_t stride_B[] = {1, size[0]};
-
-  FLA_Obj B;
-  FLA_Obj_create_tensor(FLA_DOUBLE, 2, size_B, stride_B, &B);
-  FLA_Random_matrix(B);
-
-  FLA_Obj Barr[order];
-  for(i = 0; i < order;i++)
-	Barr[i] = B; 
-
-  FLA_Obj A;
-  dim_t sizeA[order];
-  for(i = 0; i < order; i++)
-	sizeA[i] = 1;
-  FLA_Obj_create_tensor_without_buffer(FLA_DOUBLE, order; sizeA, &A);
-  double* dataA = (double*)FLA_malloc(1 * sizeof(double));
-  dataA[0] = 1;
-  dim_t strideA[order];
-  for(i = 0; i < order; i++)
-	strideA[i] = 1;
-  FLA_Obj_attach_buffer_to_tensor(dataA, order, strideA, &A);
-
-  FLA_Ttm(FLA_ONE, A, order, symmetries, FLA_ONE, Barr, *obj);
-*/
-  FLA_Random_dense_symm_tensor(1, size_symmetries, symmetries, obj);
-  FLA_free(symmetries[0]);
-  FLA_free(symmetries);
 }
 
 void initMatrix(dim_t size[2], FLA_Obj* obj){
@@ -141,9 +108,9 @@ void test_sttsm(int m, int nA, int nC, double* elapsedTime){
   FLA_Obj_free_buffer(&B);
   FLA_Obj_free_without_buffer(&B);
 
-  FLA_Obj_free_buffer(&A);
+  FLA_Obj_blocked_psym_tensor_free_buffer(&A);
   FLA_Obj_free_without_buffer(&A);
-  FLA_Obj_free_buffer(&C);
+  FLA_Obj_blocked_psym_tensor_free_buffer(&C);
   FLA_Obj_free_without_buffer(&C);
 }
 
