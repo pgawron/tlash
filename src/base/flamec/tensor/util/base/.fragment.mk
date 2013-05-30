@@ -43,7 +43,7 @@ CURRENT_DIR_NAME := base
 CURRENT_SUB_DIRS := 
 
 # Source files local to this fragment
-LOCAL_SRC_FILES  := FLA_Adjust_2D_Info.c FLA_Binomial.c FLA_Check_Unique_Index.c FLA_Compare_Pairwise_Sort.c FLA_Get_unique_info.c FLA_Permute_array.c FLA_Random_symm_tensor.c FLA_Random_tensor.c FLA_Set_tensor_permutation.c FLA_Set_tensor_stride.c FLA_Set_zero_tensor.c FLA_TIndex_to_LinIndex.c FLA_Ttm_flops.c
+LOCAL_SRC_FILES  := FLA_Adjust_2D_Info.c FLA_Binomial.c FLA_Check_Unique_Index.c FLA_Compare_Pairwise_Sort.c FLA_Get_unique_info.c FLA_Permute_array.c FLA_Random_sym_tensor.c FLA_Random_tensor.c FLA_Set_tensor_permutation.c FLA_Set_tensor_stride.c FLA_Set_zero_tensor.c FLA_TIndex_to_LinIndex.c FLA_Ttm_flops.c FLA_print_array.c TLA_create_part_obj.c TLA_destroy_part_obj.c
 
 # Add the fragment's local source files to the _global_variable_ variable.
 MK_BASE_FLAMEC_SRC += $(addprefix $(PARENT_PATH)/$(CURRENT_DIR_NAME)/, $(LOCAL_SRC_FILES))

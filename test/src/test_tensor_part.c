@@ -21,7 +21,7 @@ void initBlockedTensor(dim_t order, dim_t size[order], dim_t bSize[order], FLA_O
   FLA_Random_tensor(*obj);
 }
 
-void print_Part(FLA_Obj A, FLA_Obj parts[]){
+void print_Part(FLA_Obj A, FLA_Obj* parts[]){
 	dim_t i;
 	dim_t order = FLA_Obj_order(A);
 
@@ -34,7 +34,7 @@ void print_Part(FLA_Obj A, FLA_Obj parts[]){
 		for(i = 0; i < order; i++)
 			printf("%d", curIndex[i]);
 		printf(" = [");
-		FLA_Obj_print_tensor(parts[curPart++]);
+		FLA_Obj_print_tensor(*(parts[curPart++]));
 		printf("];\n");
 		//Update
 		curIndex[update_ptr]++;
@@ -70,20 +70,26 @@ void test_tlash_part_routines(dim_t m, dim_t nA, dim_t bA){
 
   initBlockedTensor(m, sizeA, sizeBlock, &(A) );
 
-  dim_t nPartitions = 1;
-  nPartitions <<= m;
+  dim_t nPartitions = (1 << m);
 
-  FLA_Obj Apart[nPartitions];
+  FLA_Obj* Apart[nPartitions];
+
+  TLA_create_part_obj(nPartitions, Apart);
 
   printf("A = [\n");
   FLA_Obj_print_tensor(A);
   printf("];\n");
 
   printf("Partitioning A\n");
-  FLA_Part_2powm(A, Apart, partSize, sides);
+  dim_t nModes_repart = m;
+  dim_t repart_modes[m];
+  for(i = 0; i < m; i++)
+      repart_modes[i] = i;
+  FLA_Part_2powm(A, Apart, nModes_repart, repart_modes, partSize, sides);
 
   print_Part(A, Apart);
 
+  TLA_destroy_part_obj(nPartitions, Apart);
 }
 
 int main(int argc, char* argv[]){
