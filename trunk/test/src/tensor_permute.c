@@ -4,7 +4,7 @@
 void Usage()
 {
     printf("Test TLASH Permute operation.\n\n");
-    printf("  tensor_permute <m> <nA> <bA> <perm0> <perm1> ...\n\n");
+    printf("  tensor_permute <m> <nSymGrops> <nA> <bA> <perm0> <perm1> ...\n\n");
     printf("  m: order of tensor\n");
     printf("  nA: mode-length of tensor A\n");
     printf("  permK: permutation index K\n");
@@ -26,7 +26,6 @@ void initTensor(dim_t order, dim_t nA, FLA_Obj* A){
 }
 
 void test_permute_tensor(dim_t order, dim_t nA, dim_t permutation[order]){
-  dim_t i;
   FLA_Obj A, P;
 
   initTensor(order, nA, &A);
@@ -34,28 +33,12 @@ void test_permute_tensor(dim_t order, dim_t nA, dim_t permutation[order]){
 
   initTensor(order, nA, &P);
 
-  printf("A = tensor([");
-  FLA_Obj_print_tensor(A);
-  printf("],[");
-  for(i = 0; i < FLA_Obj_order(A); i++)
-	printf("%d ", FLA_Obj_dimsize(A,i));
-  printf("]);\n\n");
+  FLA_Obj_print_matlab("A", A);
 
-  FLA_Permute(A, permutation, P);
+  FLA_Permute(A, permutation, &P);
 
-  printf("postA = tensor([");
-  FLA_Obj_print_tensor(A);
-  printf("],[");
-  for(i = 0; i < FLA_Obj_order(A); i++)
-	printf("%d ", FLA_Obj_dimsize(A,i));
-  printf("]);\n\n");
-
-  printf("P = tensor([");
-  FLA_Obj_print_tensor(P);
-  printf("],[");
-  for(i = 0; i < FLA_Obj_order(P); i++)
-	printf("%d ", FLA_Obj_dimsize(P,i));
-  printf("]);\n\n");
+  FLA_Obj_print_matlab("postA", A);
+  FLA_Obj_print_matlab("P", P);
 
 }
 

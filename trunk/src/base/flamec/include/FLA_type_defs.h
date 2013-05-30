@@ -174,6 +174,14 @@ typedef struct FLA_Obj_struct
 #endif
 } FLA_Base_obj;
 
+typedef struct TLA_symmetry
+{
+    dim_t       nSymGroups;
+    dim_t       symGroupLens[FLA_MAX_ORDER];
+    dim_t       order;
+    dim_t       symModes[FLA_MAX_ORDER];
+} TLA_sym;
+
 typedef struct FLA_Obj_view
 {
   // Basic object view description fields
@@ -190,9 +198,9 @@ typedef struct FLA_Obj_view
   dim_t         size[FLA_MAX_ORDER];
   dim_t         size_inner[FLA_MAX_ORDER];
   dim_t			permutation[FLA_MAX_ORDER];
-  dim_t			nSymmGroups;
-  dim_t			symmGroupLens[FLA_MAX_ORDER];
-  dim_t			symm_modes[FLA_MAX_ORDER];
+  dim_t         isStored;
+
+  TLA_sym       sym;
 
   FLA_Base_obj* base;
 

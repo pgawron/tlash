@@ -35,18 +35,17 @@
 FLA_Error FLA_Set_zero_tensor( FLA_Obj A )
 {
 	dim_t i;
-	dim_t  order = A.order;
-    dim_t* size = A.size;
-	dim_t nElem = 1;
-	for(i = 0; i < order; i++)
-		nElem *= size[i];
+	dim_t nElem = FLA_Obj_num_elem_alloc(A);
 
 	if(FLA_Obj_elemtype(A) == FLA_MATRIX || FLA_Obj_elemtype(A) == FLA_TENSOR){
+		FLA_Obj* buffer = (FLA_Obj*)FLA_Obj_base_buffer(A);
 		for(i = 0; i < nElem; i++)
-			FLA_Set_zero_tensor(((FLA_Obj*)FLA_Obj_base_buffer(A))[i]);
+			FLA_Set_zero_tensor(buffer[i]);
 	}
 	else{
-		memset(&(((double*)FLA_Obj_base_buffer(A))[0]), 0, nElem * sizeof(double));
+		if(A.isStored){
+			memset(&(((double*)FLA_Obj_base_buffer(A))[0]), 0, nElem * sizeof(double));
+		}
 	}
 
   return FLA_SUCCESS;
