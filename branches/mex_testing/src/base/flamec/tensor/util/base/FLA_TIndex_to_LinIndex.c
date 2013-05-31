@@ -49,4 +49,5 @@ FLA_Error FLA_LinIndex_to_TIndex( dim_t order, dim_t const stride[order], dim_t 
 		index[i] = count / stride[i];
 		count -= stride[i] * index[i];
 	}
+	return FLA_SUCCESS;
 }
