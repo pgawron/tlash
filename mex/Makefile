@@ -34,3 +34,6 @@ tensor: $(OBJ_PATH)/TLA_MEX_Convert_primitives.o $(OBJ_PATH)/TLA_MEX_Obj.o
 
 blockedtensor: $(OBJ_PATH)/TLA_MEX_Convert_primitives.o $(OBJ_PATH)/TLA_MEX_Obj.o
 	mex -g $(CFLAGS) $(PWD)/src/TLA_blockedtensor.c $(OBJS) $(LDFLAGS)
+
+blockedpsymtensor: $(OBJ_PATH)/TLA_MEX_Convert_primitives.o $(OBJ_PATH)/TLA_MEX_Obj.o
+	mex -g $(CFLAGS) $(PWD)/src/TLA_blockedpsymtensor.c $(OBJS) $(LDFLAGS)
