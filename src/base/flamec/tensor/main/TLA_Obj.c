@@ -545,8 +545,12 @@ FLA_Error FLA_Obj_create_blocked_psym_tensor(FLA_Datatype datatype, dim_t order,
 	dim_t nUniques = 1;
 	dim_t modeOffset = 0;
 	for(i = 0; i < (obj->sym).nSymGroups; i++){
-		nUniques *= binomial((obj->sym).symGroupLens[i] + (flat_size[((obj->sym).symModes)[modeOffset]] / blk_size[((obj->sym).symModes)[modeOffset]]) - 1, (obj->sym).symGroupLens[i]);
-		modeOffset += (obj->sym).symGroupLens[i];
+	    dim_t mode = (obj->sym).symModes[modeOffset];
+	    dim_t symGroupLen = (obj->sym).symGroupLens[i];
+	    dim_t blkedDim = (flat_size[mode] / blk_size[mode]);
+
+		nUniques *= binomial(symGroupLen + blkedDim - 1, symGroupLen);
+		modeOffset += symGroupLen;
 	}
 
 	void** dataBuffers = (void**)FLA_malloc(nUniques * sizeof(void*));
