@@ -46,10 +46,10 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 FLA_Error FLA_Obj_create_tensor_without_buffer( FLA_Datatype datatype, dim_t order, dim_t size[order], FLA_Obj *obj );
 FLA_Error FLA_Obj_create_blocked_tensor_without_buffer(FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t blkSize[order], FLA_Obj *obj);
 FLA_Error FLA_Obj_create_blocked_sym_tensor_without_buffer(FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t blkSize, FLA_Obj *obj);
-FLA_Error FLA_Obj_create_blocked_psym_tensor_without_buffer(FLA_Datatype datatype, dim_t order, dim_t flat_size[order], dim_t blk_size[order], FLA_Obj *obj);
+FLA_Error FLA_Obj_create_blocked_psym_tensor_without_buffer(FLA_Datatype datatype, dim_t order, dim_t flat_size[order], dim_t blk_size[order], TLA_sym sym, FLA_Obj *obj);
 FLA_Error FLA_Obj_create_blocked_tensor(FLA_Datatype datatype, dim_t order, dim_t flat_size[order], dim_t blocked_stride[order], dim_t blk_size[order], FLA_Obj *obj);
 FLA_Error FLA_Obj_create_blocked_sym_tensor(FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t stride[order], dim_t blkSize, FLA_Obj *obj);
-FLA_Error FLA_Obj_create_blocked_psym_tensor(FLA_Datatype datatype, dim_t order, dim_t flat_size[order], dim_t blocked_stride[order], dim_t blk_size[order], TLA_sym, FLA_Obj *obj);
+FLA_Error FLA_Obj_create_blocked_psym_tensor(FLA_Datatype datatype, dim_t order, dim_t flat_size[order], dim_t blocked_stride[order], dim_t blk_size[order], TLA_sym sym, FLA_Obj *obj);
 
 //--- Query functions --------------
 
