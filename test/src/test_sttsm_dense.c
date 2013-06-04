@@ -23,7 +23,7 @@ void initSymmTensor(dim_t order, dim_t size[order], FLA_Obj* obj){
   sym.symGroupLens[0] = sym.order;
   for(i = 0; i < sym.order; i++)
       (sym.symModes)[i] = i;
-  FLA_Obj_create_blocked_psym_tensor(FLA_DOUBLE, order, size, blocked_stride, size[0], sym, obj);
+  FLA_Obj_create_blocked_psym_tensor(FLA_DOUBLE, order, size, blocked_stride, size, sym, obj);
 
   FLA_Random_psym_tensor(*obj);
 

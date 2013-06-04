@@ -391,7 +391,7 @@ FLA_Error FLA_Obj_create_blocked_tensor_without_buffer(FLA_Datatype datatype, di
     return FLA_SUCCESS;
 }
 
-FLA_Error FLA_Obj_create_blocked_psym_tensor_without_buffer(FLA_Datatype datatype, dim_t order, dim_t flat_size[order], dim_t blk_size[order], FLA_Obj *obj){
+FLA_Error FLA_Obj_create_blocked_psym_tensor_without_buffer(FLA_Datatype datatype, dim_t order, dim_t flat_size[order], dim_t blk_size[order], TLA_sym sym, FLA_Obj *obj){
     dim_t i;
     dim_t nTBlks;
     FLA_Obj* t_blks;
@@ -463,6 +463,8 @@ FLA_Error FLA_Obj_create_blocked_psym_tensor_without_buffer(FLA_Datatype datatyp
 
     FLA_Obj_attach_buffer_to_tensor(t_blks, order, stride_obj, obj);
 
+    obj->sym = sym;
+
 //    FLA_Adjust_2D_info(obj);
 
     FLA_free(size_obj);
@@ -495,16 +497,17 @@ FLA_Error FLA_Obj_create_blocked_sym_tensor(FLA_Datatype datatype, dim_t order, 
 
 FLA_Error FLA_Obj_create_blocked_tensor(FLA_Datatype datatype, dim_t order, dim_t flat_size[order], dim_t blocked_stride[order], dim_t blk_size[order], FLA_Obj *obj){
     dim_t i;
-    //First set up the hierarchy without buffers
-    FLA_Obj_create_blocked_psym_tensor_without_buffer(datatype, order, flat_size, blk_size, obj);
 
-    //Add symmetry to object
-    obj->sym.nSymGroups = order;
-    obj->sym.order = order;
+    //Set up the sym struct
+    TLA_sym sym;
+    sym.nSymGroups = order;
+    sym.order = order;
     for(i = 0; i < order; i++){
-        obj->sym.symGroupLens[i] = 1;
-        obj->sym.symModes[i] = i;
+        sym.symGroupLens[i] = 1;
+        sym.symModes[i] = i;
     }
+    //First set up the hierarchy without buffers
+    FLA_Obj_create_blocked_psym_tensor_without_buffer(datatype, order, flat_size, blk_size, sym, obj);
 
     dim_t nBlocks = 1;
     for(i = 0; i < order; i++)
@@ -531,10 +534,7 @@ FLA_Error FLA_Obj_create_blocked_tensor(FLA_Datatype datatype, dim_t order, dim_
 FLA_Error FLA_Obj_create_blocked_psym_tensor(FLA_Datatype datatype, dim_t order, dim_t flat_size[order], dim_t blocked_stride[order], dim_t blk_size[order], TLA_sym sym, FLA_Obj *obj){
 
 	//First set up the hierarchy without buffers
-	FLA_Obj_create_blocked_psym_tensor_without_buffer(datatype, order, flat_size, blk_size, obj);
-
-	//Add symmetry to object
-	obj->sym = sym;
+	FLA_Obj_create_blocked_psym_tensor_without_buffer(datatype, order, flat_size, blk_size, sym, obj);
 	
 	//Set up the data buffers for psym tensor
 	dim_t i;
