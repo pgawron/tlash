@@ -208,27 +208,13 @@ void TLA_mxa_to_blocked_psym_tensor(const mxArray * mxa, FLA_Obj* A){
 
     TLA_sym sym;
     TLA_mxa_to_sym(sym_mxa, &sym);
-    printf("sym\n\n");
-    printf("order: %d\n", sym.order);
-    printf("symgrouplens: ");
-    for(i = 0; i < sym.nSymGroups; i++){
-        printf(" %d", (sym.symGroupLens)[i]);
-    }
-    printf("\n");
 
     dim_t stride[order];
     stride[0] = 1;
     for(i = 1; i < order; i++)
         stride[i] = (flat_size[i-1]/blkSize[i-1]) * stride[i-1];
-    FLA_Obj_create_blocked_psym_tensor_without_buffer(FLA_DOUBLE, order, flat_size, blkSize, sym, A);
-    printf("Asym\n\n");
-    printf("order: %d\n", A->sym.order);
-    printf("symgrouplens: ");
-    for(i = 0; i < (A->sym).nSymGroups; i++){
-        printf(" %d", ((A->sym).symGroupLens)[i]);
-    }
-    printf("\n");
 
+    FLA_Obj_create_blocked_psym_tensor_without_buffer(FLA_DOUBLE, order, flat_size, blkSize, sym, A);
     FLA_Obj_attach_buffer_to_blocked_psym_tensor((void**)dataBlocks, order, stride, A);
 }
 
@@ -328,7 +314,6 @@ void TLA_blocked_tensor_to_mxa(FLA_Obj A, mxArray ** mxa ){
 void TLA_blocked_psym_tensor_to_mxa(FLA_Obj A, mxArray ** mxa ){
     int i;
 
-    printf("getting fields\n");
     dim_t order = A.order;
     mxArray* mxa_order = mxCreateDoubleMatrix(1, 1, mxREAL);
     mxArray* mxa_flat_size = mxCreateDoubleMatrix(1, A.sym.nSymGroups, mxREAL);
@@ -339,7 +324,6 @@ void TLA_blocked_psym_tensor_to_mxa(FLA_Obj A, mxArray ** mxa ){
     double* flat_size = mxGetPr(mxa_flat_size);
     double* blk_size = mxGetPr(mxa_blk_size);
 
-    printf("getting sizes\n");
     order_ptr[0] = (double)order;
     for(i = 0; i < A.sym.nSymGroups; i++){
         dim_t symGroupModeOffset = TLA_sym_group_mode_offset(A.sym, i);
@@ -354,10 +338,8 @@ void TLA_blocked_psym_tensor_to_mxa(FLA_Obj A, mxArray ** mxa ){
         flat_size[i] = (double)flatDim;
     }
 
-    printf("calcing uniques\n");
     dim_t nUniqueBlocks = 1;
     TLA_sym sym = A.sym;
-    printf("nSymGroups: %d", sym.nSymGroups);
     for(i = 0; i < sym.nSymGroups; i++){
         dim_t symGroupLen = sym.symGroupLens[i];
         dim_t symGroupModeOffset = TLA_sym_group_mode_offset(sym, i);
@@ -366,7 +348,6 @@ void TLA_blocked_psym_tensor_to_mxa(FLA_Obj A, mxArray ** mxa ){
         nUniqueBlocks *= binomial(symGroupLen + symGroupDim - 1, symGroupLen);
     }
 
-    printf("nUniqueBlocks: %d\n", nUniqueBlocks);
     mxArray* mxa_blocks = mxCreateCellMatrix(1, nUniqueBlocks);
 
     //Works for now
@@ -378,25 +359,16 @@ void TLA_blocked_psym_tensor_to_mxa(FLA_Obj A, mxArray ** mxa ){
     dim_t linCount = 0;
 
     FLA_Obj* buffer = (FLA_Obj*)FLA_Obj_base_buffer(A);
-    printf("beginning loop\n");
     while(TRUE){
-        print_array("curIndex", order, curIndex);
-        printf("linCount: %d\n", linCount);
         if(buffer[linCount].isStored){
-            printf("found unique\n");
             const char* fields[] = {"size", "data"};
             mxArray *mxa_DataBlock = mxCreateStructMatrix(1, 1, 2, fields);
-
-            printf("ja?\n");
-            FLA_Obj_print_matlab("to convert", buffer[linCount]);
-            printf("converting tensor to mxa\n");
 
             TLA_tensor_to_mxa(buffer[linCount], &mxa_DataBlock);
             mxSetCell(mxa_blocks, uniqueCount, mxDuplicateArray(mxa_DataBlock));
             uniqueCount++;
         }
 
-        printf("looping\n");
         //Loop Update
         linCount++;
         curIndex[update_ptr]++;
@@ -407,7 +379,6 @@ void TLA_blocked_psym_tensor_to_mxa(FLA_Obj A, mxArray ** mxa ){
         }
         if(update_ptr >= order)
             break;
-        printf("update_ptr %d\n", update_ptr);
 
         memset(&(curIndex[0]), 0, (update_ptr) * sizeof(dim_t));
         update_ptr = 0;
