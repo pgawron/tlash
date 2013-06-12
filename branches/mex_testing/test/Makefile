@@ -64,7 +64,7 @@ CONFIG_MK_FRAGMENT  := $(CONFIG_DIRPATH)/$(HOST)/config.mk
 
 # Uncomment and modify these definitions if you wish to override the values
 # present in the master config makefile fragment.
- CC             := /opt/local/bin/gcc-mp-4.8
+ CC             := gcc
 # LINKER         := $(CC)
  CFLAGS         := -ggdb -O0 -Wall -Wno-comment
  LDFLAGS        := 
