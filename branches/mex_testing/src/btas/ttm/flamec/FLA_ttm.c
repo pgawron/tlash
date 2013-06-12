@@ -191,8 +191,10 @@ FLA_Error FLA_Ttm_scalar_no_permC( FLA_Obj alpha, FLA_Obj A,
 	FLA_Obj_create_tensor(datatype, order, size_A, stride_A, &P);
 	FLA_Permute(A, permutation, &P);
 
+	FLA_Adjust_2D_info(&B);
 	FLA_Adjust_2D_info(&C);
 	FLA_Adjust_2D_info(&P);
+
 	/*********************************/
 	FLASH_Gemm(FLA_NO_TRANSPOSE, FLA_NO_TRANSPOSE, beta, B, P, alpha, C);
 	/*********************************/

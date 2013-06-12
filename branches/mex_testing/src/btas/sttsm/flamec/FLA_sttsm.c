@@ -220,10 +220,10 @@ FLA_Error FLA_Sttsm_single_psttm( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj 
             //End X setup
 
 			//print X
-//			FLA_Obj_print_matlab("X", X);
+			//FLA_Obj_print_matlab("X", X);
             FLA_Psttm(alpha, A, mode, beta, B1, X);
             FLA_Sttsm_single_psttm(alpha, X, mode-1, beta, B, C1, loopCount, temps);
-
+            
 //            FLA_Obj_blocked_psym_tensor_free_buffer(&X);
 //            FLA_Obj_free_without_buffer(&X);
         }
@@ -242,32 +242,37 @@ FLA_Error FLA_Sttsm_single_psttm( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj 
     return FLA_SUCCESS;
 }
 
-void initialize_psym_temporaries(FLA_Obj A, FLA_Obj* temps[]){
+void initialize_psym_temporaries(FLA_Obj A, FLA_Obj C, FLA_Obj* temps[]){
 	dim_t i, j;
 	dim_t order = FLA_Obj_order(A);
 	dim_t blocked_size[order];
 	dim_t blocked_stride[order];
-	dim_t block_size[order];
+	dim_t input_block_size[order];
+	dim_t output_block_size[order];
+	dim_t temp_block_size[order];
 	dim_t flat_size[order];
 	
 	memcpy(&(blocked_size[0]), &(A.size[0]), order * sizeof(dim_t));
 	memcpy(&(blocked_stride[0]), &(((A.base)->stride)[0]), order * sizeof(dim_t));
-	memcpy(&(block_size[0]), &(((FLA_Obj*)FLA_Obj_base_buffer(A))[0].size[0]), order * sizeof(dim_t));
+	memcpy(&(input_block_size[0]), &(((FLA_Obj*)FLA_Obj_base_buffer(A))[0].size[0]), order * sizeof(dim_t));
+	memcpy(&(output_block_size[0]), &(((FLA_Obj*)FLA_Obj_base_buffer(C))[0].size[0]), order * sizeof(dim_t));
+	memcpy(&(temp_block_size[0]), &(((FLA_Obj*)FLA_Obj_base_buffer(A))[0].size[0]), order * sizeof(dim_t));
 	
 	for(i = 0; i < order; i++)
-		flat_size[i] = blocked_size[i] * block_size[i];
+		flat_size[i] = blocked_size[i] * input_block_size[i];
 	
 	TLA_sym tmpSym = A.sym;
 	for(i = order - 1; i > 0; i--){
 		TLA_sym Xsym;
 		TLA_split_sym_group(tmpSym, 1, &i, &Xsym);
 
-		flat_size[i] /= blocked_size[i];
+		temp_block_size[i] = output_block_size[i];
+		flat_size[i] = output_block_size[i];
 		blocked_size[i] = 1;
 		for(j = i; j < order - 1; j++)
 			blocked_stride[j] = blocked_stride[i];
 		temps[i] = (FLA_Obj*)FLA_malloc(sizeof(FLA_Obj));
-		FLA_Obj_create_blocked_psym_tensor(FLA_DOUBLE, order, flat_size, blocked_stride, block_size, Xsym, temps[i]);
+		FLA_Obj_create_blocked_psym_tensor(FLA_DOUBLE, order, flat_size, blocked_stride, temp_block_size, Xsym, temps[i]);
 		
 		tmpSym = Xsym;
 	}
@@ -282,29 +287,33 @@ void destroy_psym_temporaries(dim_t order, FLA_Obj* temps[]){
 	}
 }
 
-void initialize_temporaries(FLA_Obj A, FLA_Obj* temps[]){
+void initialize_temporaries(FLA_Obj A, FLA_Obj C, FLA_Obj* temps[]){
 	dim_t i, j;
 	dim_t order = FLA_Obj_order(A);
 	dim_t blocked_size[order];
 	dim_t blocked_stride[order];
-	dim_t block_size[order];
+	dim_t input_block_size[order];
+	dim_t output_block_size[order];
+	dim_t temp_block_size[order];
 	dim_t flat_size[order];
 	
 	memcpy(&(blocked_size[0]), &(A.size[0]), order * sizeof(dim_t));
 	memcpy(&(blocked_stride[0]), &(((A.base)->stride)[0]), order * sizeof(dim_t));
-	memcpy(&(block_size[0]), &(((FLA_Obj*)FLA_Obj_base_buffer(A))[0].size[0]), order * sizeof(dim_t));
+	memcpy(&(input_block_size[0]), &(((FLA_Obj*)FLA_Obj_base_buffer(A))[0].size[0]), order * sizeof(dim_t));
+	memcpy(&(output_block_size[0]), &(((FLA_Obj*)FLA_Obj_base_buffer(C))[0].size[0]), order * sizeof(dim_t));
+	memcpy(&(temp_block_size[0]), &(((FLA_Obj*)FLA_Obj_base_buffer(A))[0].size[0]), order * sizeof(dim_t));
 	
 	for(i = 0; i < order; i++)
-		flat_size[i] = blocked_size[i] * block_size[i];
+		flat_size[i] = blocked_size[i] * input_block_size[i];
 	
 	for(i = order - 1; i > 0; i--){
-	
-		flat_size[i] /= blocked_size[i];
+		temp_block_size[i] = output_block_size[i];
+		flat_size[i] /= output_block_size[i];
 		blocked_size[i] = 1;
 		for(j = i; j < order - 1; j++)
 			blocked_stride[j] = blocked_stride[i];
 		temps[i] = (FLA_Obj*)FLA_malloc(sizeof(FLA_Obj));
-		FLA_Obj_create_blocked_tensor(FLA_DOUBLE, order, flat_size, blocked_stride, block_size, temps[i]);
+		FLA_Obj_create_blocked_tensor(FLA_DOUBLE, order, flat_size, blocked_stride, input_block_size, temps[i]);
 	}
 }
 
@@ -323,7 +332,7 @@ FLA_Error FLA_Sttsm_without_psym_temps( FLA_Obj alpha, FLA_Obj A, FLA_Obj beta, 
 {
 	FLA_Obj* temps[A.order];
 	
-	initialize_temporaries(A, temps);
+	initialize_temporaries(A, C, temps);
     
 	FLA_Sttsm_single( alpha, A, FLA_Obj_order(C)-1, beta, B, C, FLA_Obj_dimsize(C,FLA_Obj_order(C)-1)-1, temps);
 	
@@ -338,7 +347,7 @@ FLA_Error FLA_Sttsm_with_psym_temps( FLA_Obj alpha, FLA_Obj A, FLA_Obj beta, FLA
 {
 	FLA_Obj* temps[A.order];
 
-	initialize_psym_temporaries(A, temps);
+	initialize_psym_temporaries(A, C, temps);
     FLA_Sttsm_single_psttm( alpha, A, FLA_Obj_order(C)-1, beta, B, C, FLA_Obj_dimsize(C,FLA_Obj_order(C)-1)-1, temps);
 	
 
