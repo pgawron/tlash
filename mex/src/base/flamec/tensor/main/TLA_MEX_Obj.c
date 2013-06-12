@@ -312,7 +312,7 @@ void TLA_blocked_tensor_to_mxa(FLA_Obj A, mxArray ** mxa ){
 }
 
 void TLA_blocked_psym_tensor_to_mxa(FLA_Obj A, mxArray ** mxa ){
-    int i;
+    int i, j;
 
     dim_t order = A.order;
     mxArray* mxa_order = mxCreateDoubleMatrix(1, 1, mxREAL);
@@ -356,21 +356,83 @@ void TLA_blocked_psym_tensor_to_mxa(FLA_Obj A, mxArray ** mxa ){
     memset(&(curIndex[0]), 0, order * sizeof(dim_t));
     dim_t update_ptr = 0;
     dim_t uniqueCount = 0;
-    dim_t linCount = 0;
+
+    /**
+     *  All this for psym
+     */
+    dim_t permutation[order];
+    dim_t sortedIndex[order];
+    dim_t* stride_obj = FLA_Obj_stride(A);
+    dim_t objLinIndex;
+    dim_t nSymGroups = A.sym.nSymGroups;
+    dim_t symGroupLens[nSymGroups];
+    dim_t symModes[order];
+    memcpy(&(symGroupLens[0]), &(A.sym.symGroupLens[0]), nSymGroups * sizeof(dim_t));
+    memcpy(&(symModes[0]), &(A.sym.symModes[0]), order* sizeof(dim_t));
+
+    FLA_Paired_Sort index_pairs[order];
+    dim_t orderedSymModes[order];
+    /**
+     * End necessary for psym
+     */
 
     FLA_Obj* buffer = (FLA_Obj*)FLA_Obj_base_buffer(A);
     while(TRUE){
-        if(buffer[linCount].isStored){
+		FLA_TIndex_to_LinIndex(order, stride_obj, curIndex, &objLinIndex);
+
+		dim_t modeOffset = 0;
+
+		for(i = 0; i < nSymGroups; i++){
+			for(j = 0; j < symGroupLens[i]; j++){
+				orderedSymModes[j+modeOffset] = symModes[j+modeOffset];
+			}
+			qsort(&(orderedSymModes[modeOffset]), symGroupLens[i], sizeof(dim_t), compare_dim_t);
+
+			for(j = 0; j < symGroupLens[i]; j++){
+				index_pairs[j].index = orderedSymModes[j+modeOffset];
+				index_pairs[j].val = curIndex[orderedSymModes[j+modeOffset]];
+			}
+			qsort(index_pairs, symGroupLens[i], sizeof(FLA_Paired_Sort), compare_pairwise_sort);
+
+
+			for(j = 0; j < symGroupLens[i]; j++){
+				permutation[orderedSymModes[j+modeOffset]] = index_pairs[j].index;
+				sortedIndex[orderedSymModes[j+modeOffset]] = index_pairs[j].val;
+			}
+
+			modeOffset += symGroupLens[i];
+		}
+
+		//Check if this is unique or not
+		dim_t uniqueIndex = TRUE;
+		dim_t count = 0;
+		for(i = 0; i < nSymGroups; i++){
+			if(symGroupLens[i] > 1){
+				for(j = 0; j < symGroupLens[i] - 1; j++){
+					if(curIndex[symModes[count]] > curIndex[symModes[count+1]]){
+						uniqueIndex = FALSE;
+						break;
+					}
+					count++;
+				}
+				if(uniqueIndex == FALSE)
+					break;
+			}
+			count++;
+		}
+
+        if(buffer[objLinIndex].isStored){
             const char* fields[] = {"size", "data"};
             mxArray *mxa_DataBlock = mxCreateStructMatrix(1, 1, 2, fields);
 
-            TLA_tensor_to_mxa(buffer[linCount], &mxa_DataBlock);
+            print_array("unique index found", order, curIndex);
+            FLA_Obj_print_matlab("convertBlock", buffer[objLinIndex]);
+            TLA_tensor_to_mxa(buffer[objLinIndex], &mxa_DataBlock);
             mxSetCell(mxa_blocks, uniqueCount, mxDuplicateArray(mxa_DataBlock));
             uniqueCount++;
         }
 
         //Loop Update
-        linCount++;
         curIndex[update_ptr]++;
         while(update_ptr < order && curIndex[update_ptr] == endIndex[update_ptr]){
             update_ptr++;
