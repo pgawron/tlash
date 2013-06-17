@@ -146,9 +146,11 @@ FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
 	        }
 	        dim_t update_region = update_region_stride;
 	        for(i = 0; i < nModes_part; i++){
-//	            printf("Recurring on region: %d\n", update_region);
-//	            printf("-------------------\n");
-	            FLA_Psttv(alpha, *(Arepart[update_region]), mode, beta, B, *(Crepart[update_region]));
+	            //printf("Recurring on region: %d\n", update_region);
+	            //printf("-------------------\n");
+                FLA_Obj Apass = *(Arepart[update_region]);
+                FLA_Obj Cpass = *(Crepart[update_region]);
+	            FLA_Psttv(alpha, Apass, mode, beta, B, Cpass);
 	            update_region_stride /= 3;
 	            update_region += update_region_stride;
 	        }

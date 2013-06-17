@@ -128,6 +128,9 @@ test_$(FNAME): $(TEST_OBJS)
 sttsm: $(TEST_OBJS)
 		$(LINKER) $(TEST_OBJ_PATH)/test_sttsm.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm
 
+sttsm_but_one: $(TEST_OBJS)
+		$(LINKER) $(TEST_OBJ_PATH)/test_sttsm_but_one.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm_but_one
+		
 tensor_print: $(TEST_OBJS)
 		$(LINKER) $(TEST_OBJ_PATH)/test_tensor_print.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_print
 

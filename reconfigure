@@ -1,3 +1,3 @@
 #!/bin/sh
 
-./configure --enable-blas3-front-end-cntl-trees && cp config.mk config/x86_64-apple-darwin10.8.0
+./configure --enable-blas3-front-end-cntl-trees && cp config.mk config/x86_64-apple-darwin12.4.0
