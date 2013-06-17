@@ -156,7 +156,8 @@ FLA_Error FLA_Random_scalar_psym_tensor(FLA_Obj obj){
 		//Create vector to multiply by
 		FLA_Obj vec;
 		dim_t symGroupOffset = TLA_sym_group_mode_offset(objSym, i);
-		dim_t out_mode_size = FLA_Obj_dimsize(obj, symGroupOffset);
+		dim_t symGroupMode = objSym.symModes[symGroupOffset];
+		dim_t out_mode_size = FLA_Obj_dimsize(obj, symGroupMode);
 		dim_t vecSize[] = {out_mode_size, 1};
 		dim_t vecStride[] = {1, out_mode_size};
 		FLA_Obj_create_tensor(FLA_DOUBLE, 2, vecSize, vecStride, &vec);
@@ -425,7 +426,7 @@ FLA_Error FLA_Random_psym_tensor(FLA_Obj obj){
 	    FLA_TIndex_to_LinIndex(order, stride, curIndex, &linIndex);
 		dim_t isUnique = ((FLA_Obj*)FLA_Obj_base_buffer(obj))[linIndex].isStored;
 
-		if(isUnique){		
+		if(isUnique){
 			//Create blk
 			FLA_Obj_create_tensor(FLA_DOUBLE, order, blkSize, blkStride, &tmpBlk);
 
