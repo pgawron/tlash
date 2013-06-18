@@ -32,6 +32,7 @@
 
 #include "FLAME.h"
 
+//Creates dynamic number of partition blocks (used for symmetric partitioning)
 FLA_Error TLA_create_part_obj( dim_t nPart, FLA_Obj* partitions[])
 {
   dim_t i;

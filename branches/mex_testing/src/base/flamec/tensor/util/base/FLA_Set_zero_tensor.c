@@ -37,11 +37,13 @@ FLA_Error FLA_Set_zero_tensor( FLA_Obj A )
 	dim_t i;
 	dim_t nElem = FLA_Obj_num_elem_alloc(A);
 
+	//If it is blocked, set each block
 	if(FLA_Obj_elemtype(A) == FLA_MATRIX || FLA_Obj_elemtype(A) == FLA_TENSOR){
 		FLA_Obj* buffer = (FLA_Obj*)FLA_Obj_base_buffer(A);
 		for(i = 0; i < nElem; i++)
 			FLA_Set_zero_tensor(buffer[i]);
 	}
+	//If it is a block, set it (only if stored)
 	else{
 		if(A.isStored){
 			memset(&(((double*)FLA_Obj_base_buffer(A))[0]), 0, nElem * sizeof(double));

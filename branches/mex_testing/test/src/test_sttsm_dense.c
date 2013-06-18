@@ -79,17 +79,9 @@ void test_sttsm(int m, int nA, int nC, double* elapsedTime){
   initSymmTensor(m, cSize, &C);
   setSymmTensorToZero(C);
 
-  dim_t modes[m];
-  for(i = 0; i < m; i++)
-	modes[i] = i;
-
-//printf("begin computation\n");
-  FLA_Obj Barr[m];
-  for(i = 0; i < m; i++)
-	Barr[i] = B;
-
   double startTime = FLA_Clock();
-  FLA_Ttm(alpha, A, m, modes, beta, Barr, C);
+  FLA_Sttsm_without_psym_temps(alpha, A, beta, B, C);
+  //FLA_Ttm(alpha, A, m, modes, beta, Barr, C);
   double endTime = FLA_Clock();
   *elapsedTime = endTime - startTime;
 //printf("end computation\n");

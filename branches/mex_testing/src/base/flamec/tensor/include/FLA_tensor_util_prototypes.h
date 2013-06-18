@@ -35,21 +35,27 @@
 FLA_Error FLA_Set_zero_tensor( FLA_Obj A );
 FLA_Error FLA_Adjust_2D_info( FLA_Obj *A );
 FLA_Error FLA_Random_tensor(FLA_Obj A);
-FLA_Error FLA_Random_sym_tensor(FLA_Obj obj);
 FLA_Error FLA_Random_psym_tensor(FLA_Obj obj);
 
 //---  Non-FLA utils ---------------
 int compare_pairwise_sort(const void* a, const void* b);
 int compare_dim_t(const void* a, const void* b);
 dim_t binomial(dim_t n, dim_t k);
-FLA_Error FLA_get_unique_info( dim_t order, dim_t index[order], dim_t* sortedIndex, dim_t* permutation);
+dim_t FLA_get_unique_info( TLA_sym sym, dim_t index[sym.order], dim_t* sortedIndex, dim_t* permutation, dim_t* ipermutation);
 FLA_Error FLA_Set_tensor_stride( dim_t order, dim_t size[order], dim_t* stride);
-FLA_Error FLA_Set_tensor_permutation( dim_t order, dim_t permutation[order], FLA_Obj* A);
-FLA_Error FLA_TIndex_to_LinIndex( dim_t order, dim_t const stride[order], dim_t const index[order], dim_t* linIndex);
+dim_t FLA_TIndex_to_LinIndex( dim_t order, dim_t const stride[order], dim_t const index[order]);
 FLA_Error FLA_LinIndex_to_TIndex( dim_t order, dim_t const stride[order], dim_t const linIndex, dim_t index[order]);
-FLA_Error FLA_Permute_array( dim_t order, dim_t arrfrom[order], dim_t permutation[order], dim_t* arrto);
 dim_t FLA_Ttm_Ops( dim_t order, dim_t size_A[order], dim_t size_B[2], dim_t mode);
-void print_array(const char* header, dim_t nElem, dim_t arr[nElem]);
 
+//---  Array routines --------------
+void print_array(const char* header, dim_t nElem, dim_t arr[nElem]);
+dim_t FLA_array_product( dim_t order, dim_t arr[order]);
+FLA_Error FLA_array_elemwise_product( dim_t order, dim_t arr1[order], dim_t arr2[order], dim_t* arrOut);
+FLA_Error FLA_array_elemwise_quotient( dim_t order, dim_t arr1[order], dim_t arr2[order], dim_t* arrOut);
+
+//--- Symmetry View routines ---------
 FLA_Error TLA_create_part_obj( dim_t nPart, FLA_Obj* partitions[]);
 FLA_Error TLA_destroy_part_obj( dim_t nPart, FLA_Obj* partitions[]);
+
+//--- TLA_sym routines ------------
+FLA_Error TLA_Sym_init_nonsymmetric(dim_t order, TLA_sym* sym);

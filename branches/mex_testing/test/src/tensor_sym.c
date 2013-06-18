@@ -13,8 +13,11 @@ void Usage()
 void test_create_sym_tensor(int order, int nA, int bA){
 	dim_t i;
 	dim_t size_A[order];
-	for(i = 0; i < order; i++)
+	dim_t blk_size[order];
+	for(i = 0; i < order; i++){
 		size_A[i] = nA;
+		blk_size[i] = bA;
+	}
 
 	dim_t stride_A[order];
 	stride_A[0] = 1;
@@ -24,8 +27,10 @@ void test_create_sym_tensor(int order, int nA, int bA){
 
 	FLA_Obj A;
 
-	FLA_Obj_create_blocked_sym_tensor(FLA_DOUBLE, order, size_A, stride_A, bA, &A);
-	FLA_Random_sym_tensor(A);
+	TLA_sym sym;
+	TLA_Sym_init_nonsymmetric(order, &sym);
+	FLA_Obj_create_blocked_psym_tensor(FLA_DOUBLE, order, size_A, stride_A, blk_size, sym, &A);
+	FLA_Random_psym_tensor(A);
   
 	printf("A tensor\n");
 	printf("a = tensor([");
@@ -35,7 +40,7 @@ void test_create_sym_tensor(int order, int nA, int bA){
 		printf("%d ", FLA_Obj_dimsize(((FLA_Obj*)(FLA_Obj_base_buffer(A)))[0],i) * FLA_Obj_dimsize(A,i));
 	printf("]);\n\n");
 
-  FLA_Obj_blocked_sym_tensor_free_buffer(&A);
+  FLA_Obj_blocked_psym_tensor_free_buffer(&A);
   FLA_Obj_free_without_buffer(&A);
 }
 
