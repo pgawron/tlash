@@ -32,6 +32,7 @@
 
 #include "TLA_Copy_col_mode.h"
 
+//Copies a single column from A to B
 FLA_Error TLA_Copy_col_mode(FLA_Obj A, dim_t mode_A, FLA_Obj B, dim_t mode_B){
 	dim_t i;
 	dim_t stride_A = FLA_Obj_dimstride(A,mode_A);
