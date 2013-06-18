@@ -378,7 +378,7 @@ void TLA_blocked_psym_tensor_to_mxa(FLA_Obj A, mxArray ** mxa ){
 
     FLA_Obj* buffer = (FLA_Obj*)FLA_Obj_base_buffer(A);
     while(TRUE){
-		FLA_TIndex_to_LinIndex(order, stride_obj, curIndex, &objLinIndex);
+		objLinIndex = FLA_TIndex_to_LinIndex(order, stride_obj, curIndex);
 
 		dim_t modeOffset = 0;
 

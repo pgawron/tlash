@@ -32,22 +32,60 @@
 
 #include "FLAME.h"
 
-FLA_Error FLA_get_unique_info( dim_t order, dim_t index[order], dim_t* sortedIndex, dim_t* permutation)
+dim_t FLA_get_unique_info( TLA_sym sym, dim_t index[sym.order], dim_t* sortedIndex, dim_t* permutation, dim_t* ipermutation)
 {
-	dim_t i;
-	FLA_Paired_Sort indexPairs[order];
-	for(i = 0; i < order; i++){
-		indexPairs[i].index = i;
-		indexPairs[i].val = index[i];
+	dim_t i, j;
+
+	FLA_Paired_Sort index_pairs[sym.order];
+	dim_t nSymGroups = sym.nSymGroups;
+	dim_t* symGroupLens = &(sym.symGroupLens[0]);
+	dim_t* symModes = &(sym.symModes[0]);
+	dim_t orderedSymModes[sym.order];
+	dim_t modeOffset = 0;
+	dim_t uniqueIndex = TRUE;
+
+	for(i = 0; i < nSymGroups; i++){
+		for(j = 0; j < symGroupLens[i]; j++){
+			orderedSymModes[j+modeOffset] = symModes[j+modeOffset];
+		}
+		qsort(&(orderedSymModes[modeOffset]), symGroupLens[i], sizeof(dim_t), compare_dim_t);
+
+		for(j = 0; j < symGroupLens[i]; j++){
+			index_pairs[j].index = orderedSymModes[j+modeOffset];
+			index_pairs[j].val = index[orderedSymModes[j+modeOffset]];
+		}
+		qsort(index_pairs, symGroupLens[i], sizeof(FLA_Paired_Sort), compare_pairwise_sort);
+
+
+		for(j = 0; j < symGroupLens[i]; j++){
+			permutation[orderedSymModes[j+modeOffset]] = index_pairs[j].index;
+			sortedIndex[orderedSymModes[j+modeOffset]] = index_pairs[j].val;
+		}
+
+		//Check if index is unique or not
+		if (symGroupLens[i] > 1) {
+			for (j = 0; j < symGroupLens[i] - 1; j++) {
+				if (index[symModes[j + modeOffset]]
+						> index[symModes[j + modeOffset + 1]]) {
+					uniqueIndex = FALSE;
+					break;
+				}
+			}
+		}
+
+		modeOffset += symGroupLens[i];
 	}
 
-	qsort(indexPairs, order, sizeof(FLA_Paired_Sort), compare_pairwise_sort);
-
-	for(i = 0; i < order; i++){
-		permutation[i] = indexPairs[i].index;
-		sortedIndex[i] = indexPairs[i].val;
+	//Set the correct ipermutation
+	memcpy(&(ipermutation[0]), &(permutation[0]), sym.order * sizeof(dim_t));
+	modeOffset = 0;
+	for(i = 0; i < nSymGroups; i++){
+		for(j = 0; j < symGroupLens[i]; j++){
+			ipermutation[permutation[symModes[j+modeOffset]]] = orderedSymModes[j+modeOffset];
+		}
+		modeOffset += symGroupLens[i];
 	}
 
-  return FLA_SUCCESS;
+  return uniqueIndex;
 }
 

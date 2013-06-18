@@ -33,6 +33,7 @@
 #include "FLAME.h"
 
 //NOTE: FIX for breaking/retaining symmetry
+//psttm: Partial symmetric tensor times matrix
 FLA_Error FLA_Psttm( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C )
 {
     FLA_Obj BT, BB;
@@ -57,15 +58,7 @@ FLA_Error FLA_Psttm( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
                                           &C1,
                                       CB, &C2, mode, b, FLA_BOTTOM);
         /*********************************/
-/*
-        printf("Calling psttv in mode %d\n", mode);
-        printf("-------------\n\n");
-        FLA_Obj_print_matlab("A",A);
-        FLA_Obj_print_matlab("B1",B1);
-        FLA_Obj_print_matlab("ptrC1",C1);
-*/
         FLA_Psttv(alpha, A, mode, beta, B1, C1);
-//		FLA_Obj_print_matlab("C1",C1);
         /*********************************/
         FLA_Cont_with_1xmode3_to_1xmode2( &CT, C0,
                                                C1,

@@ -36,6 +36,7 @@ FLA_Error FLA_Obj_print_scalar_tensor(FLA_Obj A, dim_t repart_mode_index){
 	FLA_Obj AT, AB;
 	FLA_Obj A0, A1, A2;
 	
+	//View could be under permutation.  Ensure print respects this
 	FLA_Part_1xmode2(A, &AT,
 						/**/
 						&AB, A.permutation[repart_mode_index], 0, FLA_TOP);
@@ -64,6 +65,9 @@ FLA_Error FLA_Obj_print_scalar_tensor(FLA_Obj A, dim_t repart_mode_index){
 	return FLA_SUCCESS;	
 }
 
+//Because we are printing a blocks of tensors
+//We alternate between scalar columns and block columns
+//This routine prints the element at that location
 FLA_Error FLA_Obj_print_scalar_tensor_mode_at(FLA_Obj A, dim_t mode, dim_t index[]){
 	FLA_Obj Atmp;
 	FLA_Obj AT, AB;
@@ -183,6 +187,8 @@ FLA_Error FLA_Obj_print_tensor(FLA_Obj A){
 	return FLA_SUCCESS;
 }
 
+
+//Eliminate soon.
 FLA_Error FLA_Obj_print(FLA_Obj obj){
     dim_t order = FLA_Obj_order(obj);
     dim_t* permutation = FLA_Obj_permutation(obj);
@@ -199,6 +205,7 @@ FLA_Error FLA_Obj_print(FLA_Obj obj){
     return FLA_SUCCESS;
 }
 
+//Nice matlab printing
 FLA_Error FLA_Obj_print_matlab(const char * varName, FLA_Obj obj){
     dim_t i;
     if(FLA_Obj_order(obj) <= 2)
