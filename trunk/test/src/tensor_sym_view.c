@@ -29,8 +29,11 @@ void print_tensor(const char* varName, FLA_Obj A){
 void create_psym_tensor(dim_t order, dim_t nA, dim_t bA, TLA_sym sym, FLA_Obj* A){
 	dim_t i;
 	dim_t flat_size[order];
-	for(i = 0; i < order; i++)
+	dim_t block_size[order];
+	for(i = 0; i < order; i++){
 		flat_size[i] = nA;
+		block_size[i] = bA;
+	}
 
 	dim_t blocked_stride[order];
 	blocked_stride[0] = 1;
@@ -38,7 +41,7 @@ void create_psym_tensor(dim_t order, dim_t nA, dim_t bA, TLA_sym sym, FLA_Obj* A
 	for(i = 1; i < order; i++)
 		blocked_stride[i] = flat_size[i-1]/bA * blocked_stride[i-1];
 
-	FLA_Obj_create_blocked_psym_tensor(FLA_DOUBLE, order, flat_size, blocked_stride, bA, sym, A);
+	FLA_Obj_create_blocked_psym_tensor(FLA_DOUBLE, order, flat_size, blocked_stride, block_size, sym, A);
 	FLA_Random_psym_tensor(*A);
 }
 

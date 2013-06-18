@@ -33,11 +33,16 @@
 #include "FLAME.h"
 
 //Note: Only retains symmetry that exists...
-//Note: Mode multiplies MUST be INORDER (so that traverse stored pieces correctly). (This might could be relaxed since no matter the loop order, we will hit the unique part only once...Not sure...I think we would just have to handle the permutations)
+//Note: Mode multiplies MUST be INORDER (so that traverse stored pieces correctly).
+//(This might could be relaxed since no matter the loop order, we will hit the unique part only once...Not sure...I think we would just have to handle the permutations)
+//Step 1: Partition unaltered symmetric groups of A and C first!!
+//Step 2: Deal with the symGroup that will be broken
 FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C )
 {
     dim_t i;
 
+    //Determine which (if any) symmetric group can safely be repartitioned similarly
+    //between A and C.
     TLA_sym symC = C.sym;
     dim_t symGroupToSplit = -1;
     dim_t nModes_part;
@@ -48,12 +53,16 @@ FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
             break;
         }
 
+    //No group can be split, meaning mode multiplied in is on own in both tensors.
+    //Multiply
 	if(symGroupToSplit == -1){
 	    FLA_Ttm_single_mode(alpha, A, mode, beta, B, C);
 	    return FLA_SUCCESS;
 	}else{
+		//This is the symmetric group to split
 	    dim_t symGroupToSplitOffset = TLA_sym_group_mode_offset(symC, symGroupToSplit);
 
+	    //Initialize Views & data for loop
 	    dim_t nPart = 1 << nModes_part;
 	    dim_t nRepart = 1;
 	    for(i = 0; i < nModes_part; i++)
@@ -73,6 +82,8 @@ FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
 	    }
 
 
+	    //Check if we are dealing with a single block
+	    //If so, we get to just multiply in a mode
 	    dim_t isSingleBlock = TRUE;
 	    for(i = 0; i < nModes_part; i++){
 	        if(FLA_Obj_dimsize(C,part_modes[i]) == 0){
@@ -88,6 +99,7 @@ FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
 	        return FLA_SUCCESS;
 	    }
 
+	    //Begin loop for general tensor case
 	    FLA_Obj* Apart[nPart];
 	    FLA_Obj* Cpart[nPart];
 
@@ -107,18 +119,7 @@ FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
 	    FLA_Part_2powm(C, Cpart,
 	                       nModes_part, part_modes,
 	                       sizes, sides);
-/*
-        printf("---------------\n");
-        printf("After Part\n");
-        printf("---------------\n");
-        for(i = 0; i < nPart; i++){
-            printf("Cpart[%d]", i);
-            print_array("", (Cpart[i])->order, &(((Cpart[i])->offset)[0]));
-            print_array("  size", (Cpart[i])->order, &(((Cpart[i])->size)[0]));
-            print_array("  offset", (Cpart[i])->order, &(((Cpart[i])->offset)[0]));
-            printf("\n");
-        }
-*/
+
 	    while(FLA_Obj_dimsize(*(Cpart[0]), part_modes[0]) < FLA_Obj_dimsize(C, part_modes[0])){
 	        FLA_Repart_2powm_to_3powm(Apart, Arepart,
 	                                      nModes_part, part_modes,
@@ -126,29 +127,21 @@ FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
 	        FLA_Repart_2powm_to_3powm(Cpart, Crepart,
 	                                      nModes_part, part_modes,
 	                                      repart_sizes, repart_sides);
-/*
-	        printf("---------------\n");
-            printf("After repart\n");
-            printf("---------------\n");
 
-            for(i = 0; i < nRepart; i++){
-                printf("Crepart[%d]", i);
-                print_array("", (Crepart[i])->order, &(((Crepart[i])->offset)[0]));
-                print_array("  size", (Crepart[i])->order, &(((Crepart[i])->size)[0]));
-                print_array("  offset", (Crepart[i])->order, &(((Crepart[i])->offset)[0]));
-                printf("\n");
-            }
-*/
 			/******************************/
 	        dim_t update_region_stride = 1;
 	        for(i = 1; i < nModes_part; i++){
 	            update_region_stride *= 3;
 	        }
+
+	        //Symmetric region being partitioned includes
+	        //symmetric tensors of order 0->order-1
+	        //Must update ALL of them
 	        dim_t update_region = update_region_stride;
 	        for(i = 0; i < nModes_part; i++){
-//	            printf("Recurring on region: %d\n", update_region);
-//	            printf("-------------------\n");
-	            FLA_Psttv(alpha, *(Arepart[update_region]), mode, beta, B, *(Crepart[update_region]));
+                FLA_Obj Apass = *(Arepart[update_region]);
+                FLA_Obj Cpass = *(Crepart[update_region]);
+	            FLA_Psttv(alpha, Apass, mode, beta, B, Cpass);
 	            update_region_stride /= 3;
 	            update_region += update_region_stride;
 	        }
@@ -159,20 +152,9 @@ FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
 	        FLA_Cont_with_3powm_to_2powm(Cpart, Crepart,
 	                                         nModes_part, part_modes,
                                              repart_sides);
-/*
-	        printf("---------------\n");
-	        printf("After cont with\n");
-            printf("---------------\n");
-            for(i = 0; i < nPart; i++){
-                printf("Cpart[%d]", i);
-                print_array("", (Cpart[i])->order, &(((Cpart[i])->offset)[0]));
-                print_array("  size", (Cpart[i])->order, &(((Cpart[i])->size)[0]));
-                print_array("  offset", (Cpart[i])->order, &(((Cpart[i])->offset)[0]));
-                printf("\n");
-            }
-*/
 	    }
 
+	    //Tidy up alloc'd data
 	    TLA_destroy_part_obj(nPart, Apart);
 	    TLA_destroy_part_obj(nPart, Cpart);
 

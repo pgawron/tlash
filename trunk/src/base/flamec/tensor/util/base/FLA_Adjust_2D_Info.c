@@ -32,6 +32,7 @@
 
 #include "FLAME.h"
 
+//Adjusts tensor object to fill in for 2D matrix object
 FLA_Error FLA_Adjust_2D_info( FLA_Obj *A )
 {
 	dim_t  order = A->order;

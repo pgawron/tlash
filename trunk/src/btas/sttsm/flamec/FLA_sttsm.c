@@ -34,154 +34,56 @@
 
 FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C, dim_t endIndex, FLA_Obj* temps[] )
 {
-	//dim_t order = FLA_Obj_order( A );
+	//FOR
+	FLA_Obj BT, BB;
+	FLA_Obj B0, B1, B2;
+	FLA_Obj CT, CB;
+	FLA_Obj C0, C1, C2;
 
-	if(mode == 0){
-		FLA_Obj BT, BB;
-		FLA_Obj B0, B1, B2;
-		FLA_Obj CT, CB;
-		FLA_Obj C0, C1, C2;
-
-		FLA_Part_1xmode2(B, &BT,
-						 &BB, 0, 0, FLA_TOP);
-		FLA_Part_1xmode2(C, &CT,
-						 &CB, mode, 0, FLA_TOP);
-		dim_t loopCount = 0;
-		while(loopCount <= endIndex){
-			dim_t b = 1;
-			FLA_Repart_1xmode2_to_1xmode3(BT, &B0,
-										  /**/ /**/
+	FLA_Part_1xmode2(B, &BT,
+						&BB, 0, 0, FLA_TOP);
+	FLA_Part_1xmode2(C, &CT,
+						&CB, mode, 0, FLA_TOP);
+	//Only symmetric part touched
+	//Ponder this
+	dim_t loopCount = 0;
+	while(loopCount <= endIndex){
+		dim_t b = 1;
+		FLA_Repart_1xmode2_to_1xmode3(BT, &B0,
+									/**/ /**/
 										  &B1,
-										  BB, &B2, 0, b, FLA_BOTTOM);
-			FLA_Repart_1xmode2_to_1xmode3(CT, &C0,
-										  /**/ /**/
+									  BB, &B2, 0, b, FLA_BOTTOM);
+		FLA_Repart_1xmode2_to_1xmode3(CT, &C0,
+									/**/ /**/
 										  &C1,
-										  CB, &C2, mode, b, FLA_BOTTOM);
-
-//			printf("ttm performed: %d\n", FLA_Ttm_Ops(order, A.size, B1.size, mode));
+									  CB, &C2, mode, b, FLA_BOTTOM);
+		/*********************************/
+		//Make sure that if we are at the bottom of the recursion,
+		//We multiply into C (not X)
+		if(mode == 0){
 			FLA_Ttm_single_mode(alpha, A, mode, beta, B1, C1);
-
-			FLA_Cont_with_1xmode3_to_1xmode2( &CT, C0,
-											 C1,
-											 /********/
-											 &CB, C2, mode, FLA_TOP);
-			FLA_Cont_with_1xmode3_to_1xmode2( &BT, B0,
-											 B1,
-											 /********/
-											 &BB, B2, 0, FLA_TOP);
-			loopCount++;
-		}
-	}else{
-		//dim_t i;
-		//FLA_Obj X;
-
-
-		//FOR
-		FLA_Obj BT, BB;
-		FLA_Obj B0, B1, B2;
-		FLA_Obj CT, CB;
-		FLA_Obj C0, C1, C2;
-
-		FLA_Part_1xmode2(B, &BT,
-							&BB, 0, 0, FLA_TOP);
-		FLA_Part_1xmode2(C, &CT,
-							&CB, mode, 0, FLA_TOP);
-		//Only symmetric part touched
-		//Ponder this
-		dim_t loopCount = 0;
-		while(loopCount <= endIndex){
-			//Check this mathc out.  I think it is correct, Mode-1 of B matches mode-n of A
-			//Mode-0 of B matches Mode-n of C
-			dim_t b = 1;
-			FLA_Repart_1xmode2_to_1xmode3(BT, &B0,
-										/**/ /**/
-											  &B1,
-										  BB, &B2, 0, b, FLA_BOTTOM);
-			FLA_Repart_1xmode2_to_1xmode3(CT, &C0,
-										/**/ /**/
-											  &C1,
-										  CB, &C2, mode, b, FLA_BOTTOM);
-			
-			/*
-			//Set up X to be corect size
-			dim_t size_X[FLA_Obj_order( A )];
-			//HACK I KNOW, just need to figure out how to make X the correct blocked size
-			dim_t blkSize[order];
-			for(i = 0; i < order; i++)
-				blkSize[i] = (((FLA_Obj*)FLA_Obj_base_buffer(A))[0]).size[i];
-			blkSize[mode] = (((FLA_Obj*)FLA_Obj_base_buffer(B1))[0]).size[0];
-
-			for(i = 0; i < order; i++)
-				size_X[i] = blkSize[i] * FLA_Obj_dimsize(A,i);
-			size_X[mode] = FLA_Obj_dimsize( B1, 0) * blkSize[mode];
-
-			dim_t nElem = size_X[0];
-			dim_t stride_X[order];
-			stride_X[0] = 1;
-			for(i = 1; i < order; i++){
-				nElem *= size_X[i];
-				stride_X[i] = stride_X[i-1]*size_X[i-1];
-			}
-			FLA_Obj_create_blocked_tensor(FLA_DOUBLE, order, size_X, stride_X, blkSize, &X);
-			FLA_Set_zero_tensor(X);
-			 */
+		}else{
+			//Initialize X to 0
 			FLA_Obj X = *(temps[mode]);
-            FLA_Set_zero_tensor(X);
-			
-			//End X setup
+			FLA_Set_zero_tensor(X);
 
-			/*
-			printf("\n\nMultiply happening\n");
-			printf("a = tensor([");
-			FLA_Obj_print_tensor(A);
-			printf("],[");
-			for(i = 0; i < FLA_Obj_order(A); i++)
-				printf("%d ", FLA_Obj_dimsize(((FLA_Obj*)(FLA_Obj_base_buffer(A)))[0],i) * FLA_Obj_dimsize(A,i));
-			printf("]);\n\n");
-
-			printf("\ntimes %d\n", mode);
-			printf("b1 = reshape([");
-			FLA_Obj_print_tensor(B1);
-			printf("],[");
-			printf("%d ", 2);
-			printf("%d ", 4);
-			printf("]);\n\n");
-
-			printf("preX = tensor([");
-			FLA_Obj_print_tensor(X);
-			printf("],[");
-			for(i = 0; i < FLA_Obj_order(X); i++)
-				printf("%d ", FLA_Obj_dimsize(((FLA_Obj*)(FLA_Obj_base_buffer(X)))[0],i) * FLA_Obj_dimsize(X,i));
-			printf("]);\n\n");
-*/
-//			FLA_Obj_print_matlab("X", X);
+			//Compute X
 			FLA_Ttm_single_mode(alpha, A, mode, beta, B1, X);
-/*
-			printf("postX = tensor([");
-			FLA_Obj_print_tensor(X);
-			printf("],[");
-			for(i = 0; i < FLA_Obj_order(X); i++)
-				printf("%d ", FLA_Obj_dimsize(((FLA_Obj*)(FLA_Obj_base_buffer(X)))[0],i) * FLA_Obj_dimsize(X,i));
-			printf("]);\n\n");
-*/
-
+			//Use X for rest of computation
 			FLA_Sttsm_single(alpha, X, mode-1, beta, B, C1, loopCount, temps);
-
-//			FLA_Obj_blocked_free_buffer(&X);
-//			FLA_Obj_free_without_buffer(&X);
-
-
-			FLA_Cont_with_1xmode3_to_1xmode2( &CT, C0,
-												   C1,
-											/********/
-											  &CB, C2, mode, FLA_TOP);
-			FLA_Cont_with_1xmode3_to_1xmode2( &BT, B0,
-												   B1,
-											/********/
-											  &BB, B2, 0, FLA_TOP);
-			loopCount++;
 		}
+		/*********************************/
+		FLA_Cont_with_1xmode3_to_1xmode2( &CT, C0,
+											   C1,
+										/********/
+										  &CB, C2, mode, FLA_TOP);
+		FLA_Cont_with_1xmode3_to_1xmode2( &BT, B0,
+											   B1,
+										/********/
+										  &BB, B2, 0, FLA_TOP);
+		loopCount++;
 	}
+
 
 	return FLA_SUCCESS;
 }
@@ -214,18 +116,15 @@ FLA_Error FLA_Sttsm_single_psttm( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj 
         if(mode == 0){
             FLA_Ttm_single_mode(alpha, A, mode, beta, B1, C1);
         }else{
-			//Set up X temporary
+			//Set X to 0
 			FLA_Obj X = *(temps[mode]);
             FLA_Set_zero_tensor(X);
-            //End X setup
 
-			//print X
-//			FLA_Obj_print_matlab("X", X);
+            //Compute X
             FLA_Psttm(alpha, A, mode, beta, B1, X);
-            FLA_Sttsm_single_psttm(alpha, X, mode-1, beta, B, C1, loopCount, temps);
 
-//            FLA_Obj_blocked_psym_tensor_free_buffer(&X);
-//            FLA_Obj_free_without_buffer(&X);
+            //Use X for rest of computation
+            FLA_Sttsm_single_psttm(alpha, X, mode-1, beta, B, C1, loopCount, temps);
         }
 		/**************************************************/
         FLA_Cont_with_1xmode3_to_1xmode2( &CT, C0,
@@ -242,32 +141,39 @@ FLA_Error FLA_Sttsm_single_psttm( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj 
     return FLA_SUCCESS;
 }
 
-void initialize_psym_temporaries(FLA_Obj A, FLA_Obj* temps[]){
+void initialize_psym_temporaries(FLA_Obj A, FLA_Obj C, FLA_Obj* temps[]){
 	dim_t i, j;
 	dim_t order = FLA_Obj_order(A);
-	dim_t blocked_size[order];
-	dim_t blocked_stride[order];
-	dim_t block_size[order];
-	dim_t flat_size[order];
-	
-	memcpy(&(blocked_size[0]), &(A.size[0]), order * sizeof(dim_t));
-	memcpy(&(blocked_stride[0]), &(((A.base)->stride)[0]), order * sizeof(dim_t));
-	memcpy(&(block_size[0]), &(((FLA_Obj*)FLA_Obj_base_buffer(A))[0].size[0]), order * sizeof(dim_t));
-	
-	for(i = 0; i < order; i++)
-		flat_size[i] = blocked_size[i] * block_size[i];
+	dim_t temp_blocked_size[order];
+	dim_t temp_blocked_stride[order];
+	dim_t temp_block_size[order];
+	dim_t temp_flat_size[order];
+	FLA_Obj* buf_A = (FLA_Obj*)FLA_Obj_base_buffer(A);
+	FLA_Obj* buf_C = (FLA_Obj*)FLA_Obj_base_buffer(C);
 	
 	TLA_sym tmpSym = A.sym;
 	for(i = order - 1; i > 0; i--){
+		//Symmetry is different for each temporary
 		TLA_sym Xsym;
 		TLA_split_sym_group(tmpSym, 1, &i, &Xsym);
 
-		flat_size[i] /= blocked_size[i];
-		blocked_size[i] = 1;
-		for(j = i; j < order - 1; j++)
-			blocked_stride[j] = blocked_stride[i];
+		//For simplicity, temp_block_size has all same size as A first
+		memcpy(&(temp_block_size[0]), &(buf_A[0].size[0]), order * sizeof(dim_t));
+		memcpy(&(temp_blocked_size[0]), &(A.size[0]), order * sizeof(dim_t));
+		//Adjust output modes
+		for(j = i; j < order; j++){
+			//Each temporary is multiplied by a block vector
+			temp_blocked_size[j] = 1;
+			temp_block_size[j] = buf_C[0].size[j];
+		}
+
+		//Adjust the flat_size & stride
+		FLA_array_elemwise_product(order, temp_blocked_size, temp_block_size, temp_flat_size);
+		FLA_Set_tensor_stride(order, temp_blocked_size, temp_blocked_stride);
+
+		//Create the temporary
 		temps[i] = (FLA_Obj*)FLA_malloc(sizeof(FLA_Obj));
-		FLA_Obj_create_blocked_psym_tensor(FLA_DOUBLE, order, flat_size, blocked_stride, block_size, Xsym, temps[i]);
+		FLA_Obj_create_blocked_psym_tensor(FLA_DOUBLE, order, temp_flat_size, temp_blocked_stride, temp_block_size, Xsym, temps[i]);
 		
 		tmpSym = Xsym;
 	}
@@ -282,29 +188,35 @@ void destroy_psym_temporaries(dim_t order, FLA_Obj* temps[]){
 	}
 }
 
-void initialize_temporaries(FLA_Obj A, FLA_Obj* temps[]){
+void initialize_temporaries(FLA_Obj A, FLA_Obj C, FLA_Obj* temps[]){
 	dim_t i, j;
 	dim_t order = FLA_Obj_order(A);
-	dim_t blocked_size[order];
-	dim_t blocked_stride[order];
-	dim_t block_size[order];
-	dim_t flat_size[order];
-	
-	memcpy(&(blocked_size[0]), &(A.size[0]), order * sizeof(dim_t));
-	memcpy(&(blocked_stride[0]), &(((A.base)->stride)[0]), order * sizeof(dim_t));
-	memcpy(&(block_size[0]), &(((FLA_Obj*)FLA_Obj_base_buffer(A))[0].size[0]), order * sizeof(dim_t));
-	
-	for(i = 0; i < order; i++)
-		flat_size[i] = blocked_size[i] * block_size[i];
-	
+	dim_t temp_blocked_size[order];
+	dim_t temp_blocked_stride[order];
+	dim_t temp_block_size[order];
+	dim_t temp_flat_size[order];
+	FLA_Obj* buf_A = (FLA_Obj*)FLA_Obj_base_buffer(A);
+	FLA_Obj* buf_C = (FLA_Obj*)FLA_Obj_base_buffer(C);
+
+	//Set up each temporary
 	for(i = order - 1; i > 0; i--){
-	
-		flat_size[i] /= blocked_size[i];
-		blocked_size[i] = 1;
-		for(j = i; j < order - 1; j++)
-			blocked_stride[j] = blocked_stride[i];
+		//For simplicity, temp_block_size has all same size as A first
+		memcpy(&(temp_block_size[0]), &(buf_A[0].size[0]), order * sizeof(dim_t));
+		memcpy(&(temp_blocked_size[0]), &(A.size[0]), order * sizeof(dim_t));
+		//Adjust output modes
+		for(j = i; j < order; j++){
+			//Each temporary is multiplied by a block vector
+			temp_blocked_size[j] = 1;
+			temp_block_size[j] = buf_C[0].size[j];
+		}
+
+		//Adjust the flat_size & stride
+		FLA_array_elemwise_product(order, temp_blocked_size, temp_block_size, temp_flat_size);
+		FLA_Set_tensor_stride(order, temp_blocked_size, temp_blocked_stride);
+
+		//Create the temporary
 		temps[i] = (FLA_Obj*)FLA_malloc(sizeof(FLA_Obj));
-		FLA_Obj_create_blocked_tensor(FLA_DOUBLE, order, flat_size, blocked_stride, block_size, temps[i]);
+		FLA_Obj_create_blocked_tensor(FLA_DOUBLE, order, temp_flat_size, temp_blocked_stride, temp_block_size, temps[i]);
 	}
 }
 
@@ -318,16 +230,18 @@ void destroy_temporaries(dim_t order, FLA_Obj* temps[]){
 }
 
 //No psym temps
-
 FLA_Error FLA_Sttsm_without_psym_temps( FLA_Obj alpha, FLA_Obj A, FLA_Obj beta, FLA_Obj B, FLA_Obj C )
 {
+	//Create temporaries used in sttsm
 	FLA_Obj* temps[A.order];
+	initialize_temporaries(A, C, temps);
 	
-	initialize_temporaries(A, temps);
-    
+	//Compute
 	FLA_Sttsm_single( alpha, A, FLA_Obj_order(C)-1, beta, B, C, FLA_Obj_dimsize(C,FLA_Obj_order(C)-1)-1, temps);
 	
+	//Cleanup
 	destroy_temporaries(A.order, temps);
+
 	return FLA_SUCCESS;
 }
 
@@ -336,12 +250,15 @@ FLA_Error FLA_Sttsm_without_psym_temps( FLA_Obj alpha, FLA_Obj A, FLA_Obj beta, 
 
 FLA_Error FLA_Sttsm_with_psym_temps( FLA_Obj alpha, FLA_Obj A, FLA_Obj beta, FLA_Obj B, FLA_Obj C )
 {
+	//Create temporaries used in sttsm
 	FLA_Obj* temps[A.order];
+	initialize_psym_temporaries(A, C, temps);
 
-	initialize_psym_temporaries(A, temps);
+	//Compute
     FLA_Sttsm_single_psttm( alpha, A, FLA_Obj_order(C)-1, beta, B, C, FLA_Obj_dimsize(C,FLA_Obj_order(C)-1)-1, temps);
 	
-
+    //Cleanup
 	destroy_psym_temporaries(A.order, temps);
+
 	return FLA_SUCCESS;
 }

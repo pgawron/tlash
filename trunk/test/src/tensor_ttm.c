@@ -31,15 +31,12 @@ void test_permute_ttm_scalar(dim_t order, dim_t sizeA[order], dim_t nC, dim_t mo
 	stored_sizeA[order - 1] = sizeA[0];
 
 	dim_t strideA[order];
-	dim_t strideB[2] = {1, nC};
+	dim_t strideB[2];
 	dim_t strideC[order];
 
-	strideA[0] = 1;
-	strideC[0] = 1;
-	for(i = 1; i < order; i++){
-		strideA[i] = stored_sizeA[i-1] * strideA[i-1];
-		strideC[i] = sizeC[i-1] * strideC[i-1];
-	}
+	FLA_Set_tensor_stride(order, sizeA, strideA);
+	FLA_Set_tensor_stride(2, sizeB, strideB);
+	FLA_Set_tensor_stride(order, sizeC, strideC);
 
 	FLA_Obj A,B,C;
 	FLA_Obj_create_tensor(FLA_DOUBLE, order, stored_sizeA, strideA, &A);
@@ -57,38 +54,13 @@ void test_permute_ttm_scalar(dim_t order, dim_t sizeA[order], dim_t nC, dim_t mo
 		printf("%d ", A.permutation[i]);
 	printf("]\n");
 
-	printf("\nA = permute(tensor([");
-	FLA_Obj_print_tensor(A);
-	printf("],[");
-	for(i = 0; i < FLA_Obj_order(A); i++)
-		printf("%d ", FLA_Obj_dimsize(A,i));
-	printf("]),[");
-	for(i = 0; i < order; i++)
-		printf("%d ", A.permutation[i]+1);
-	printf("]);\n");
-	
-
-	printf("\nB = reshape([");
-	double* buf_B = FLA_Obj_base_buffer(B);
-	for(i = 0; i < nC * sizeA[mode]; i++)
-		printf("%.3f ", buf_B[i]); 
-	printf("],[%d %d]);", nC, sizeA[mode]);
-
-	printf("\nC = tensor([");
-	FLA_Obj_print_tensor(C);
-	printf("],[");
-	for(i = 0; i < FLA_Obj_order(C); i++)
-		printf("%d ", FLA_Obj_dimsize(C,i));
-	printf("]);");
+	FLA_Obj_print_matlab("A", A);
+	FLA_Obj_print_matlab("B", B);
+	FLA_Obj_print_matlab("preC", C);
 
 	FLA_Ttm_single_mode(FLA_ONE, A, mode, FLA_ONE, B, C);
 
-	printf("\npostC = tensor([");
-	FLA_Obj_print_tensor(C);
-	printf("],[");
-	for(i = 0; i < FLA_Obj_order(C); i++)
-		printf("%d ", FLA_Obj_dimsize(C,i));
-	printf("]);");
+	FLA_Obj_print_matlab("postC", C);
 }
 void test_ttm_scalar(dim_t order, dim_t sizeA[order], dim_t nC, dim_t mode){
 	dim_t sizeB[2] = {nC, sizeA[mode]};
@@ -98,16 +70,12 @@ void test_ttm_scalar(dim_t order, dim_t sizeA[order], dim_t nC, dim_t mode){
 	sizeC[mode] = nC;
 
 	dim_t strideA[order];
-	dim_t strideB[2] = {1, nC};
+	dim_t strideB[2];
 	dim_t strideC[order];
 
-	strideA[0] = 1;
-	strideC[0] = 1;
-	dim_t i;
-	for(i = 1; i < order; i++){
-		strideA[i] = sizeA[i-1] * strideA[i-1];
-		strideC[i] = sizeC[i-1] * strideC[i-1];
-	}
+	FLA_Set_tensor_stride(order, sizeA, strideA);
+	FLA_Set_tensor_stride(2, sizeB, strideB);
+	FLA_Set_tensor_stride(order, sizeC, strideC);
 
 	FLA_Obj A,B,C;
 	FLA_Obj_create_tensor(FLA_DOUBLE, order, sizeA, strideA, &A);
@@ -118,34 +86,12 @@ void test_ttm_scalar(dim_t order, dim_t sizeA[order], dim_t nC, dim_t mode){
 	FLA_Random_tensor(B);
 	FLA_Random_tensor(C);
 
-	printf("\nA = tensor([");
-	FLA_Obj_print_tensor(A);
-	printf("],[");
-	for(i = 0; i < FLA_Obj_order(A); i++)
-		printf("%d ", FLA_Obj_dimsize(A,i));
-	printf("]);");
-
-	printf("\nB = reshape([");
-	double* buf_B = FLA_Obj_base_buffer(B);
-	for(i = 0; i < nC * sizeA[mode]; i++)
-		printf("%.3f ", buf_B[i]); 
-	printf("],[%d %d]);", nC, sizeA[mode]);
-
-	printf("\nC = tensor([");
-	FLA_Obj_print_tensor(C);
-	printf("],[");
-	for(i = 0; i < FLA_Obj_order(C); i++)
-		printf("%d ", FLA_Obj_dimsize(C,i));
-	printf("]);");
-
+	FLA_Obj_print_matlab("A", A);
+	FLA_Obj_print_matlab("B", B);
+	FLA_Obj_print_matlab("preC", C);
 
 	FLA_Ttm_single_mode(FLA_ONE, A, mode, FLA_ONE, B, C);
-	printf("\npostC = tensor([");
-	FLA_Obj_print_tensor(C);
-	printf("],[");
-	for(i = 0; i < FLA_Obj_order(C); i++)
-		printf("%d ", FLA_Obj_dimsize(C,i));
-	printf("]);");
+	FLA_Obj_print_matlab("C", C);
 }
 
 int main(int argc, char* argv[]){

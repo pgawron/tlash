@@ -64,7 +64,7 @@ CONFIG_MK_FRAGMENT  := $(CONFIG_DIRPATH)/$(HOST)/config.mk
 
 # Uncomment and modify these definitions if you wish to override the values
 # present in the master config makefile fragment.
- CC             := /opt/local/bin/gcc-mp-4.8
+ CC             := gcc
 # LINKER         := $(CC)
  CFLAGS         := -ggdb -O0 -Wall -Wno-comment
  LDFLAGS        := 
@@ -128,6 +128,9 @@ test_$(FNAME): $(TEST_OBJS)
 sttsm: $(TEST_OBJS)
 		$(LINKER) $(TEST_OBJ_PATH)/test_sttsm.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm
 
+sttsm_but_one: $(TEST_OBJS)
+		$(LINKER) $(TEST_OBJ_PATH)/test_sttsm_but_one.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm_but_one
+		
 tensor_print: $(TEST_OBJS)
 		$(LINKER) $(TEST_OBJ_PATH)/test_tensor_print.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_print
 

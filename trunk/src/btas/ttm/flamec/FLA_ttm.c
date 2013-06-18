@@ -33,18 +33,14 @@
 #include "FLAME.h"
 
 //TODO: Handle permuted C
+//Repartition until 2-D matrix (Very slow) (Ignore)
 FLA_Error FLA_Ttm_single_mode_blis( FLA_Obj alpha, FLA_Obj A,
                                     dim_t mode,
                                     FLA_Obj beta, FLA_Obj B,
                                     FLA_Obj C, dim_t repart_mode )
 {
-	dim_t order = FLA_Obj_order(A);
-	dim_t i;
 
 	dim_t* permA = FLA_Obj_permutation(A);
-	dim_t ipermA[order];
-	for(i = 0; i < order; i++)
-		ipermA[permA[i]] = i;
 
 	if((mode == 0 && repart_mode == 1) || repart_mode == 0){
 		FLA_Obj A_2D, C_2D;
@@ -191,8 +187,10 @@ FLA_Error FLA_Ttm_scalar_no_permC( FLA_Obj alpha, FLA_Obj A,
 	FLA_Obj_create_tensor(datatype, order, size_A, stride_A, &P);
 	FLA_Permute(A, permutation, &P);
 
+	FLA_Adjust_2D_info(&B);
 	FLA_Adjust_2D_info(&C);
 	FLA_Adjust_2D_info(&P);
+
 	/*********************************/
 	FLASH_Gemm(FLA_NO_TRANSPOSE, FLA_NO_TRANSPOSE, beta, B, P, alpha, C);
 	/*********************************/
@@ -270,7 +268,7 @@ FLA_Error FLA_Ttm_scalar_permC( FLA_Obj alpha, FLA_Obj A,
 
     return FLA_SUCCESS;
 }
-
+/*
 FLA_Error FLA_Ttm( FLA_Obj alpha, FLA_Obj A,
                    dim_t nModes, dim_t mode[nModes],
                    FLA_Obj beta, FLA_Obj B[nModes],
@@ -344,10 +342,12 @@ FLA_Error FLA_Ttm( FLA_Obj alpha, FLA_Obj A,
 	FLA_free(stride_tmpA);
 	return FLA_SUCCESS;
 }
+*/
 
 /*****************
 *****    NOTE: ASSUMES THIS IS COMPUTING STATIONARY C ALGORITHM!!!!!
 *****************/
+/*
 FLA_Error FLA_Ttm_hierAB_single_repart_mode( FLA_Obj alpha, FLA_Obj A,
                                              dim_t mode,
                                              FLA_Obj beta, FLA_Obj B,
@@ -398,11 +398,11 @@ FLA_Error FLA_Ttm_hierAB_single_repart_mode( FLA_Obj alpha, FLA_Obj A,
 		//Mode-0 of B matches Mode-n of C
 		dim_t b = 1;
 		FLA_Repart_1xmode2_to_1xmode3(BT, &B0,
-									/**/ /**/
+									//// ////
 										  &B1,
 									  BB, &B2, 1, b, FLA_BOTTOM); 
 		FLA_Repart_1xmode2_to_1xmode3(AT, &A0,
-									/**/ /**/
+									//// ////
 										  &A1,
 									  AB, &A2, repart_mode, b, FLA_BOTTOM);
 
@@ -412,11 +412,11 @@ FLA_Error FLA_Ttm_hierAB_single_repart_mode( FLA_Obj alpha, FLA_Obj A,
 
 		FLA_Cont_with_1xmode3_to_1xmode2( &AT, A0,
 											   A1,
-										/********/
+										//////////
 										  &AB, A2, repart_mode, FLA_TOP);
 		FLA_Cont_with_1xmode3_to_1xmode2( &BT, B0,
 											   B1,
-										/********/
+										//////////
 										  &BB, B2, 1, FLA_TOP);
 		loopCount++;
 	}
@@ -435,6 +435,7 @@ FLA_Error FLA_Ttm_hierAB_single_repart_mode( FLA_Obj alpha, FLA_Obj A,
 
 	return FLA_SUCCESS;
 }
+
 
 FLA_Error FLA_Ttm_hierCB_single_repart_mode( FLA_Obj alpha, FLA_Obj A,
                                              dim_t mode,
@@ -460,11 +461,11 @@ FLA_Error FLA_Ttm_hierCB_single_repart_mode( FLA_Obj alpha, FLA_Obj A,
 		//Mode-0 of B matches Mode-n of C
 		dim_t b = 1;
 		FLA_Repart_1xmode2_to_1xmode3(BT, &B0,
-									/**/ /**/
+									//// ////
 										  &B1,
 									  BB, &B2, 1, b, FLA_BOTTOM); 
 		FLA_Repart_1xmode2_to_1xmode3(CT, &C0,
-									/**/ /**/
+									//// ////
 										  &C1,
 									  CB, &C2, repart_mode, b, FLA_BOTTOM);
 
@@ -473,17 +474,18 @@ FLA_Error FLA_Ttm_hierCB_single_repart_mode( FLA_Obj alpha, FLA_Obj A,
 
 		FLA_Cont_with_1xmode3_to_1xmode2( &CT, C0,
 											   C1,
-										/********/
+										//////////
 										  &CB, C2, repart_mode, FLA_TOP);
 		FLA_Cont_with_1xmode3_to_1xmode2( &BT, B0,
 											   B1,
-										/********/
+										//////////
 										  &BB, B2, 0, FLA_TOP);
 		loopCount++;
 	}
 
 	return FLA_SUCCESS;
 }
+*/
 
 FLA_Error FLA_Ttm_hierCA_single_repart_mode( FLA_Obj alpha, FLA_Obj A,
                                              dim_t mode,
@@ -530,6 +532,7 @@ FLA_Error FLA_Ttm_hierCA_single_repart_mode( FLA_Obj alpha, FLA_Obj A,
 	return FLA_SUCCESS;
 }
 
+//Assumes C is already permuted (hence nopermC)
 FLA_Error FLA_Tensor_innerprod_nopermC( FLA_Obj alpha, FLA_Obj A,
                                         dim_t mode,
                                         FLA_Obj beta, FLA_Obj B,
@@ -560,12 +563,11 @@ FLA_Error FLA_Tensor_innerprod_nopermC( FLA_Obj alpha, FLA_Obj A,
                                     /**/ /**/
                                           &A1,
                                       AB, &A2, mode, b, FLA_BOTTOM);
-
+        /*********************/
         FLA_Obj A1blk = *((FLA_Obj*)FLA_Obj_tensor_buffer_at_view(A1));
         FLA_Obj B1blk = *((FLA_Obj*)FLA_Obj_tensor_buffer_at_view(B1));
-
         FLA_Ttm_scalar_no_permC(alpha, A1blk, mode, beta, B1blk, C);
-		
+		/*********************/
         FLA_Cont_with_1xmode3_to_1xmode2( &AT, A0,
                                                A1,
                                         /********/
@@ -590,6 +592,9 @@ FLA_Error FLA_Tensor_mvmult_nopermC( FLA_Obj alpha, FLA_Obj A,
     FLA_Obj CT, CB;
     FLA_Obj C0, C1, C2;
 
+    //Normally each block of output vector would be re-permuted for each contribution.
+    //To avoid this, we permute the output block once and compute assuming the data is
+    //already permuted, then permute back.  This saves lots of mem-ops
 	FLA_Obj tmpC1;
 
 	
@@ -614,14 +619,16 @@ FLA_Error FLA_Tensor_mvmult_nopermC( FLA_Obj alpha, FLA_Obj A,
                                           &C1,
                                       CB, &C2, mode, b, FLA_BOTTOM);
 
-
+        //Permute this block of C
         FLA_Obj* C1blk = (FLA_Obj*)FLA_Obj_tensor_buffer_at_view(C1);
         dim_t i;
         dim_t order = FLA_Obj_order(*C1blk);
-        dim_t* size_C1blk = FLA_Obj_size(*C1blk);
-        dim_t* stride_C1blk = FLA_Obj_stride(*C1blk);
+        dim_t size_C1blk[order];
+        dim_t stride_C1blk[order];
         dim_t permutation[order];
         dim_t ipermutation[order];
+        memcpy(&(size_C1blk[0]), &((C1blk->size)[0]), order * sizeof(dim_t));
+        memcpy(&(stride_C1blk[0]), &((C1blk->base->stride)[0]), order * sizeof(dim_t));
         permutation[0] = mode;
         for(i = 0; i < mode; i++)
             permutation[i+1] = i;
@@ -629,20 +636,20 @@ FLA_Error FLA_Tensor_mvmult_nopermC( FLA_Obj alpha, FLA_Obj A,
             permutation[i] = i;
 		if(loopCount == 0)
 			FLA_Obj_create_tensor(FLA_DOUBLE, C1blk->order, size_C1blk, stride_C1blk, &tmpC1);
-
         FLA_Permute(*C1blk, permutation, &tmpC1);
+        //Done permuting
 
         /***********************************************/
+        //Compute
         FLA_Tensor_innerprod_nopermC(alpha, A, mode, beta, B1, tmpC1);
         /***********************************************/
 
+        //Permute the block back
         for(i = 0; i < order; i++)
             ipermutation[permutation[i]] = i;
-
         FLA_Permute(tmpC1, ipermutation, C1blk);
+        //Done permuting
 
-		FLA_free(size_C1blk);
-		FLA_free(stride_C1blk);
         FLA_Cont_with_1xmode3_to_1xmode2( &CT, C0,
                                                C1,
                                         /********/
@@ -665,6 +672,12 @@ FLA_Error FLA_Ttm_single_mode( FLA_Obj alpha, FLA_Obj A,
                                FLA_Obj C )
 {
 	dim_t i;
+
+	//If A is a scalar, call the scalar version
+	if(FLA_Obj_elemtype(A) == FLA_SCALAR){
+		return FLA_Ttm_scalar_permC(alpha, A, mode, beta, B, C);
+	}
+	//Repartition C & A as much as you can before multiplying
 	dim_t do_repart = FALSE;
 	dim_t repart_mode = 0;
 	for(i = 0; i < FLA_Obj_order(C); i++){
@@ -676,13 +689,15 @@ FLA_Error FLA_Ttm_single_mode( FLA_Obj alpha, FLA_Obj A,
 			break;
 		}
 	}
+
+	//Multiply if can't repartition anymore
     if(do_repart == FALSE)
         return FLA_Tensor_mvmult_nopermC(alpha, A, mode, beta, B, C);
     else
         return FLA_Ttm_hierCA_single_repart_mode(alpha, A, mode, beta, B, repart_mode, C);
 }
 
-
+//Single ttm without permuting C
 FLA_Error FLA_Ttm_single_mode_no_permC( FLA_Obj alpha, FLA_Obj A,
                                         dim_t mode,
                                         FLA_Obj beta, FLA_Obj B,
@@ -699,15 +714,12 @@ FLA_Error FLA_Ttm_single_mode_no_permC( FLA_Obj alpha, FLA_Obj A,
 		dim_t singleElemA = TRUE;
 		dim_t singleElemB = TRUE;
 		dim_t singleElemC = TRUE;
-		dim_t nonUnitA = -1;
-		dim_t nonUnitC = -1;
 		void* buf_A = FLA_Obj_base_buffer(A);
 		void* buf_B = FLA_Obj_base_buffer(B);
 		void* buf_C = FLA_Obj_base_buffer(C);
 
 		for(i = 0; i < FLA_Obj_order(A); i++)
 			if(FLA_Obj_dimsize(A, i) != 1){
-				nonUnitA = i;
 				singleElemA = FALSE;
 				break;
 			}
@@ -718,7 +730,6 @@ FLA_Error FLA_Ttm_single_mode_no_permC( FLA_Obj alpha, FLA_Obj A,
 			}
 		for(i = 0; i < FLA_Obj_order(C); i++)
 			if(FLA_Obj_dimsize(C, i) != 1){
-				nonUnitC = i;
 				singleElemC = FALSE;
 				break;
 			}
@@ -726,40 +737,19 @@ FLA_Error FLA_Ttm_single_mode_no_permC( FLA_Obj alpha, FLA_Obj A,
 		if(singleElemC && elemtype_C != FLA_SCALAR){
 			dim_t linIndex = 0;
 			dim_t order = FLA_Obj_order(C);
-			FLA_TIndex_to_LinIndex(order, &(((C.base)->stride)[0]), &(C.offset[0]), &linIndex);
+			linIndex = FLA_TIndex_to_LinIndex(order, &(((C.base)->stride)[0]), &(C.offset[0]));
 			FLA_Ttm_single_mode_no_permC(alpha, A, mode, beta, B, ((FLA_Obj*)buf_C)[linIndex]);
 		}else if(singleElemA && elemtype_A != FLA_SCALAR){
 			dim_t linIndex = 0;
 			dim_t order = FLA_Obj_order(A);
-			FLA_TIndex_to_LinIndex(order, &(((A.base)->stride)[0]), &(A.offset[0]), &linIndex);
+			linIndex = FLA_TIndex_to_LinIndex(order, &(((A.base)->stride)[0]), &(A.offset[0]));
 			FLA_Ttm_single_mode_no_permC(alpha, ((FLA_Obj*)buf_A)[linIndex], mode, beta, B, C);
 		}else if(singleElemB && elemtype_B != FLA_SCALAR){
 			dim_t linIndex = 0;
 			dim_t order = FLA_Obj_order(B);
-			FLA_TIndex_to_LinIndex(order, &(((B.base)->stride)[0]), &(B.offset[0]), &linIndex);
+			linIndex = FLA_TIndex_to_LinIndex(order, &(((B.base)->stride)[0]), &(B.offset[0]));
 			FLA_Ttm_single_mode_no_permC(alpha, A, mode, beta, ((FLA_Obj*)buf_B)[linIndex], C);
 		}
-/*
-		else{
-			if(elemtype_C != FLA_SCALAR){
-				if(elemtype_B != FLA_SCALAR){
-					if(nonUnitC == mode){
-						FLA_Ttm_hierCB_single_repart_mode( alpha, A, mode, beta, B, nonUnitC, C);
-					}else{
-						FLA_Ttm_hierCA_single_repart_mode( alpha, A, mode, beta, B, nonUnitC, C);
-					}
-				} else{
-					FLA_Ttm_hierCA_single_repart_mode( alpha, A, mode, beta, B, nonUnitA, C);
-				}
-			} else if(elemtype_B != FLA_SCALAR){
-				if(nonUnitA == mode){
-					FLA_Ttm_hierAB_single_repart_mode( alpha, A, mode, beta, B, nonUnitA, C);
-				} else{
-					FLA_Ttm_hierCA_single_repart_mode( alpha, A, mode, beta, B, nonUnitC, C);
-				}
-			}
-		}
-*/
 	}
 	return FLA_SUCCESS;
 }
