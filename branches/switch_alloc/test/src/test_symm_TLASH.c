@@ -6,13 +6,14 @@ void initSymmObj(FLA_Obj* obj){
   dim_t order = 3;
   dim_t size[] = {8,8,8};
   dim_t blkSize[] = {2,2,2};
+  dim_t blocked_stride[FLA_MAX_ORDER];
+  TLA_sym sym;
 
-  dim_t blocked_stride[order];
   blocked_stride[0] = 1;
   for(i = 1; i < order; i++)
       blocked_stride[i] = blocked_stride[i-1] * (size[i-1] / blkSize[i-1]);
 
-  TLA_sym sym;
+
   sym.order = FLA_Obj_order(*obj);
   sym.nSymGroups = 1;
   sym.symGroupLens[0] = sym.order;
@@ -55,8 +56,10 @@ void printObj(FLA_Obj obj){
 
 void test_symm_tlash(){
   FLA_Obj A;
+  dim_t i;
+
   initSymmObj(&A);
-	dim_t i;
+
 	for (i = 0; i < 64; i++){
 		if ((((FLA_Obj*)A.base->buffer)[i]).base->buffer == 0) {
 			printf("error on %d\n", i);

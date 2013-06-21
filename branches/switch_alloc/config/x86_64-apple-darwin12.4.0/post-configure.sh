@@ -110,14 +110,14 @@ echo ""
 echo "C compiler language flags....................... : -std=c99"
 
 echo ""
-echo "Enable compiler optimizations................... : yes"
-echo "   C compiler optimization flags................ : -O3"
+echo "Enable compiler optimizations................... : no"
+echo "   C compiler optimization flags................ : -O0"
 
 echo "Enable compiler warnings........................ : yes"
 echo "   C compiler warning flags..................... : -Wall -Wno-comment"
 
-echo "Enable compiler debugging symbols............... : no"
-echo "   C compiler debug flags....................... : -g0"
+echo "Enable compiler debugging symbols............... : yes"
+echo "   C compiler debug flags....................... : -g"
 
 echo "Enable compiler profiling symbols............... : no"
 echo "   C compiler profiling flags................... : "
@@ -132,7 +132,7 @@ echo ""
 echo "Enable memory leak counter...................... : no"
 
 echo ""
-echo "Enable level-3 BLAS front-end control trees..... : yes"
+echo "Enable level-3 BLAS front-end control trees..... : no"
 
 echo ""
 echo "Enable BLIS use of FLA_malloc()................. : yes"

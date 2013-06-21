@@ -35,6 +35,7 @@
 //Adjusts tensor object to fill in for 2D matrix object
 FLA_Error FLA_Adjust_2D_info( FLA_Obj *A )
 {
+	dim_t i;
 	dim_t  order = A->order;
     dim_t* size_inner = A->size_inner;
     dim_t* size = A->size;
@@ -60,7 +61,7 @@ FLA_Error FLA_Adjust_2D_info( FLA_Obj *A )
 	A->m_inner = size_inner[0];
 	A->n_inner = size_inner[1];
 
-	for(dim_t i = 2; i < order; i++){
+	for(i = 2; i < order; i++){
 		A->base->n *= base_size[i];
 		A->base->n_inner *= base_size_inner[i];
 		//A->base->n_index *= base_index[i];
