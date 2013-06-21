@@ -337,6 +337,9 @@ FLA_Error FLA_Cont_with_3powm_to_2powm( FLA_Obj* Apart[], FLA_Obj * Arepart[],
         part_mode_stride *= 2;
     }
 
+    FLA_free(repart_base);
+    FLA_free(repart_update);
+
     return FLA_SUCCESS;
 }
 

@@ -4,7 +4,7 @@
 void Usage()
 {
     printf("Test TLASH Permute operation.\n\n");
-    printf("  tensor_permute <m> <nSymGrops> <nA> <bA> <perm0> <perm1> ...\n\n");
+    printf("  tensor_permute <m> <nA> <perm0> <perm1> ...\n\n");
     printf("  m: order of tensor\n");
     printf("  nA: mode-length of tensor A\n");
     printf("  permK: permutation index K\n");
@@ -37,7 +37,6 @@ void test_permute_tensor(dim_t order, dim_t nA, dim_t permutation[]){
 
   FLA_Permute(A, permutation, &P);
 
-  FLA_Obj_print_matlab("postA", A);
   FLA_Obj_print_matlab("P", P);
 
 }
@@ -78,7 +77,7 @@ FLA_Error check_errors(dim_t order, dim_t nA, dim_t permutation[]){
 		}
 		for(j = 0; j < order; j++){
 			if((i != j) && (permutation[i] == permutation[j])){
-				printf("permutation[i] must not contain duplicates\n");
+				printf("permutation must not contain duplicates\n");
 				return FLA_FAILURE;
 			}
 		}

@@ -17,15 +17,15 @@ void initSymmTensor(dim_t order, dim_t size[], dim_t b, FLA_Obj* obj){
     dim_t i;
     dim_t blocked_stride[FLA_MAX_ORDER];
 	dim_t block_size[FLA_MAX_ORDER];
+	dim_t blocked_size[FLA_MAX_ORDER];
 	TLA_sym sym;
 
-    blocked_stride[0] = 1;
-	block_size[0] = b;
-    for(i = 1; i < order; i++){
-        blocked_stride[i] = blocked_stride[i-1] * (size[i-1] / block_size[i-1]);
+	for(i = 0; i < order; i++){
 		block_size[i] = b;
 	}
-		
+
+	FLA_array_elemwise_quotient(order, size, block_size, blocked_size);
+	FLA_Set_tensor_stride(order, blocked_size, blocked_stride);
 
     sym.order = order;
     sym.nSymGroups = 1;
@@ -37,47 +37,13 @@ void initSymmTensor(dim_t order, dim_t size[], dim_t b, FLA_Obj* obj){
 }
 
 void initMatrix(dim_t size[2], dim_t bC, dim_t bA, FLA_Obj* obj){
-  dim_t i,j;
   dim_t order = 2;
-  dim_t sizeObj[] = {size[0] / bC, size[1] / bA};
-  dim_t strideObj[] = {1, sizeObj[0]};
+  dim_t sizeObj[2] = {size[0] / bC, size[1] / bA};
+  dim_t strideObj[2] = {1, sizeObj[0]};
   dim_t sizeBlk[] = {bC, bA};
-  dim_t strideBlk[] = {1, bC};
-  FLA_Obj* buf;
 
-  FLA_Obj_create_tensor_without_buffer(FLA_DOUBLE, order, sizeObj, obj);
-  obj->base->elemtype = FLA_TENSOR;
-
-  buf = (FLA_Obj*)FLA_malloc(sizeObj[0] * sizeObj[1] * sizeof(FLA_Obj));
-  FLA_Obj_attach_buffer_to_tensor(buf, order, strideObj, obj);
-
-  FLA_Adjust_2D_info(obj);
-
-  for(i = 0; i < sizeObj[1]; i++)
-	for(j = 0; j < sizeObj[0]; j++){
-		FLA_Obj* curObj = FLA_Obj_base_buffer(*obj);
-		FLA_Obj_create_tensor(FLA_DOUBLE, order, sizeBlk, strideBlk, &(curObj[j + (sizeObj[0]*i)]));
-		FLA_Random_matrix(curObj[j+ (sizeObj[0]*i)]);
-		FLA_Adjust_2D_info(&(curObj[j+(sizeObj[0]*i)]));
-	}
-}
-
-void setSymmTensorToZero(FLA_Obj obj){
-    dim_t i,j;
-	dim_t order = FLA_Obj_order(obj);
-	dim_t numel = 1;
-	FLA_Obj* obj_buf;
-
-	for(i = 0; i < order; i++)
-		numel *= FLA_Obj_dimsize(obj, i);
-
-	obj_buf = (FLA_Obj*)FLA_Obj_base_buffer(obj);
-	for(i = 0; i < numel; i++){
-		dim_t inner_numel = 1;
-		for(j = 0; j < order; j++)
-			inner_numel *= FLA_Obj_dimsize(obj_buf[i], j);
-		memset(&(((double*)FLA_Obj_base_buffer(obj_buf[i]))[0]), 0, inner_numel * sizeof(double));
-	}
+  FLA_Obj_create_blocked_tensor(FLA_DOUBLE, order, size, strideObj, sizeBlk, obj);
+  FLA_Random_tensor(*obj);
 }
 
 void test_sttsm(int m, int nA, int nC, int bA, int bC, int psym_temps, double* elapsedTime){
@@ -100,7 +66,6 @@ void test_sttsm(int m, int nA, int nC, int bA, int bC, int psym_temps, double* e
   initMatrix(bSize, bC, bA, &B);
 
   initSymmTensor(m, cSize, bC, &C);
-//  setSymmTensorToZero(C);
 
 	FLA_Obj_print_matlab("A", A);
 
@@ -128,7 +93,7 @@ void test_sttsm(int m, int nA, int nC, int bA, int bC, int psym_temps, double* e
 	printf("}));\n");
 	printf("max(diff(:))\n");
 	
-  FLA_Obj_blocked_free_buffer(&B);
+  FLA_Obj_blocked_tensor_free_buffer(&B);
   FLA_Obj_free_without_buffer(&B);
 
   FLA_Obj_blocked_psym_tensor_free_buffer(&A);

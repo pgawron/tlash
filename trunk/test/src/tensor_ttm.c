@@ -39,7 +39,7 @@ void test_permute_ttm_scalar(dim_t order, dim_t sizeA[], dim_t nC, dim_t mode){
 		stored_sizeA[i] = sizeA[i+1];
 	stored_sizeA[order - 1] = sizeA[0];
 
-	FLA_Set_tensor_stride(order, sizeA, strideA);
+	FLA_Set_tensor_stride(order, stored_sizeA, strideA);
 	FLA_Set_tensor_stride(2, sizeB, strideB);
 	FLA_Set_tensor_stride(order, sizeC, strideC);
 
@@ -54,10 +54,7 @@ void test_permute_ttm_scalar(dim_t order, dim_t sizeA[], dim_t nC, dim_t mode){
 
 	memcpy(&(A.permutation[0]), &(permutation[0]), order * sizeof(dim_t));
 
-	printf("permutation[");
-	for(i = 0; i < order; i++)
-		printf("%d ", A.permutation[i]);
-	printf("]\n");
+	print_array("permutation", order, A.permutation);
 
 	FLA_Obj_print_matlab("A", A);
 	FLA_Obj_print_matlab("B", B);
@@ -66,7 +63,16 @@ void test_permute_ttm_scalar(dim_t order, dim_t sizeA[], dim_t nC, dim_t mode){
 	FLA_Ttm_single_mode(FLA_ONE, A, mode, FLA_ONE, B, C);
 
 	FLA_Obj_print_matlab("postC", C);
+
+	FLA_Obj_free_buffer(&A);
+	FLA_Obj_free_buffer(&B);
+	FLA_Obj_free_buffer(&C);
+
+	FLA_Obj_free_without_buffer(&A);
+	FLA_Obj_free_without_buffer(&B);
+	FLA_Obj_free_without_buffer(&C);
 }
+
 void test_ttm_scalar(dim_t order, dim_t sizeA[], dim_t nC, dim_t mode){
 	dim_t sizeB[2] = {nC, sizeA[mode]};
 	dim_t sizeC[FLA_MAX_ORDER];
@@ -99,6 +105,14 @@ void test_ttm_scalar(dim_t order, dim_t sizeA[], dim_t nC, dim_t mode){
 
 	FLA_Ttm_single_mode(FLA_ONE, A, mode, FLA_ONE, B, C);
 	FLA_Obj_print_matlab("C", C);
+
+	FLA_Obj_free_buffer(&A);
+	FLA_Obj_free_buffer(&B);
+	FLA_Obj_free_buffer(&C);
+
+	FLA_Obj_free_without_buffer(&A);
+	FLA_Obj_free_without_buffer(&B);
+	FLA_Obj_free_without_buffer(&C);
 }
 
 
@@ -173,7 +187,7 @@ int main(int argc, char* argv[]){
 		return 0;
 	}
 
-	test_ttm_scalar(order, nA, nC, mode);
+	//test_ttm_scalar(order, nA, nC, mode);
 	test_permute_ttm_scalar(order, nA, nC, mode);
 
 	FLA_Finalize();

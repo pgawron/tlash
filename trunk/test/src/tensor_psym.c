@@ -38,39 +38,51 @@ void create_psym_tensor(dim_t order, TLA_sym sym, dim_t n[], dim_t b[], FLA_Obj*
 	FLA_Random_psym_tensor(*A);
 }
 
-FLA_Error check_errors(dim_t m, TLA_sym sym, dim_t n[], dim_t b[], dim_t permutation[]){
+FLA_Error check_errors(dim_t order, TLA_sym sym, dim_t n[], dim_t b[], dim_t permutation[]){
     dim_t i, j;
-    dim_t symModesFound[FLA_MAX_ORDER];
-    dim_t permutationModesFound[FLA_MAX_ORDER];
+    dim_t count;
 
-    if(m <= 0){
+    if(order <= 0){
         printf("m must be greater than 0\n");
         return FLA_FAILURE;
     }
 
-    if(sym.nSymGroups <= 0){
-        printf("nSymGroups must be greater than 0\n");
-        return FLA_FAILURE;
-    }
-    dim_t count = 0;
-    for(i = 0; i < sym.nSymGroups; i++)
-        count += sym.symGroupLens[i];
-    if(count != m){
-        printf("symGroupLens must sum to m\n");
-        return FLA_FAILURE;
-    }
+	if(sym.nSymGroups <= 0){
+		printf("nSymGroups must be greater than 0\n");
+		return FLA_FAILURE;
+	}
 
-    memset(&(symModesFound[0]), 0, m * sizeof(dim_t));
-    for(i = 0; i < m; i++){
-        for(j = 0; j < sym.order; j++)
-            if(sym.symModes[j] == i)
-                symModesFound[i] = 1;
-    }
-    for(i = 0; i < m; i++)
-        if(symModesFound[i] == 0){
-            printf("symModes missing mode %d\n", i);
-            return FLA_FAILURE;
-        }
+	count = 0;
+	for(i = 0; i < sym.nSymGroups; i++){
+		count += sym.symGroupLens[i];
+		if(sym.symGroupLens[i] > order){
+			printf("symGroupLens[i] must not be greater than order\n");
+			return FLA_FAILURE;
+		}
+	}
+
+	if(count != order){
+		printf("Sum of symGroupLens must equal order\n");
+		return FLA_FAILURE;
+	}
+
+	for(i = 0; i < order; i++){
+		if((i < order - 1) && (sym.symModes[i+1] < sym.symModes[i])){
+			printf("symModes must be in ascending order\n");
+			return FLA_FAILURE;
+		}
+
+		if(sym.symModes[i] >= order){
+			printf("symModes[i] must be less than order\n");
+			return FLA_FAILURE;
+		}
+		for(j = 0; j < order; j++){
+			if((i != j) && (sym.symModes[i] == sym.symModes[j])){
+				printf("symModes[i] must not contain duplicates\n");
+				return FLA_FAILURE;
+			}
+		}
+	}
 
     for(i = 0; i < sym.nSymGroups; i++){
         if(n[i] <= 0){
@@ -87,17 +99,18 @@ FLA_Error check_errors(dim_t m, TLA_sym sym, dim_t n[], dim_t b[], dim_t permuta
         }
     }
 
-    memset(&(permutationModesFound[0]), 0, m * sizeof(dim_t));
-    for(i = 0; i < m; i++){
-        for(j = 0; j < sym.order; j++)
-            if(permutation[j] == i)
-                permutationModesFound[i] = 1;
-    }
-    for(i = 0; i < m; i++)
-        if(permutationModesFound[i] == 0){
-            printf("permutationModes missing mode %d\n", i);
-            return FLA_FAILURE;
-        }
+	for(i = 0; i < order; i++){
+		if(permutation[i] >= order){
+			printf("permutation[i] must be less than order\n");
+			return FLA_FAILURE;
+		}
+		for(j = 0; j < order; j++){
+			if((i != j) && (permutation[i] == permutation[j])){
+				printf("permutation must not contain duplicates\n");
+				return FLA_FAILURE;
+			}
+		}
+	}
 
     return FLA_SUCCESS;
 }
@@ -156,8 +169,8 @@ void test_permute_tensor(dim_t permutation[], FLA_Obj A){
         print_array("stored permutation", curObj.order, curObj.permutation);
         print_array("stored size", curObj.order, curObj.size);
         FLA_Obj_print_matlab("data", curObj);
-        printf("raw data: ");
 
+        printf("raw data: ");
         for(j = 0; j < n_obj_alloc; j++)
             printf("%.3f ", obj_base_buffer[j]);
         printf("\n");

@@ -17,6 +17,7 @@ void test_tlash_print_routines(dim_t order, dim_t nA, dim_t bA){
 
   dim_t scalar_sizeA[FLA_MAX_ORDER];
   dim_t block_sizeA[FLA_MAX_ORDER];
+  dim_t blocked_sizeA[FLA_MAX_ORDER];
   dim_t stride_A[FLA_MAX_ORDER];
 
   FLA_Obj* buf;
@@ -26,43 +27,37 @@ void test_tlash_print_routines(dim_t order, dim_t nA, dim_t bA){
 	block_sizeA[i] = bA;
   }
 
-  stride_A[0] = 1;
-  for(i = 1; i < order; i++)
-	stride_A[i] = scalar_sizeA[i-1]*stride_A[i-1];
+  FLA_array_elemwise_quotient(order, scalar_sizeA, block_sizeA, blocked_sizeA);
+  FLA_Set_tensor_stride(order, blocked_sizeA, stride_A);
 
   printf("scalar tensor test\n");
   FLA_Obj_create_tensor(FLA_DOUBLE, order, scalar_sizeA, stride_A, &Ascalar);
   FLA_Random_tensor(Ascalar);
-  FLA_Obj_print_tensor(Ascalar);
+  FLA_Obj_print_matlab("Ascalar", Ascalar);
 	
   printf("\n\n");
   printf("blocked tensor test\n");
   FLA_Obj_create_blocked_tensor(FLA_DOUBLE, order, scalar_sizeA, stride_A, block_sizeA, &Ablocked);
   FLA_Random_tensor(Ablocked);
-  FLA_Obj_print_tensor(Ablocked);
+  FLA_Obj_print_matlab("Ablocked", Ablocked);
   
   printf("\n\n");
 
   buf = FLA_Obj_base_buffer(Ablocked);
-//  for(i = 0; i < order; i++)
-//    (*buf).permutation[i] = i;
 
   (*buf).permutation[0] = order - 1;
   for(i = 1; i < order; i++)
   	(*buf).permutation[i] = i-1;
 
-  printf("[ ");  
-  for(i = 0; i < order; i++)
-    printf("%d ", (*buf).permutation[i]);
-  printf("] ");
+  print_array("permutation", order, buf->permutation);
   printf("permuted blocked tensor test\n");  
 
-  FLA_Obj_print_tensor(Ablocked);
+  FLA_Obj_print_matlab("Ablocked", Ablocked);
 
   FLA_Obj_free_buffer(&Ascalar);
   FLA_Obj_free_without_buffer(&Ascalar);
 
-  FLA_Obj_blocked_free_buffer(&Ablocked);
+  FLA_Obj_blocked_tensor_free_buffer(&Ablocked);
   FLA_Obj_free_without_buffer(&Ablocked);
 }
 
