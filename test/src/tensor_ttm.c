@@ -11,34 +11,39 @@ void Usage()
     printf("  mode: mode to multiply in\n");
 }
 
-void test_permute_ttm_scalar(dim_t order, dim_t sizeA[order], dim_t nC, dim_t mode){
-	printf("\nPERMUTE TEST\n\n");
+void test_permute_ttm_scalar(dim_t order, dim_t sizeA[], dim_t nC, dim_t mode){
 	dim_t i;
 	dim_t sizeB[2] = {nC, sizeA[mode]};
-	dim_t sizeC[order];
+	dim_t sizeC[FLA_MAX_ORDER];
+	dim_t permutation[FLA_MAX_ORDER];
+	dim_t stored_sizeA[FLA_MAX_ORDER];
+
+	dim_t strideA[FLA_MAX_ORDER];
+	dim_t strideB[2];
+	dim_t strideC[FLA_MAX_ORDER];
+
+	FLA_Obj A,B,C;
+
+	printf("\nPERMUTE TEST\n\n");
 	memcpy(&(sizeC[0]), &(sizeA[0]), order * sizeof(dim_t));
 
 	sizeC[mode] = nC;
 
-	dim_t permutation[order];
+
 	for(i = 1; i < order; i++)
 		permutation[i] = i - 1;
 	permutation[0] = order - 1;
 
-	dim_t stored_sizeA[order];
+
 	for(i = 0; i < order-1; i++)
 		stored_sizeA[i] = sizeA[i+1];
 	stored_sizeA[order - 1] = sizeA[0];
-
-	dim_t strideA[order];
-	dim_t strideB[2];
-	dim_t strideC[order];
 
 	FLA_Set_tensor_stride(order, sizeA, strideA);
 	FLA_Set_tensor_stride(2, sizeB, strideB);
 	FLA_Set_tensor_stride(order, sizeC, strideC);
 
-	FLA_Obj A,B,C;
+
 	FLA_Obj_create_tensor(FLA_DOUBLE, order, stored_sizeA, strideA, &A);
 	FLA_Obj_create_tensor(FLA_DOUBLE, 2, sizeB, strideB, &B);
 	FLA_Obj_create_tensor(FLA_DOUBLE, order, sizeC, strideC, &C);
@@ -62,22 +67,24 @@ void test_permute_ttm_scalar(dim_t order, dim_t sizeA[order], dim_t nC, dim_t mo
 
 	FLA_Obj_print_matlab("postC", C);
 }
-void test_ttm_scalar(dim_t order, dim_t sizeA[order], dim_t nC, dim_t mode){
+void test_ttm_scalar(dim_t order, dim_t sizeA[], dim_t nC, dim_t mode){
 	dim_t sizeB[2] = {nC, sizeA[mode]};
-	dim_t sizeC[order];
+	dim_t sizeC[FLA_MAX_ORDER];
+
+	dim_t strideA[FLA_MAX_ORDER];
+	dim_t strideB[2];
+	dim_t strideC[FLA_MAX_ORDER];
+
+	FLA_Obj A,B,C;
+
 	memcpy(&(sizeC[0]), &(sizeA[0]), order * sizeof(dim_t));
 
 	sizeC[mode] = nC;
-
-	dim_t strideA[order];
-	dim_t strideB[2];
-	dim_t strideC[order];
 
 	FLA_Set_tensor_stride(order, sizeA, strideA);
 	FLA_Set_tensor_stride(2, sizeB, strideB);
 	FLA_Set_tensor_stride(order, sizeC, strideC);
 
-	FLA_Obj A,B,C;
 	FLA_Obj_create_tensor(FLA_DOUBLE, order, sizeA, strideA, &A);
 	FLA_Obj_create_tensor(FLA_DOUBLE, 2, sizeB, strideB, &B);
 	FLA_Obj_create_tensor(FLA_DOUBLE, order, sizeC, strideC, &C);
@@ -94,40 +101,80 @@ void test_ttm_scalar(dim_t order, dim_t sizeA[order], dim_t nC, dim_t mode){
 	FLA_Obj_print_matlab("C", C);
 }
 
+
+FLA_Error parse_input(int argc, char* argv[], dim_t* order, dim_t* nA, dim_t* nC, dim_t* mode){
+    dim_t i;
+    int argNum = 0;
+
+    if(argc < 2){
+        return FLA_FAILURE;
+    }
+
+    *order = atoi(argv[++argNum]);
+
+    if(argc < 2 + (*order)){
+    	return FLA_FAILURE;
+    }
+
+    for(i = 0; i < *order; i++){
+    	nA[i] = atoi(argv[++argNum]);
+    }
+
+    if(argc != 2 + (*order) + 2){
+    	return FLA_FAILURE;
+    }
+
+    *nC = atoi(argv[++argNum]);
+    *mode = atoi(argv[++argNum]);
+
+    return FLA_SUCCESS;
+}
+
+FLA_Error check_errors(dim_t order, dim_t nA[], dim_t nC, dim_t mode){
+	dim_t i;
+
+	if(order <= 0 || nC <= 0){
+		printf("m and nC must be greater than 0\n");
+		return FLA_FAILURE;
+	}
+
+	if(mode >= order){
+		printf("mode must be less than order\n");
+		return FLA_FAILURE;
+	}
+
+	for(i = 0; i < order; i++){
+		if(nA[i] <= 0){
+			printf("nA[i] must be greater than 0\n");
+			return FLA_FAILURE;
+		}
+	}
+
+	return FLA_SUCCESS;
+}
+
 int main(int argc, char* argv[]){
+	dim_t order;
+	dim_t nA[FLA_MAX_ORDER];
+	dim_t nC;
+	dim_t mode;
+
 	FLA_Init();
 
-	if(argc < 4){
+	if(parse_input(argc, argv, &order, nA, &nC, &mode) == FLA_FAILURE){
 		Usage();
 		FLA_Finalize();
 		return 0;
 	}
-	
-	dim_t i;	
-	int argNum = 0;
-	const int m = atoi(argv[++argNum]);
-	dim_t nA[m];
-	for(i = 0; i < m; i++)
-		nA[i] = atoi(argv[++argNum]);
-	const int nC = atoi(argv[++argNum]);
-	const int mode = atoi(argv[++argNum]);
 
-/*
-	if(nA % bA != 0){
-		printf("bA must evenly divide nA\n");
+	if(check_errors(order, nA, nC, mode) == FLA_FAILURE){
+		Usage();
 		FLA_Finalize();
 		return 0;
 	}
 
-	if(m <= 0 || nA <= 0 || bA <= 0){
-		printf("m, nA, and bA must be greater than 0\n");
-		FLA_Finalize();
-		return 0;
-	}
-*/
-
-	test_ttm_scalar(m, nA, nC, mode);
-	test_permute_ttm_scalar(m, nA, nC, mode);
+	test_ttm_scalar(order, nA, nC, mode);
+	test_permute_ttm_scalar(order, nA, nC, mode);
 
 	FLA_Finalize();
 

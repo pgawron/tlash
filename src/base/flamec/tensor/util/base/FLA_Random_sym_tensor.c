@@ -34,9 +34,10 @@
 
 //Used to generate all permutations
 //From Wikipedia article
-FLA_Bool next_permutation(dim_t nElem, dim_t perm[]){
+FLA_Bool next_permutation(dim_t nElem, dim_t* perm){
 	dim_t k = -1;
-	dim_t i;
+	dim_t i,l;
+	dim_t tmp;
 
 	for(i = 0; i < nElem - 1; i++)
 		if(perm[i] < perm[i+1])
@@ -45,12 +46,12 @@ FLA_Bool next_permutation(dim_t nElem, dim_t perm[]){
 	if(k == -1)
 		return FALSE;
 	
-	dim_t l = k+1;
+	l = k+1;
 	for(i = k+1; i < nElem; i++)
 		if(perm[k] < perm[i])
 			l = i;
 
-	dim_t tmp = perm[k];
+	tmp = perm[k];
 	perm[k] = perm[l];
 	perm[l] = tmp;
 
@@ -68,8 +69,13 @@ FLA_Error FLA_Random_scalar_psym_tensor(FLA_Obj obj){
 	dim_t i,j;
 	dim_t order = FLA_Obj_order(obj);
 	FLA_Obj tmp;
-	dim_t tmpSize[order];
-	dim_t tmpStride[order];
+	dim_t tmpSize[FLA_MAX_ORDER];
+	dim_t tmpStride[FLA_MAX_ORDER];
+	TLA_sym objSym;
+
+	void* tmpBuffer;
+	void* objBuffer;
+
 	for(i = 0; i < order; i++){
 		tmpSize[i] = 1;
 		tmpStride[i] = 1;
@@ -77,7 +83,7 @@ FLA_Error FLA_Random_scalar_psym_tensor(FLA_Obj obj){
 	FLA_Obj_create_tensor(FLA_DOUBLE, order, tmpSize, tmpStride, &tmp);
 	((double*)((tmp.base)->buffer))[0] = 1;
 	
-	TLA_sym objSym = obj.sym;
+	objSym = obj.sym;
 
 	//Loop over all symGroups and multiply by random vector in all modes of symGroup
 	for(i = 0; i < objSym.nSymGroups; i++){
@@ -97,8 +103,8 @@ FLA_Error FLA_Random_scalar_psym_tensor(FLA_Obj obj){
 			dim_t mode_mult = objSym.symModes[symGroupOffset + j];
 			//Set up temporary
 			FLA_Obj tmpRes;
-			dim_t tmpResSize[order];
-			dim_t tmpResStride[order];
+			dim_t tmpResSize[FLA_MAX_ORDER];
+			dim_t tmpResStride[FLA_MAX_ORDER];
 			memcpy(&(tmpResSize[0]), &(tmp.size[0]), order * sizeof(dim_t));
 			tmpResSize[mode_mult] = out_mode_size;
 			FLA_Set_tensor_stride(order, tmpResSize, tmpResStride);
@@ -120,8 +126,8 @@ FLA_Error FLA_Random_scalar_psym_tensor(FLA_Obj obj){
 	}
 
 	//Final result created, copy over to obj
-	void* tmpBuffer = FLA_Obj_base_buffer(tmp);
-	void* objBuffer = FLA_Obj_base_buffer(obj);
+	tmpBuffer = FLA_Obj_base_buffer(tmp);
+	objBuffer = FLA_Obj_base_buffer(obj);
 	memcpy(objBuffer, tmpBuffer, FLA_Obj_num_elem_alloc(obj) * sizeof(double));
 
 	//Free locally alloc'd data
@@ -132,29 +138,26 @@ FLA_Error FLA_Random_scalar_psym_tensor(FLA_Obj obj){
 
 
 FLA_Error FLA_Random_psym_tensor(FLA_Obj obj){
+	dim_t i;
 
+	//Obj data
+	dim_t order = FLA_Obj_order(obj);
+	dim_t size[FLA_MAX_ORDER];
+	dim_t stride[FLA_MAX_ORDER];
+	dim_t blk_size[FLA_MAX_ORDER];
+	dim_t blk_stride[FLA_MAX_ORDER];
+	dim_t n_elem_alloc;
+	FLA_Obj* obj_buffer = (FLA_Obj*)FLA_Obj_base_buffer(obj);
+
+	//Loop data
+	dim_t curIndex[FLA_MAX_ORDER];
+	dim_t linIndex;
+	dim_t isUnique;
 
 	//If scalar, call appropriate subroutine
 	if(FLA_Obj_elemtype(obj) == FLA_SCALAR){
 		return FLA_Random_scalar_psym_tensor(obj);
 	}
-
-	//Dealing with a blocked tensor
-	dim_t i;
-
-	//Obj data
-	dim_t order = FLA_Obj_order(obj);
-	dim_t size[order];
-	dim_t stride[order];
-	dim_t blk_size[order];
-	dim_t blk_stride[order];
-	dim_t n_elem_alloc;
-	FLA_Obj* obj_buffer = (FLA_Obj*)FLA_Obj_base_buffer(obj);
-
-	//Loop data
-	dim_t curIndex[order];
-	dim_t linIndex;
-	dim_t isUnique;
 
 	//Initialize Obj data
 	memcpy(&(size[0]), &(obj.size[0]), order * sizeof(dim_t));

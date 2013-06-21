@@ -64,7 +64,7 @@ MAKE_DEFS = build\defs.mk
 # --- Variable modifications ---------------------------------------------------
 #
 
-LIBFLAME_OBJS = $(FLAMEC_OBJS) $(LAPACK2FLAMEC_OBJS)
+LIBFLAME_OBJS = $(FLAMEC_OBJS)
 
 
 
@@ -120,20 +120,6 @@ distclean: clean-config clean-build clean-log
 	@$(CC) $(CFLAGS) /c $< /Fo$@ >> $(CC_LOG_FILE)
 !endif
 
-# --- C source files in lapack2flamec directory ---
-{$(SRC_L2F_DIRPATH)}.c{$(OBJ_L2F_DIRPATH)}.obj:
-!ifdef VERBOSE
-	if not exist $(OBJ_L2F_DIRPATH) \
-	   ( $(MKDIR) $(OBJ_L2F_DIRPATH) )
-	$(CC) $(CFLAGS) /c $< /Fo$@
-!else
-	@if not exist $(OBJ_L2F_DIRPATH) \
-	 (  ( $(ECHO) nmake: Creating $(OBJ_L2F_DIRPATH) directory ) & \
-	    ( $(MKDIR) $(OBJ_L2F_DIRPATH) ) )
-	@$(ECHO) nmake: Compiling $<
-	@$(CC) $(CFLAGS) /c $< /Fo$@ >> $(CC_LOG_FILE)
-!endif
-
 
 
 #
@@ -146,7 +132,6 @@ $(LIB_LIBFLAME_DIRPATH)\$(LIBFLAME_LIB): libflame-objs
 	if not exist $(LIB_LIBFLAME_DIRPATH) \
 	   ( $(MKDIR) $(LIB_LIBFLAME_DIRPATH) )
 	$(COPY) $(OBJ_FLA_DIRPATH)\*.obj $(LIB_LIBFLAME_DIRPATH)
-	$(COPY) $(OBJ_L2F_DIRPATH)\*.obj $(LIB_LIBFLAME_DIRPATH)
 	$(CD) $(LIB_LIBFLAME_DIRPATH)
 	$(LIB) $(LIB_OPTIONS) $(LIB_FLA_OUTPUT_ARG) $(LIB_FLA_INPUT_ARGS)
 	$(DEL) *.obj
@@ -157,7 +142,6 @@ $(LIB_LIBFLAME_DIRPATH)\$(LIBFLAME_LIB): libflame-objs
 	    ( $(MKDIR) $(LIB_LIBFLAME_DIRPATH) ) )
 	@$(ECHO) nmake: Creating static library $@
 	@$(COPY) $(OBJ_FLA_DIRPATH)\*.obj $(LIB_LIBFLAME_DIRPATH) >> $(COPY_LOG_FILE)
-	@$(COPY) $(OBJ_L2F_DIRPATH)\*.obj $(LIB_LIBFLAME_DIRPATH) >> $(COPY_LOG_FILE)
 	@$(CD) $(LIB_LIBFLAME_DIRPATH)
 	@$(LIB) $(LIB_OPTIONS) $(LIB_FLA_OUTPUT_ARG) $(LIB_FLA_INPUT_ARGS)
 	@$(DEL) *.obj
@@ -170,7 +154,6 @@ $(DLL_LIBFLAME_DIRPATH)\$(LIBFLAME_DLL): libflame-objs
 	if not exist $(DLL_LIBFLAME_DIRPATH) \
 	   ( $(MKDIR) $(DLL_LIBFLAME_DIRPATH) )
 	$(COPY) $(OBJ_FLA_DIRPATH)\*.obj $(DLL_LIBFLAME_DIRPATH) >> $(COPY_LOG_FILE)
-	$(COPY) $(OBJ_L2F_DIRPATH)\*.obj $(DLL_LIBFLAME_DIRPATH) >> $(COPY_LOG_FILE)
 	$(CD) $(DLL_LIBFLAME_DIRPATH)
 	$(DIR) /B *.obj > $(OBJ_LIST_FILE)
 	$(GENDLL) $(LIBFLAME) $(LIBFLAME) $(CC) $(LINKARGS_FILEPATH) $(SYM_DEF_FILEPATH) /objlist $(OBJ_LIST_FILE)
@@ -183,7 +166,6 @@ $(DLL_LIBFLAME_DIRPATH)\$(LIBFLAME_DLL): libflame-objs
 	    ( $(MKDIR) $(DLL_LIBFLAME_DIRPATH) ) )
 	@$(ECHO) nmake: Creating dynamic library $@
 	@$(COPY) $(OBJ_FLA_DIRPATH)\*.obj $(DLL_LIBFLAME_DIRPATH) >> $(COPY_LOG_FILE)
-	@$(COPY) $(OBJ_L2F_DIRPATH)\*.obj $(DLL_LIBFLAME_DIRPATH) >> $(COPY_LOG_FILE)
 	@$(CD) $(DLL_LIBFLAME_DIRPATH)
 	@$(DIR) /B *.obj > $(OBJ_LIST_FILE)
 	@$(GENDLL) $(LIBFLAME) $(LIBFLAME) $(CC) $(LINKARGS_FILEPATH) $(SYM_DEF_FILEPATH) /objlist $(OBJ_LIST_FILE)

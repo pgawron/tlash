@@ -1,6 +1,6 @@
 #include "FLAME.h"
 
-void print_array(const char* header, dim_t nElems, dim_t arr[nElems]){
+void print_array(const char* header, dim_t nElems, const dim_t arr[]){
  	dim_t i;
 
 	printf("%s:", header);

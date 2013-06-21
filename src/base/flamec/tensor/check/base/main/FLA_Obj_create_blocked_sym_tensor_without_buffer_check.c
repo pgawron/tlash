@@ -32,7 +32,7 @@
 
 #include "FLAME.h"
 
-FLA_Error FLA_Obj_create_blocked_sym_tensor_without_buffer_check( FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t b, FLA_Obj *obj )
+FLA_Error FLA_Obj_create_blocked_sym_tensor_without_buffer_check( FLA_Datatype datatype, dim_t order, const dim_t size[], dim_t b, FLA_Obj *obj )
 {
   dim_t i;
   FLA_Error e_val;

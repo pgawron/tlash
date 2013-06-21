@@ -32,12 +32,13 @@
 
 #include "FLAME.h"
 
-dim_t FLA_Ttm_Ops( dim_t order, dim_t size_A[order], dim_t size_B[2], dim_t mode)
+dim_t FLA_Ttm_Ops( dim_t order, const dim_t size_A[], const dim_t size_B[2], dim_t mode)
 {
+	dim_t i;
 	dim_t m = size_B[0];
 	dim_t k = size_B[1];
 	dim_t n = 1;
-	for(dim_t i = 0; i < order; i++)
+	for(i = 0; i < order; i++)
 		if(i != mode)
 			n *= size_A[i];
 	return 2*m*n*k;

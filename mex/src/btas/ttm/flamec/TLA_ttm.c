@@ -29,9 +29,9 @@ void mexFunction(int nargout, mxArray * pargout[],
     printf("mode: %d\n", mode);
 
     FLA_Obj C;
-    dim_t C_size[A.order];
-    dim_t C_blked_size[A.order];
-    dim_t C_block_size[A.order];
+    dim_t C_size[FLA_MAX_ORDER];
+    dim_t C_blked_size[FLA_MAX_ORDER];
+    dim_t C_block_size[FLA_MAX_ORDER];
 
     memcpy(&(C_blked_size[0]), &(A.size[0]), A.order * sizeof(dim_t));
     memcpy(&(C_block_size[0]), &((((FLA_Obj*)FLA_Obj_base_buffer(A))[0].size)[0]), A.order * sizeof(dim_t));
@@ -41,7 +41,7 @@ void mexFunction(int nargout, mxArray * pargout[],
     for(i = 0; i < A.order; i++)
         C_size[i] = C_blked_size[i] * C_block_size[i];
 
-    dim_t C_stride[A.order];
+    dim_t C_stride[FLA_MAX_ORDER];
     C_stride[0] = 1;
     for(i = 1; i < A.order; i++)
         C_stride[i] = C_stride[i-1] * C_blked_size[i-1];

@@ -30,9 +30,9 @@ void mexFunction(int nargout, mxArray * pargout[],
 
     FLA_Obj C;
     dim_t order = A.order;
-    dim_t C_size[order];
-    dim_t C_blked_size[order];
-    dim_t C_block_size[order];
+    dim_t C_size[FLA_MAX_ORDER];
+    dim_t C_blked_size[FLA_MAX_ORDER];
+    dim_t C_block_size[FLA_MAX_ORDER];
 
     for(i = 0; i < order; i++){
         C_blked_size[i] = B.size[0];
@@ -40,7 +40,7 @@ void mexFunction(int nargout, mxArray * pargout[],
         C_size[i] = C_blked_size[i] * C_block_size[i];
     }
 
-    dim_t C_stride[order];
+    dim_t C_stride[FLA_MAX_ORDER];
     C_stride[0] = 1;
     for(i = 1; i < order; i++)
         C_stride[i] = C_stride[i-1] * C_blked_size[i-1];

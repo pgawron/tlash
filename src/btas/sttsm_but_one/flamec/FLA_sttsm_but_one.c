@@ -34,7 +34,13 @@
 
 FLA_Error FLA_Sttsm_but_one_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, dim_t ignore_mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C, dim_t endIndex, FLA_Obj* temps[] )
 {
+	//FOR
+	FLA_Obj BT, BB;
+	FLA_Obj B0, B1, B2;
+	FLA_Obj CT, CB;
+	FLA_Obj C0, C1, C2;
 
+	dim_t loopCount;
 	//Recurse doing nothing if we hit the mode to ignore multiplying in
     if(mode == ignore_mode){
         if (mode != 0)
@@ -42,11 +48,7 @@ FLA_Error FLA_Sttsm_but_one_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, dim_t 
         return FLA_SUCCESS;
     }
     
-	//FOR
-	FLA_Obj BT, BB;
-	FLA_Obj B0, B1, B2;
-	FLA_Obj CT, CB;
-	FLA_Obj C0, C1, C2;
+
 
 	FLA_Part_1xmode2(B, &BT,
 						&BB, 0, 0, FLA_TOP);
@@ -54,7 +56,7 @@ FLA_Error FLA_Sttsm_but_one_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, dim_t 
 						&CB, mode, 0, FLA_TOP);
 	//Only symmetric part touched
 	//Ponder this
-	dim_t loopCount = 0;
+	loopCount = 0;
 	while(loopCount <= endIndex){
 		//Check this mathc out.  I think it is correct, Mode-1 of B matches mode-n of A
 		//Mode-0 of B matches Mode-n of C
@@ -100,10 +102,10 @@ FLA_Error FLA_Sttsm_but_one_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, dim_t 
 void initialize_psym_but_one_temporaries(FLA_Obj A, FLA_Obj C, dim_t ignore_mode, FLA_Obj* temps[]){
 	dim_t i, j;
 	dim_t order = FLA_Obj_order(A);
-	dim_t temp_blocked_size[order];
-	dim_t temp_blocked_stride[order];
-	dim_t temp_block_size[order];
-	dim_t temp_flat_size[order];
+	dim_t temp_blocked_size[FLA_MAX_ORDER];
+	dim_t temp_blocked_stride[FLA_MAX_ORDER];
+	dim_t temp_block_size[FLA_MAX_ORDER];
+	dim_t temp_flat_size[FLA_MAX_ORDER];
 	FLA_Obj* buf_A = (FLA_Obj*)FLA_Obj_base_buffer(A);
 	FLA_Obj* buf_C = (FLA_Obj*)FLA_Obj_base_buffer(C);
 
@@ -153,7 +155,7 @@ void destroy_psym_but_one_temporaries(dim_t order, dim_t ignore_mode, FLA_Obj* t
 FLA_Error FLA_Sttsm_but_one( FLA_Obj alpha, FLA_Obj A, dim_t ignore_mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C )
 {
 	//Create the temporaries used by sttsm
-	FLA_Obj* temps[A.order];
+	FLA_Obj* temps[FLA_MAX_ORDER];
 	initialize_psym_but_one_temporaries(A, C, ignore_mode, temps);
 
 	//If we ignore the last mode, start off ar order - 2
