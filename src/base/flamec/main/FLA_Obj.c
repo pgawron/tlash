@@ -645,18 +645,3 @@ FLA_Error FLA_Obj_free_buffer( FLA_Obj *obj )
 
   return FLA_SUCCESS;
 }
-
-FLA_Error FLA_Obj_blocked_free_buffer( FLA_Obj *obj)
-{
-	if(FLA_Obj_elemtype(*obj) == FLA_TENSOR || FLA_Obj_elemtype(*obj) == FLA_MATRIX){
-		dim_t i;
-		FLA_Obj* buf = (FLA_Obj*)FLA_Obj_base_buffer(*obj);
-		for(i = 0; i < FLA_Obj_num_elem_alloc(*obj); i++){
-			FLA_Obj_free_buffer(&(buf[i]));
-			FLA_Obj_free_without_buffer(&(buf[i]));
-		}
-		FLA_Obj_free_buffer(obj);
-	}
-	return FLA_SUCCESS;
-}
-

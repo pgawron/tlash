@@ -4,7 +4,7 @@
 void Usage()
 {
     printf("Test sttsm operation.\n\n");
-    printf("  test_sttsm <m> <nA> <nC><b>\n\n");
+    printf("  test_sttsm <m> <nA> <nC>\n\n");
     printf("  m: order of symmetric tensors\n");
     printf("  nA: mode-length of tensor A\n");
     printf("  nC: mode-length of symmetric tensor C\n");
@@ -20,7 +20,7 @@ void initSymmTensor(dim_t order, dim_t size[], FLA_Obj* obj){
       blocked_stride[i] = blocked_stride[i-1] * (size[i-1] / size[0]);
 
 
-  sym.order = FLA_Obj_order(*obj);
+  sym.order = order;
   sym.nSymGroups = 1;
   sym.symGroupLens[0] = sym.order;
   for(i = 0; i < sym.order; i++)
@@ -33,29 +33,10 @@ void initSymmTensor(dim_t order, dim_t size[], FLA_Obj* obj){
 
 void initMatrix(dim_t size[2], FLA_Obj* obj){
   dim_t order = 2;
-  dim_t sizeObj[] = {size[0], size[1]};
-  dim_t strideObj[] = {1, sizeObj[0]};
-  double* buf;
+  dim_t strideObj[] = {1, size[0]};
 
-  FLA_Obj_create_tensor_without_buffer(FLA_DOUBLE, order, sizeObj, obj);
-  obj->base->elemtype = FLA_SCALAR;
-
-  buf = (double*)FLA_malloc(sizeObj[0] * sizeObj[1] * sizeof(double));
-  FLA_Obj_attach_buffer_to_tensor(buf, order, strideObj, obj);
-
-  FLA_Adjust_2D_info(obj);
-
-  FLA_Random_matrix(*obj);
-}
-
-void setSymmTensorToZero(FLA_Obj obj){
-    dim_t i;
-	dim_t order = FLA_Obj_order(obj);
-	dim_t numel = 1;
-	for(i = 0; i < order; i++)
-		numel *= FLA_Obj_dimsize(obj, i);
-
-	memset(&(((double*)FLA_Obj_base_buffer(obj))[0]), 0, numel * sizeof(double));
+  FLA_Obj_create_blocked_tensor(FLA_DOUBLE, order, size, strideObj, size, obj);
+  FLA_Random_tensor(*obj);
 }
 
 void test_sttsm(int m, int nA, int nC, double* elapsedTime){
@@ -70,7 +51,7 @@ void test_sttsm(int m, int nA, int nC, double* elapsedTime){
   for(i = 0; i < m; i++)
     aSize[i] = nA;
   for(i = 0; i < m; i++)
-  cSize[i] = nC;
+    cSize[i] = nC;
   //End setup parameters
 
   FLA_Obj alpha = FLA_ONE;
@@ -79,11 +60,13 @@ void test_sttsm(int m, int nA, int nC, double* elapsedTime){
   FLA_Obj A, B, C;
 
   initSymmTensor(m, aSize, &A);
-
   initMatrix(bSize, &B);
-
   initSymmTensor(m, cSize, &C);
-  setSymmTensorToZero(C);
+
+  FLA_Obj_print_matlab("A", A);
+  FLA_Obj_print_matlab("B", B);
+  FLA_Obj_print_matlab("C", C);
+
 
   startTime = FLA_Clock();
   FLA_Sttsm_without_psym_temps(alpha, A, beta, B, C);
@@ -93,14 +76,6 @@ void test_sttsm(int m, int nA, int nC, double* elapsedTime){
 //printf("end computation\n");
 //	printf("c tensor\n");
 //	FLA_Obj_print_flat_tensor(c);
-	printf("A tensor\n");
-	FLA_Obj_print_tensor(A);
-
-	printf("B tensor\n");
-	FLA_Obj_print_tensor(B);
-
-	printf("c tensor\n");
-	FLA_Obj_print_tensor(C);
 
 
   FLA_Obj_free_buffer(&B);

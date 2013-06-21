@@ -538,7 +538,7 @@ FLA_Error FLA_Tensor_innerprod_nopermC( FLA_Obj alpha, FLA_Obj A,
     FLA_Obj B1blk;
 
     FLA_Part_1xmode2(B, &BT,
-                        &BB, 0, 0, FLA_TOP);
+                        &BB, 1, 0, FLA_TOP);
     FLA_Part_1xmode2(A, &AT,
                         &AB, mode, 0, FLA_TOP);
     //Only symmetric part touched

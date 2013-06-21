@@ -87,29 +87,14 @@ FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
 	    for(i = 0; i < nModes_part; i++)
 	        nRepart *= 3;
 
-	    part_modes = (dim_t*)FLA_malloc(nModes_part * sizeof(dim_t));
-	    sizes = (dim_t*)FLA_malloc(nModes_part * sizeof(dim_t));;
-	    repart_sizes = (dim_t*)FLA_malloc(nModes_part * sizeof(dim_t));;
-	    sides = (FLA_Side*)FLA_malloc(nModes_part * sizeof(dim_t));;
-	    repart_sides = (FLA_Side*)FLA_malloc(nModes_part * sizeof(dim_t));;
-
-	    for(i = 0; i < nModes_part; i++){
-	        part_modes[i] = symC.symModes[symGroupToSplitOffset + i];
-	        sizes[i] = 0;
-	        repart_sizes[i] = 1;
-	        sides[i] = FLA_TOP;
-	        repart_sides[i] = FLA_BOTTOM;
-	    }
-
-
 	    //Check if we are dealing with a single block
 	    //If so, we get to just multiply in a mode
 	    isSingleBlock = TRUE;
 	    for(i = 0; i < nModes_part; i++){
-	        if(FLA_Obj_dimsize(C,part_modes[i]) == 0){
+	        if(FLA_Obj_dimsize(C, symC.symModes[symGroupToSplitOffset + i]) == 0){
 	            return FLA_SUCCESS;
 	        }
-	        if(FLA_Obj_dimsize(C, part_modes[i]) > 1){
+	        if(FLA_Obj_dimsize(C, symC.symModes[symGroupToSplitOffset + i]) > 1){
 	            isSingleBlock = FALSE;
 	        }
 	    }
@@ -117,6 +102,20 @@ FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
 	    if(isSingleBlock){
 	        FLA_Ttm_single_mode(alpha, A, mode, beta, B, C);
 	        return FLA_SUCCESS;
+	    }
+
+	    part_modes = (dim_t*)FLA_malloc(nModes_part * sizeof(dim_t));
+	    sizes = (dim_t*)FLA_malloc(nModes_part * sizeof(dim_t));
+	    repart_sizes = (dim_t*)FLA_malloc(nModes_part * sizeof(dim_t));
+	    sides = (FLA_Side*)FLA_malloc(nModes_part * sizeof(dim_t));
+	    repart_sides = (FLA_Side*)FLA_malloc(nModes_part * sizeof(dim_t));
+
+	    for(i = 0; i < nModes_part; i++){
+	    	part_modes[i] = symC.symModes[symGroupToSplitOffset + i];
+	        sizes[i] = 0;
+	        repart_sizes[i] = 1;
+	        sides[i] = FLA_TOP;
+	        repart_sides[i] = FLA_BOTTOM;
 	    }
 
 	    //Begin loop for general tensor case

@@ -226,7 +226,7 @@ void initialize_temporaries(FLA_Obj A, FLA_Obj C, FLA_Obj* temps[]){
 void destroy_temporaries(dim_t order, FLA_Obj* temps[]){
 	dim_t i;
 	for(i = order - 1; i > 0; i--){
-		FLA_Obj_blocked_free_buffer(temps[i]);
+		FLA_Obj_blocked_tensor_free_buffer(temps[i]);
         FLA_Obj_free_without_buffer(temps[i]);
 		FLA_free(temps[i]);
 	}

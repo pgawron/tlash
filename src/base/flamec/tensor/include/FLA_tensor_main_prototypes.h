@@ -58,7 +58,7 @@ dim_t*		FLA_Obj_permutation( FLA_Obj obj );
 dim_t		FLA_Obj_dimsize( FLA_Obj obj, dim_t mode );
 dim_t		FLA_Obj_base_dimstride( FLA_Obj obj, dim_t dim );
 dim_t		FLA_Obj_dimstride( FLA_Obj obj, dim_t dim );
-FLA_Error	FLA_Obj_blocked_free_buffer(FLA_Obj* obj);
+FLA_Error	FLA_Obj_blocked_tensor_free_buffer(FLA_Obj* obj);
 FLA_Error	FLA_Obj_blocked_psym_tensor_free_buffer( FLA_Obj *obj);
 dim_t*		FLA_Obj_base_scalar_size(FLA_Obj A);
 dim_t		FLA_Obj_base_scalar_dimsize(FLA_Obj A, dim_t mode);

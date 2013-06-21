@@ -17,45 +17,26 @@ void Usage()
 }
 
 void create_random_psym_tensor(dim_t order, TLA_sym sym, dim_t n[], dim_t b[], FLA_Obj* A){
-    dim_t i;
     dim_t blocked_size[FLA_MAX_ORDER];
     dim_t blocked_stride[FLA_MAX_ORDER];
 
-    for(i = 0; i < order; i++)
-        blocked_size[i] = n[i] / b[i];
-
-    blocked_stride[0] = 1;
-    for(i = 1; i < order; i++)
-        blocked_stride[i] = blocked_size[i-1] * blocked_stride[i-1];
+    FLA_array_elemwise_quotient(order, n, b, blocked_size);
+    FLA_Set_tensor_stride(order, blocked_size, blocked_stride);
 
     FLA_Obj_create_blocked_psym_tensor(FLA_DOUBLE, order, n, blocked_stride, b, sym, A);
     FLA_Random_psym_tensor(*A);
 }
 
 void create_random_matrix(dim_t size[2], dim_t blk_size[2], FLA_Obj* obj){
-    dim_t i,j;
     dim_t order = 2;
-    dim_t blked_size[] = {size[0] / blk_size[0], size[1] / blk_size[1]};
-    dim_t blked_stride[] = {1, blked_size[0]};
-    dim_t blk_stride[] = {1, blk_size[0]};
+    dim_t blked_size[2];
+    dim_t blked_stride[2];
 
-    FLA_Obj* buf;
+    FLA_array_elemwise_quotient(order, size, blk_size, blked_size);
+    FLA_Set_tensor_stride(order, blked_size, blked_stride);
 
-    FLA_Obj_create_tensor_without_buffer(FLA_DOUBLE, order, blked_size, obj);
-    obj->base->elemtype = FLA_TENSOR;
-
-    buf = (FLA_Obj*)FLA_malloc(blked_size[0] * blked_size[1] * sizeof(FLA_Obj));
-    FLA_Obj_attach_buffer_to_tensor(buf, order, blked_stride, obj);
-
-    FLA_Adjust_2D_info(obj);
-
-    for(i = 0; i < blked_size[1]; i++)
-      for(j = 0; j < blked_size[0]; j++){
-          FLA_Obj* curObj = FLA_Obj_base_buffer(*obj);
-          FLA_Obj_create_tensor(FLA_DOUBLE, order, blk_size, blk_stride, &(curObj[j + (blked_size[0]*i)]));
-          FLA_Random_matrix(curObj[j+ (blked_size[0]*i)]);
-          FLA_Adjust_2D_info(&(curObj[j+(blked_size[0]*i)]));
-      }
+    FLA_Obj_create_blocked_tensor(FLA_DOUBLE, order, size, blked_stride, blk_size, obj);
+    FLA_Random_tensor(*obj);
 }
 
 void test_psttm(dim_t order, TLA_sym sym, dim_t nA[], dim_t bA[], dim_t mode, dim_t nCMode, dim_t bCMode){
@@ -108,6 +89,13 @@ void test_psttm(dim_t order, TLA_sym sym, dim_t nA[], dim_t bA[], dim_t mode, di
     FLA_Psttm(FLA_ONE, A, mode, FLA_ONE, B, C);
     FLA_Obj_print_matlab("C", C);
 
+    FLA_Obj_blocked_psym_tensor_free_buffer(&A);
+    FLA_Obj_blocked_tensor_free_buffer(&B);
+    FLA_Obj_blocked_psym_tensor_free_buffer(&C);
+
+    FLA_Obj_free_without_buffer(&A);
+    FLA_Obj_free_without_buffer(&B);
+    FLA_Obj_free_without_buffer(&C);
 }
 
 FLA_Error check_errors(dim_t order, TLA_sym sym, dim_t nA[], dim_t bA[], dim_t mode, dim_t nC, dim_t bC){

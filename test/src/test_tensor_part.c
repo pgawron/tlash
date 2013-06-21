@@ -3,7 +3,7 @@
 
 void Usage()
 {
-    printf("Test TLASH Part, Repart, Cont_with, Merge operations.\n\n");
+    printf("Test TLASH Part operations.\n\n");
     printf("  tlash_part <m> <nA> <bA>\n\n");
     printf("  m: order of symmetric tensors\n");
     printf("  nA: mode-length of tensor A\n");
@@ -11,11 +11,11 @@ void Usage()
 }
 
 void initBlockedTensor(dim_t order, dim_t size[], dim_t bSize[], FLA_Obj* obj){
-  dim_t i;
   dim_t stride[FLA_MAX_ORDER];
-  stride[0] = 1;
-  for(i = 1; i < order; i++)
-	stride[i] = size[i-1]*stride[i-1];
+  dim_t blked_size[FLA_MAX_ORDER];
+
+  FLA_array_elemwise_quotient(order, size, bSize, blked_size);
+  FLA_Set_tensor_stride(order, blked_size, stride);
 
   FLA_Obj_create_blocked_tensor(FLA_DOUBLE, order, size, stride, bSize, obj);
   FLA_Random_tensor(*obj);
@@ -94,6 +94,10 @@ void test_tlash_part_routines(dim_t m, dim_t nA, dim_t bA){
   print_Part(A, Apart);
 
   TLA_destroy_part_obj(nPartitions, Apart);
+
+  FLA_free(Apart);
+  FLA_Obj_blocked_tensor_free_buffer(&A);
+  FLA_Obj_free_without_buffer(&A);
 }
 
 FLA_Error parse_input(int argc, char* argv[], dim_t* order, dim_t* nA, dim_t* bA){
