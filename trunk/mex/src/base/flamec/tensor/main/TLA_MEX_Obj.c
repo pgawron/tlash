@@ -3,6 +3,15 @@
 
 void TLA_mxa_to_tensor(const mxArray * mxa, FLA_Obj* A){
     int i;
+    dim_t order;
+    const mxArray* size_mxa;
+    const mxArray* data_mxa;
+
+    double* temp;
+    double* data;
+
+    dim_t size[FLA_MAX_ORDER];
+    dim_t stride[FLA_MAX_ORDER];
 
     if(!mxIsStruct(mxa)){
         mexErrMsgTxt("Input must be a tensor (must be a structure).");
@@ -17,9 +26,6 @@ void TLA_mxa_to_tensor(const mxArray * mxa, FLA_Obj* A){
         mexErrMsgTxt("Input must be a tensor (must have size and data fields).");
     }
 
-    const mxArray* size_mxa;
-    const mxArray* data_mxa;
-
     size_mxa = mxGetFieldByNumber(mxa, 0, size_field_num);
     data_mxa = mxGetFieldByNumber(mxa, 0, data_field_num);
 
@@ -31,22 +37,16 @@ void TLA_mxa_to_tensor(const mxArray * mxa, FLA_Obj* A){
     }
 
     //Data extracted from mxArray structures
-    dim_t order;
     order = mxGetNumberOfElements(size_mxa);
     //Temp used as intermediate for converting MATLAB double arrays to dim_t arrays
-    double* temp;
 
-    dim_t size[FLA_MAX_ORDER];
     temp = mxGetPr(size_mxa);
     for(i = 0; i < order; i++)
         size[i] = (dim_t)(temp[i]);
 
-    dim_t stride[FLA_MAX_ORDER];
-    stride[0] = 1;
-    for(i = 1; i < order; i++)
-        stride[i] = stride[i-1] * size[i-1];
+    FLA_Set_tensor_stride(order, size, stride);
 
-    double* data = mxGetPr(data_mxa);
+    data = mxGetPr(data_mxa);
     FLA_Obj_create_tensor_without_buffer(FLA_DOUBLE, order, size, A);
     FLA_Obj_attach_buffer_to_tensor(data, order, stride, A);
 }
@@ -57,6 +57,26 @@ void TLA_mxa_to_tensor(const mxArray * mxa, FLA_Obj* A){
  */
 void TLA_mxa_to_blocked_tensor(const mxArray * mxa, FLA_Obj* A){
     int i;
+    int flat_size_field_num;
+    int block_size_field_num;
+    int data_blocks_field_num;
+
+    const mxArray* flat_size_mxa;
+    const mxArray* block_size_mxa;
+    const mxArray* data_blocks_mxa;
+
+    int numBlocks;
+
+    //Data extracted from mxArray structures
+    dim_t order;
+    //Temp used as intermediate for converting MATLAB double arrays to dim_t arrays
+    double* temp;
+
+    dim_t flat_size[FLA_MAX_ORDER];
+    dim_t blkSize[FLA_MAX_ORDER];
+    dim_t blked_size[FLA_MAX_ORDER];
+    double** dataBlocks;
+    dim_t stride[FLA_MAX_ORDER];
 
     if (!mxIsStruct(mxa))
     {
@@ -64,18 +84,14 @@ void TLA_mxa_to_blocked_tensor(const mxArray * mxa, FLA_Obj* A){
     }
 
     // Check that the struct has the right fields
-    int flat_size_field_num = mxGetFieldNumber(mxa, "flat_size");
-    int block_size_field_num = mxGetFieldNumber(mxa, "block_size");
-    int data_blocks_field_num = mxGetFieldNumber(mxa, "data_blocks");
+    flat_size_field_num = mxGetFieldNumber(mxa, "flat_size");
+    block_size_field_num = mxGetFieldNumber(mxa, "block_size");
+    data_blocks_field_num = mxGetFieldNumber(mxa, "data_blocks");
 
     if ((flat_size_field_num == -1) || (block_size_field_num == -1) || (data_blocks_field_num == -1))
     {
         mexErrMsgTxt("Input must be a blocked tensor (must have flat_size, block_size, and data_blocks fields).");
     }
-
-    const mxArray* flat_size_mxa;
-    const mxArray* block_size_mxa;
-    const mxArray* data_blocks_mxa;
 
     flat_size_mxa = mxGetFieldByNumber(mxa, 0, flat_size_field_num);
     block_size_mxa = mxGetFieldByNumber(mxa, 0, block_size_field_num);
@@ -91,7 +107,7 @@ void TLA_mxa_to_blocked_tensor(const mxArray * mxa, FLA_Obj* A){
         mexErrMsgTxt("Input must be a blocked tensor (data_blocks must be a cell).");
     }
 
-    int numBlocks = mxGetNumberOfElements(data_blocks_mxa);
+    numBlocks = mxGetNumberOfElements(data_blocks_mxa);
 
     for(i = 0; i < numBlocks; i++){
         if(!mxIsStruct(mxGetCell(data_blocks_mxa, i))){
@@ -99,14 +115,9 @@ void TLA_mxa_to_blocked_tensor(const mxArray * mxa, FLA_Obj* A){
         }
     }
 
-    //Data extracted from mxArray structures
-    dim_t order;
-    //Temp used as intermediate for converting MATLAB double arrays to dim_t arrays
-    double* temp;
 
     order = (dim_t)mxGetNumberOfElements(flat_size_mxa);
-    dim_t flat_size[FLA_MAX_ORDER];
-    dim_t blkSize[FLA_MAX_ORDER];
+
     temp = mxGetPr(flat_size_mxa);
     for(i = 0; i < order; i++)
         flat_size[i] = (dim_t)(temp[i]);
@@ -114,7 +125,7 @@ void TLA_mxa_to_blocked_tensor(const mxArray * mxa, FLA_Obj* A){
     for(i = 0; i < order; i++)
         blkSize[i] = (dim_t)(temp[i]);
 
-    double* dataBlocks[numBlocks];
+    dataBlocks = (double**)FLA_malloc(numBlocks * sizeof(double*));
     for(i = 0; i < numBlocks; i++){
         FLA_Obj curObj;
         TLA_mxa_to_tensor(mxGetCell(data_blocks_mxa, i), &curObj);
@@ -123,16 +134,39 @@ void TLA_mxa_to_blocked_tensor(const mxArray * mxa, FLA_Obj* A){
         memcpy(&(dataBlocks[i][0]), FLA_Obj_base_buffer(curObj), curObj.base->n_elem_alloc * sizeof(double));
     }
 
-    dim_t stride[FLA_MAX_ORDER];
-    stride[0] = 1;
-    for(i = 1; i < order; i++)
-        stride[i] = (flat_size[i-1]/blkSize[i-1]) * stride[i-1];
+    FLA_array_elemwise_quotient(order, flat_size, blkSize, blked_size);
+    FLA_Set_tensor_stride(order, blked_size, stride);
+
     FLA_Obj_create_blocked_tensor_without_buffer(FLA_DOUBLE, order, flat_size, blkSize, A);
     FLA_Obj_attach_buffer_to_blocked_tensor((void**)dataBlocks, order, stride, A);
 }
 
 void TLA_mxa_to_blocked_psym_tensor(const mxArray * mxa, FLA_Obj* A){
     int i;
+    int flat_size_field_num;
+    int block_size_field_num;
+    int data_blocks_field_num;
+    int sym_field_num;
+
+    const mxArray* flat_size_mxa;
+    const mxArray* block_size_mxa;
+    const mxArray* data_blocks_mxa;
+    const mxArray* sym_mxa;
+
+    int numBlocks;
+
+    //Data extracted from mxArray structures
+    dim_t order;
+    //Temp used as intermediate for converting MATLAB double arrays to dim_t arrays
+    double* temp;
+
+    dim_t flat_size[FLA_MAX_ORDER];
+    dim_t blkSize[FLA_MAX_ORDER];
+    dim_t blked_size[FLA_MAX_ORDER];
+    double** dataBlocks;
+    dim_t stride[FLA_MAX_ORDER];
+
+    TLA_sym sym;
 
     if (!mxIsStruct(mxa))
     {
@@ -140,20 +174,16 @@ void TLA_mxa_to_blocked_psym_tensor(const mxArray * mxa, FLA_Obj* A){
     }
 
     // Check that the struct has the right fields
-    int flat_size_field_num = mxGetFieldNumber(mxa, "flat_size");
-    int block_size_field_num = mxGetFieldNumber(mxa, "block_size");
-    int data_blocks_field_num = mxGetFieldNumber(mxa, "data_blocks");
-    int sym_field_num = mxGetFieldNumber(mxa, "sym");
+    flat_size_field_num = mxGetFieldNumber(mxa, "flat_size");
+    block_size_field_num = mxGetFieldNumber(mxa, "block_size");
+    data_blocks_field_num = mxGetFieldNumber(mxa, "data_blocks");
+    sym_field_num = mxGetFieldNumber(mxa, "sym");
 
     if ((flat_size_field_num == -1) || (block_size_field_num == -1) || (data_blocks_field_num == -1) || (sym_field_num == -1))
     {
         mexErrMsgTxt("Input must be a blocked psym tensor (must have flat_size, block_size, data_blocks, and sym fields).");
     }
 
-    const mxArray* flat_size_mxa;
-    const mxArray* block_size_mxa;
-    const mxArray* data_blocks_mxa;
-    const mxArray* sym_mxa;
 
     flat_size_mxa = mxGetFieldByNumber(mxa, 0, flat_size_field_num);
     block_size_mxa = mxGetFieldByNumber(mxa, 0, block_size_field_num);
@@ -174,7 +204,7 @@ void TLA_mxa_to_blocked_psym_tensor(const mxArray * mxa, FLA_Obj* A){
         mexErrMsgTxt("Input must be a blocked tensor (sym must be a cell).");
     }
 
-    int numBlocks = mxGetNumberOfElements(data_blocks_mxa);
+    numBlocks = mxGetNumberOfElements(data_blocks_mxa);
 
     for(i = 0; i < numBlocks; i++){
         if(!mxIsStruct(mxGetCell(data_blocks_mxa, i))){
@@ -182,14 +212,7 @@ void TLA_mxa_to_blocked_psym_tensor(const mxArray * mxa, FLA_Obj* A){
         }
     }
 
-    //Data extracted from mxArray structures
-    dim_t order;
-    //Temp used as intermediate for converting MATLAB double arrays to dim_t arrays
-    double* temp;
-
     order = (dim_t)mxGetNumberOfElements(flat_size_mxa);
-    dim_t flat_size[FLA_MAX_ORDER];
-    dim_t blkSize[FLA_MAX_ORDER];
     temp = mxGetPr(flat_size_mxa);
     for(i = 0; i < order; i++)
         flat_size[i] = (dim_t)(temp[i]);
@@ -197,7 +220,7 @@ void TLA_mxa_to_blocked_psym_tensor(const mxArray * mxa, FLA_Obj* A){
     for(i = 0; i < order; i++)
         blkSize[i] = (dim_t)(temp[i]);
 
-    double* dataBlocks[numBlocks];
+    dataBlocks = (double**)FLA_malloc(numBlocks * sizeof(double*));
     for(i = 0; i < numBlocks; i++){
         FLA_Obj curObj;
         TLA_mxa_to_tensor(mxGetCell(data_blocks_mxa, i), &curObj);
@@ -206,13 +229,11 @@ void TLA_mxa_to_blocked_psym_tensor(const mxArray * mxa, FLA_Obj* A){
         memcpy(&(dataBlocks[i][0]), FLA_Obj_base_buffer(curObj), curObj.base->n_elem_alloc * sizeof(double));
     }
 
-    TLA_sym sym;
+
     TLA_mxa_to_sym(sym_mxa, &sym);
 
-    dim_t stride[FLA_MAX_ORDER];
-    stride[0] = 1;
-    for(i = 1; i < order; i++)
-        stride[i] = (flat_size[i-1]/blkSize[i-1]) * stride[i-1];
+    FLA_array_elemwise_quotient(order, flat_size, blkSize, blked_size);
+    FLA_Set_tensor_stride(order, blked_size, stride);
 
     FLA_Obj_create_blocked_psym_tensor_without_buffer(FLA_DOUBLE, order, flat_size, blkSize, sym, A);
     FLA_Obj_attach_buffer_to_blocked_psym_tensor((void**)dataBlocks, order, stride, A);
@@ -220,24 +241,26 @@ void TLA_mxa_to_blocked_psym_tensor(const mxArray * mxa, FLA_Obj* A){
 
 void TLA_mxa_to_sym(const mxArray * mxa, TLA_sym* sym){
     dim_t i, j;
-
     dim_t count = 0;
+    int nSymGroups;
 
     if(!mxIsCell(mxa)){
         mexErrMsgTxt("sym must be a cell");
     }
 
-    int nSymGroups = mxGetNumberOfElements(mxa);
+    nSymGroups = mxGetNumberOfElements(mxa);
     (sym->nSymGroups) = nSymGroups;
     sym->order = 0;
     for(i = 0; i < nSymGroups; i++){
+    	double* symModes_mxa;
+    	dim_t symGroupLen;
         mxArray* symGroup = mxGetCell(mxa, i);
         if(!mxIsDouble(symGroup)){
             mexErrMsgTxt("symGroups must be double arrays");
         }
 
-        double* symModes_mxa = mxGetPr(symGroup);
-        dim_t symGroupLen = mxGetNumberOfElements(symGroup);
+        symModes_mxa = mxGetPr(symGroup);
+        symGroupLen = mxGetNumberOfElements(symGroup);
         for(j = 0; j < symGroupLen; j++){
             //Subtract 1 because MATLAB 1-indexes
             (sym->symModes)[count++] = (dim_t)(symModes_mxa[j]) - 1;
@@ -252,13 +275,16 @@ void TLA_tensor_to_mxa(FLA_Obj A, mxArray ** mxa){
     int i;
     mxArray* mxa_size = mxCreateDoubleMatrix(1, A.order, mxREAL);
     double* size = mxGetPr(mxa_size);
+    mxArray* mxa_data;
+    double* data;
+    double* dataBuf;
 
     for(i = 0; i < A.order; i++)
         size[i] = (double)A.size[i];
 
-    mxArray* mxa_data = mxCreateDoubleMatrix(1, A.base->n_elem_alloc, mxREAL);
-    double* data = mxGetPr(mxa_data);
-    double* dataBuf = (double*)FLA_Obj_base_buffer(A);
+    mxa_data = mxCreateDoubleMatrix(1, A.base->n_elem_alloc, mxREAL);
+    data = mxGetPr(mxa_data);
+    dataBuf = (double*)FLA_Obj_base_buffer(A);
 
     memcpy(&(data[0]), &(dataBuf[0]), A.base->n_elem_alloc * sizeof(double));
 
@@ -279,6 +305,11 @@ void TLA_blocked_tensor_to_mxa(FLA_Obj A, mxArray ** mxa ){
     double* flat_size = mxGetPr(mxa_flat_size);
     double* blk_size = mxGetPr(mxa_blk_size);
 
+    mxArray* mxa_blocks;
+
+    mxArray* plhs[1];
+    mxArray* prhs[3];
+
     for(i = 0; i < A.order; i++){
         dim_t blkDim = (((FLA_Obj*)FLA_Obj_base_buffer(A))[0]).size[i];
         dim_t blkedDim = A.size[i];
@@ -287,12 +318,11 @@ void TLA_blocked_tensor_to_mxa(FLA_Obj A, mxArray ** mxa ){
         blk_size[i] = (double) blkDim;
         flat_size[i] = (double) flatDim;
     }
-    mxArray* mxa_blocks = mxCreateCellMatrix(1, A.base->n_elem_alloc);
+    mxa_blocks = mxCreateCellMatrix(1, A.base->n_elem_alloc);
 
     for(i = 0; i < A.base->n_elem_alloc; i++){
         FLA_Obj curObj = ((FLA_Obj*)FLA_Obj_base_buffer(A))[i];
         const char* fields[] = {"size", "data"};
-
         mxArray *mxa_DataBlock = mxCreateStructMatrix(1, 1, 2, fields);
 
         TLA_tensor_to_mxa(curObj, &mxa_DataBlock);
@@ -301,8 +331,7 @@ void TLA_blocked_tensor_to_mxa(FLA_Obj A, mxArray ** mxa ){
     }
 
     //Set up for creating blocked tensor in MATLAB
-    mxArray* plhs[1];
-    mxArray* prhs[3];
+
     prhs[0] = mxa_blocks;
     prhs[1] = mxa_flat_size;
     prhs[2] = mxa_blk_size;
@@ -324,36 +353,13 @@ void TLA_blocked_psym_tensor_to_mxa(FLA_Obj A, mxArray ** mxa ){
     double* flat_size = mxGetPr(mxa_flat_size);
     double* blk_size = mxGetPr(mxa_blk_size);
 
-    order_ptr[0] = (double)order;
-    for(i = 0; i < A.sym.nSymGroups; i++){
-        dim_t symGroupModeOffset = TLA_sym_group_mode_offset(A.sym, i);
-        dim_t symMode = A.sym.symModes[symGroupModeOffset];
-        FLA_Obj block = ((FLA_Obj*)FLA_Obj_base_buffer(A))[0];
+    dim_t nUniqueBlocks;
+    TLA_sym sym;
 
-        dim_t blkDim = block.size[symMode];
-        dim_t blkedDim = A.size[symMode];
-        dim_t flatDim = blkDim * blkedDim;
+    mxArray* mxa_blocks;
 
-        blk_size[i] = (double)blkDim;
-        flat_size[i] = (double)flatDim;
-    }
-
-    dim_t nUniqueBlocks = 1;
-    TLA_sym sym = A.sym;
-    for(i = 0; i < sym.nSymGroups; i++){
-        dim_t symGroupLen = sym.symGroupLens[i];
-        dim_t symGroupModeOffset = TLA_sym_group_mode_offset(sym, i);
-        dim_t symGroupDim = A.size[sym.symModes[symGroupModeOffset]];
-
-        nUniqueBlocks *= binomial(symGroupLen + symGroupDim - 1, symGroupLen);
-    }
-
-    mxArray* mxa_blocks = mxCreateCellMatrix(1, nUniqueBlocks);
-
-    //Works for now
-    dim_t* endIndex = A.size;
+    dim_t* endIndex;
     dim_t curIndex[FLA_MAX_ORDER];
-    memset(&(curIndex[0]), 0, order * sizeof(dim_t));
     dim_t update_ptr = 0;
     dim_t uniqueCount = 0;
 
@@ -365,22 +371,65 @@ void TLA_blocked_psym_tensor_to_mxa(FLA_Obj A, mxArray ** mxa ){
     dim_t* stride_obj = FLA_Obj_stride(A);
     dim_t objLinIndex;
     dim_t nSymGroups = A.sym.nSymGroups;
-    dim_t symGroupLens[nSymGroups];
+    dim_t symGroupLens[FLA_MAX_ORDER];
     dim_t symModes[FLA_MAX_ORDER];
-    memcpy(&(symGroupLens[0]), &(A.sym.symGroupLens[0]), nSymGroups * sizeof(dim_t));
-    memcpy(&(symModes[0]), &(A.sym.symModes[0]), order* sizeof(dim_t));
 
     FLA_Paired_Sort index_pairs[FLA_MAX_ORDER];
     dim_t orderedSymModes[FLA_MAX_ORDER];
     /**
      * End necessary for psym
      */
+    mxArray* plhs[1];
+    mxArray* prhs[5];
+
+
+    order_ptr[0] = (double)order;
+    for(i = 0; i < A.sym.nSymGroups; i++){
+        dim_t symGroupModeOffset = TLA_sym_group_mode_offset(A.sym, i);
+        dim_t symMode = A.sym.symModes[symGroupModeOffset];
+        dim_t blkDim;
+        dim_t blkedDim;
+        dim_t flatDim;
+
+        FLA_Obj block = ((FLA_Obj*)FLA_Obj_base_buffer(A))[0];
+
+        blkDim = block.size[symMode];
+        blkedDim = A.size[symMode];
+        flatDim = blkDim * blkedDim;
+
+        blk_size[i] = (double)blkDim;
+        flat_size[i] = (double)flatDim;
+    }
+
+    nUniqueBlocks = 1;
+    sym = A.sym;
+    for(i = 0; i < sym.nSymGroups; i++){
+        dim_t symGroupLen = sym.symGroupLens[i];
+        dim_t symGroupModeOffset = TLA_sym_group_mode_offset(sym, i);
+        dim_t symGroupDim = A.size[sym.symModes[symGroupModeOffset]];
+
+        nUniqueBlocks *= binomial(symGroupLen + symGroupDim - 1, symGroupLen);
+    }
+
+    mxa_blocks = mxCreateCellMatrix(1, nUniqueBlocks);
+
+    //Works for now
+    endIndex = A.size;
+    memset(&(curIndex[0]), 0, order * sizeof(dim_t));
+
+
+
+    memcpy(&(symGroupLens[0]), &(A.sym.symGroupLens[0]), nSymGroups * sizeof(dim_t));
+    memcpy(&(symModes[0]), &(A.sym.symModes[0]), order* sizeof(dim_t));
+
 
     FLA_Obj* buffer = (FLA_Obj*)FLA_Obj_base_buffer(A);
     while(TRUE){
-		objLinIndex = FLA_TIndex_to_LinIndex(order, stride_obj, curIndex);
+    	dim_t modeOffset = 0;
+		dim_t uniqueIndex = TRUE;
+		dim_t count = 0;
 
-		dim_t modeOffset = 0;
+		objLinIndex = FLA_TIndex_to_LinIndex(order, stride_obj, curIndex);
 
 		for(i = 0; i < nSymGroups; i++){
 			for(j = 0; j < symGroupLens[i]; j++){
@@ -404,8 +453,7 @@ void TLA_blocked_psym_tensor_to_mxa(FLA_Obj A, mxArray ** mxa ){
 		}
 
 		//Check if this is unique or not
-		dim_t uniqueIndex = TRUE;
-		dim_t count = 0;
+
 		for(i = 0; i < nSymGroups; i++){
 			if(symGroupLens[i] > 1){
 				for(j = 0; j < symGroupLens[i] - 1; j++){
@@ -449,8 +497,6 @@ void TLA_blocked_psym_tensor_to_mxa(FLA_Obj A, mxArray ** mxa ){
     TLA_sym_to_mxa(A.sym, &mxa_sym);
 
     //Set up for creating blocked tensor in MATLAB
-    mxArray* plhs[1];
-    mxArray* prhs[5];
     prhs[0] = mxa_blocks;
     prhs[1] = mxa_order;
     prhs[2] = mxa_flat_size;

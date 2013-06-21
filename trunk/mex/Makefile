@@ -1,4 +1,4 @@
-CC = /usr/bin/gcc
+CC = gcc
 
 FLAME_DIR = /Users/martin/flame/lib
 FLAME_LIB = flame
@@ -22,7 +22,7 @@ OBJ_PATH = $(PWD)/obj
 OBJS = $(OBJ_PATH)/TLA_MEX_Convert_primitives.o $(OBJ_PATH)/TLA_MEX_Obj.o
 
 $(OBJ_PATH)/TLA_MEX_Obj.o : $(MEX_OBJ_FILE)
-	$(CC) $(CFLAGS) -c $(OBJ_FILE) -o $(OBJ_PATH)/TLA_MEX_Obj.o
+	$(CC) $(CFLAGS) -c $(MEX_OBJ_FILE) -o $(OBJ_PATH)/TLA_MEX_Obj.o
 
 $(OBJ_PATH)/TLA_MEX_Convert_primitives.o : $(UTIL_FILE)
 	$(CC) $(CFLAGS) -c $(UTIL_FILE) -o $(OBJ_PATH)/TLA_MEX_Convert_primitives.o
