@@ -35,12 +35,13 @@
 FLA_Error FLA_Check_adjacent_objects_1xmode2( FLA_Obj AT,
                                           FLA_Obj AB, dim_t mode )
 {
+  dim_t i;
   FLA_Error e_val = FLA_SUCCESS;
 
   if ( FLA_Obj_dimsize( AT, mode ) != FLA_Obj_dimsize( AB, mode ) )
     e_val = FLA_ADJACENT_OBJECT_DIM_MISMATCH;
 
-  for(int i = 0; i < AT.order; i++){
+  for(i = 0; i < AT.order; i++){
     if(i == mode){
       if ( AB.offset[i] != AT.offset[i] + FLA_Obj_dimsize( AT, mode ) )
         e_val = FLA_OBJECTS_NOT_VERTICALLY_ADJ;

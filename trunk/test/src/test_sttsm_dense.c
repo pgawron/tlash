@@ -5,19 +5,21 @@ void Usage()
 {
     printf("Test sttsm operation.\n\n");
     printf("  test_sttsm <m> <nA> <nC><b>\n\n");
-    printf("  m: order of hyper-symmetric tensors\n");
+    printf("  m: order of symmetric tensors\n");
     printf("  nA: mode-length of tensor A\n");
-    printf("  nC: mode-length of hyper-symmetric tensor C\n");
+    printf("  nC: mode-length of symmetric tensor C\n");
 }
 
-void initSymmTensor(dim_t order, dim_t size[order], FLA_Obj* obj){
+void initSymmTensor(dim_t order, dim_t size[], FLA_Obj* obj){
   dim_t i;
-  dim_t blocked_stride[order];
+  dim_t blocked_stride[FLA_MAX_ORDER];
+  TLA_sym sym;
+
   blocked_stride[0] = 1;
   for(i = 1; i < order; i++)
       blocked_stride[i] = blocked_stride[i-1] * (size[i-1] / size[0]);
 
-  TLA_sym sym;
+
   sym.order = FLA_Obj_order(*obj);
   sym.nSymGroups = 1;
   sym.symGroupLens[0] = sym.order;
@@ -33,11 +35,12 @@ void initMatrix(dim_t size[2], FLA_Obj* obj){
   dim_t order = 2;
   dim_t sizeObj[] = {size[0], size[1]};
   dim_t strideObj[] = {1, sizeObj[0]};
+  double* buf;
 
   FLA_Obj_create_tensor_without_buffer(FLA_DOUBLE, order, sizeObj, obj);
   obj->base->elemtype = FLA_SCALAR;
 
-  double* buf = (double*)FLA_malloc(sizeObj[0] * sizeObj[1] * sizeof(double));
+  buf = (double*)FLA_malloc(sizeObj[0] * sizeObj[1] * sizeof(double));
   FLA_Obj_attach_buffer_to_tensor(buf, order, strideObj, obj);
 
   FLA_Adjust_2D_info(obj);
@@ -58,11 +61,14 @@ void setSymmTensorToZero(FLA_Obj obj){
 void test_sttsm(int m, int nA, int nC, double* elapsedTime){
 	//Setup parameters
   dim_t i;
-  dim_t aSize[m];
+  dim_t aSize[FLA_MAX_ORDER];
+  dim_t bSize[] = {nC, nA};
+  dim_t cSize[FLA_MAX_ORDER];
+  double startTime;
+  double endTime;
+
   for(i = 0; i < m; i++)
     aSize[i] = nA;
-  dim_t bSize[] = {nC, nA};
-  dim_t cSize[m];
   for(i = 0; i < m; i++)
   cSize[i] = nC;
   //End setup parameters
@@ -79,22 +85,22 @@ void test_sttsm(int m, int nA, int nC, double* elapsedTime){
   initSymmTensor(m, cSize, &C);
   setSymmTensorToZero(C);
 
-  double startTime = FLA_Clock();
+  startTime = FLA_Clock();
   FLA_Sttsm_without_psym_temps(alpha, A, beta, B, C);
   //FLA_Ttm(alpha, A, m, modes, beta, Barr, C);
-  double endTime = FLA_Clock();
+  endTime = FLA_Clock();
   *elapsedTime = endTime - startTime;
 //printf("end computation\n");
 //	printf("c tensor\n");
 //	FLA_Obj_print_flat_tensor(c);
 	printf("A tensor\n");
-	FLA_Obj_print_flat_tensor(A);
+	FLA_Obj_print_tensor(A);
 
 	printf("B tensor\n");
-	FLA_Obj_print_flat_tensor(B);
+	FLA_Obj_print_tensor(B);
 
 	printf("c tensor\n");
-	FLA_Obj_print_flat_tensor(C);
+	FLA_Obj_print_tensor(C);
 
 
   FLA_Obj_free_buffer(&B);
@@ -119,35 +125,57 @@ double Sttsm_GFlops(dim_t m, dim_t nA, dim_t nC, double elapsedTime){
 	return nC*nA*(KpowTerm-NpowTerm)/(nC-nA)/(1.e9*elapsedTime);
 }
 
+FLA_Error parse_input(int argc, char* argv[], dim_t* order, dim_t* nA, dim_t* nC){
+    int argNum = 0;
+
+    if(argc != 4){
+        return FLA_FAILURE;
+    }
+
+    *order = atoi(argv[++argNum]);
+    *nA = atoi(argv[++argNum]);
+    *nC = atoi(argv[++argNum]);
+
+    return FLA_SUCCESS;
+}
+
+FLA_Error check_errors(dim_t order, dim_t nA, dim_t nC){
+
+	if(order <= 0 || nA <= 0 || nC <= 0){
+		printf("m, nA, and nC must be greater than 0\n");
+		return FLA_FAILURE;
+	}
+
+	return FLA_SUCCESS;
+}
+
 int main(int argc, char* argv[]){
+	dim_t order;
+	dim_t nA;
+	dim_t nC;
+	double elapsedTime;
+
 	FLA_Init();
 
-	if(argc < 4){
+	if(parse_input(argc, argv, &order, &nA, &nC) == FLA_FAILURE){
 		Usage();
 		FLA_Finalize();
 		return 0;
 	}
-		
 
-	int argNum = 0;
-	const int m = atoi(argv[++argNum]);
-	const int nA = atoi(argv[++argNum]);
-	const int nC = atoi(argv[++argNum]);
-
-	if(m <= 0){
-		printf("m must be greater than 0\n");
+	if(check_errors(order, nA, nC) == FLA_FAILURE){
+		Usage();
 		FLA_Finalize();
 		return 0;
 	}
 
-	double elapsedTime;
-	test_sttsm(m, nA, nC, &elapsedTime);
+	test_sttsm(order, nA, nC, &elapsedTime);
 
 	FLA_Finalize();
 
 	//Print out results
 //	double gflops = Sttsm_GFlops(m, nA, nC, elapsedTime);
-	printf("ARGS DENSE %d %d %d %d %d\n", m, nA, nC, nA, nC);
+	printf("ARGS DENSE %d %d %d %d %d\n", order, nA, nC, nA, nC);
 	printf("TIME %.6f\n", elapsedTime);
 	printf("GFLOPS %.6f\n", -1.0);
 	return 0;

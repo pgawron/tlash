@@ -32,7 +32,7 @@
 
 #include "FLAME.h"
 
-dim_t FLA_array_product( dim_t order, dim_t arr[order])
+dim_t FLA_array_product( dim_t order, const dim_t arr[])
 {
 	dim_t i;
 	dim_t val = 1;

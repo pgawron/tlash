@@ -4,9 +4,9 @@
 void Usage() {
 	printf("Test sttsm_but_one operation.\n\n");
 	printf("  test_sttsm_but_one <m> <nA> <nC> <bA> <bC> <ignore_mode>\n\n");
-	printf("  m: order of hyper-symmetric tensors\n");
+	printf("  m: order of symmetric tensors\n");
 	printf("  nA: mode-length of tensor A\n");
-	printf("  nC: mode-length of hyper-symmetric tensor C\n");
+	printf("  nC: mode-length of symmetric tensor C\n");
 	printf("  bA: mode-length of block of A\n");
 	printf("  bC: mode-length of block of C\n");
 	printf(
@@ -15,10 +15,12 @@ void Usage() {
 
 void initSymmTensor(dim_t order, dim_t nA, dim_t bA, FLA_Obj* obj) {
 	dim_t i;
-	dim_t flat_size[order];
-	dim_t blocked_stride[order];
-	dim_t blocked_size[order];
-	dim_t block_size[order];
+	dim_t flat_size[FLA_MAX_ORDER];
+	dim_t blocked_stride[FLA_MAX_ORDER];
+	dim_t blocked_size[FLA_MAX_ORDER];
+	dim_t block_size[FLA_MAX_ORDER];
+	TLA_sym sym;
+
 	for (i = 0; i < order; i++) {
 		flat_size[i] = nA;
 		block_size[i] = bA;
@@ -30,7 +32,7 @@ void initSymmTensor(dim_t order, dim_t nA, dim_t bA, FLA_Obj* obj) {
 		blocked_stride[i] = blocked_stride[i - 1] * blocked_size[i - 1];
 	}
 
-	TLA_sym sym;
+
 	sym.order = order;
 	sym.nSymGroups = 1;
 	sym.symGroupLens[0] = sym.order;
@@ -48,11 +50,12 @@ void initMatrix(dim_t nC, dim_t nA, dim_t bC, dim_t bA, FLA_Obj* obj) {
 	dim_t strideObj[] = { 1, sizeObj[0] };
 	dim_t sizeBlk[] = { bC, bA };
 	dim_t strideBlk[] = { 1, bC };
+	FLA_Obj* buf;
 
 	FLA_Obj_create_tensor_without_buffer(FLA_DOUBLE, order, sizeObj, obj);
 	obj->base->elemtype = FLA_TENSOR;
 
-	FLA_Obj* buf = (FLA_Obj*) FLA_malloc(
+	buf = (FLA_Obj*) FLA_malloc(
 			sizeObj[0] * sizeObj[1] * sizeof(FLA_Obj));
 	FLA_Obj_attach_buffer_to_tensor(buf, order, strideObj, obj);
 
@@ -72,10 +75,11 @@ void initOutputTensor(dim_t order, dim_t nA, dim_t nC, dim_t bA, dim_t bC,
 		dim_t ignore_mode, FLA_Obj* obj) {
 
 	dim_t i;
-	dim_t flat_size[order];
-	dim_t blocked_size[order];
-	dim_t blocked_stride[order];
-	dim_t block_size[order];
+	dim_t flat_size[FLA_MAX_ORDER];
+	dim_t blocked_size[FLA_MAX_ORDER];
+	dim_t blocked_stride[FLA_MAX_ORDER];
+	dim_t block_size[FLA_MAX_ORDER];
+	TLA_sym sym;
 
 	for (i = 0; i < order; i++) {
 		flat_size[i] = nC;
@@ -93,7 +97,7 @@ void initOutputTensor(dim_t order, dim_t nA, dim_t nC, dim_t bA, dim_t bC,
 		blocked_stride[i] = blocked_stride[i - 1] * blocked_size[i - 1];
 	}
 
-	TLA_sym sym;
+
 	sym.order = order;
 	sym.nSymGroups = 2;
 	sym.symGroupLens[0] = 1;
@@ -119,6 +123,9 @@ void test_sttsm(int m, int nA, int nC, int bA, int bC, dim_t ignore_mode,
 
 	FLA_Obj A, B, C;
 
+	double startTime;
+	double endTime;
+
 	initSymmTensor(m, nA, bA, &A);
 	initMatrix(nC, nA, bC, bA, &B);
 	initOutputTensor(m, nA, nC, bA, bC, ignore_mode, &C);
@@ -127,11 +134,11 @@ void test_sttsm(int m, int nA, int nC, int bA, int bC, dim_t ignore_mode,
 	FLA_Obj_print_matlab("B", B);
 	FLA_Obj_print_matlab("preC", C);
 
-	double startTime = FLA_Clock();
+	startTime = FLA_Clock();
 
 	FLA_Sttsm_but_one(alpha, A, ignore_mode, beta, B, C);
 
-	double endTime = FLA_Clock();
+	endTime = FLA_Clock();
 
 	*elapsedTime = endTime - startTime;
 
@@ -155,43 +162,79 @@ void test_sttsm(int m, int nA, int nC, int bA, int bC, dim_t ignore_mode,
 	FLA_Obj_blocked_psym_tensor_free_buffer(&C);
 	FLA_Obj_free_without_buffer(&C);
 }
+
+FLA_Error parse_input(int argc, char* argv[], dim_t* order, dim_t* nA, dim_t* nC, dim_t* bA, dim_t* bC, dim_t* ignore_mode){
+    int argNum = 0;
+
+    if(argc != 7){
+        return FLA_FAILURE;
+    }
+
+    *order = atoi(argv[++argNum]);
+    *nA = atoi(argv[++argNum]);
+    *nC = atoi(argv[++argNum]);
+    *bA = atoi(argv[++argNum]);
+    *bC = atoi(argv[++argNum]);
+    *ignore_mode = atoi(argv[++argNum]);
+
+    return FLA_SUCCESS;
+}
+
+FLA_Error check_errors(dim_t order, dim_t nA, dim_t nC, dim_t bA, dim_t bC, dim_t ignore_mode){
+
+	if(order <= 0 || nA <= 0 || nC <= 0 || bA <= 0 || bC <= 0){
+		printf("m, nA, nC, bA, and bC must be greater than 0\n");
+		return FLA_FAILURE;
+	}
+
+	if(nA % bA != 0){
+		printf("bA must evenly divide nA\n");
+		return FLA_FAILURE;
+	}
+
+	if(nC % bC != 0){
+		printf("bC must evenly divide nC\n");
+		return FLA_FAILURE;
+	}
+
+	if(ignore_mode >= order){
+		printf("ignore_mode must be less than order\n");
+		return FLA_FAILURE;
+	}
+
+	return FLA_SUCCESS;
+}
+
 int main(int argc, char* argv[]) {
+	dim_t order;
+	dim_t nA;
+	dim_t nC;
+	dim_t bA;
+	dim_t bC;
+	dim_t ignore_mode;
+
+	double elapsedTime;
+
 	FLA_Init();
 
-	if (argc < 7) {
+	if(parse_input(argc, argv, &order, &nA, &nC, &bA, &bC, &ignore_mode) == FLA_FAILURE){
 		Usage();
 		FLA_Finalize();
 		return 0;
 	}
 
-	int argNum = 0;
-	const dim_t m = atoi(argv[++argNum]);
-	const dim_t nA = atoi(argv[++argNum]);
-	const dim_t nC = atoi(argv[++argNum]);
-	const dim_t bA = atoi(argv[++argNum]);
-	const dim_t bC = atoi(argv[++argNum]);
-	const dim_t ignore_mode = atoi(argv[++argNum]);
-
-	if (nA % bA != 0 || nC % bC != 0) {
-		printf("bA must evenly divide nA and bC must evenly divide nC\n");
-		FLA_Finalize();
-		return 0;
-	}
-	if (m <= 0 || bA <= 0 || bC < 0) {
-		printf("m and b must be greater than 0\n");
+	if(check_errors(order, nA, nC, bA, bC, ignore_mode) == FLA_FAILURE){
+		Usage();
 		FLA_Finalize();
 		return 0;
 	}
 
-	double elapsedTime;
-	test_sttsm(m, nA, nC, bA, bC, ignore_mode, &elapsedTime);
+	test_sttsm(order, nA, nC, bA, bC, ignore_mode, &elapsedTime);
 
 	FLA_Finalize();
 
 	//Print out results
-//	double gflops = Sttsm_GFlops(m, nA, nC, bA, bC, elapsedTime);
-	printf("ARGS COMPACT %d %d %d %d %d\n", m, nA, nC, bA, bC);
+	printf("ARGS COMPACT %d %d %d %d %d\n", order, nA, nC, bA, bC);
 	printf("TIME %.6f\n", elapsedTime);
-//	printf("GFLOPS %.6f\n", gflops);
 	return 0;
 }

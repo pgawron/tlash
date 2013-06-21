@@ -32,7 +32,7 @@
 
 #include "FLAME.h"
 
-FLA_Error FLA_Set_tensor_stride( dim_t order, dim_t size[order], dim_t* stride)
+FLA_Error FLA_Set_tensor_stride( dim_t order, const dim_t size[], dim_t* stride)
 {
 	dim_t i;
 	stride[0] = 1;

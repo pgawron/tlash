@@ -32,15 +32,15 @@
 
 #include "FLAME.h"
 
-dim_t FLA_get_unique_info( TLA_sym sym, dim_t index[sym.order], dim_t* sortedIndex, dim_t* permutation, dim_t* ipermutation)
+dim_t FLA_get_unique_info( TLA_sym sym, const dim_t index[], dim_t* sortedIndex, dim_t* permutation, dim_t* ipermutation)
 {
 	dim_t i, j;
 
-	FLA_Paired_Sort index_pairs[sym.order];
+	FLA_Paired_Sort index_pairs[FLA_MAX_ORDER];
 	dim_t nSymGroups = sym.nSymGroups;
 	dim_t* symGroupLens = &(sym.symGroupLens[0]);
 	dim_t* symModes = &(sym.symModes[0]);
-	dim_t orderedSymModes[sym.order];
+	dim_t orderedSymModes[FLA_MAX_ORDER];
 	dim_t modeOffset = 0;
 	dim_t uniqueIndex = TRUE;
 

@@ -53,7 +53,7 @@
 
 // Determines whether to use control trees to select a reasonable FLAME
 // variant and blocksize when level-3 BLAS front-ends are invoked.
-#define FLA_ENABLE_BLAS3_FRONT_END_CNTL_TREES
+//#define FLA_ENABLE_BLAS3_FRONT_END_CNTL_TREES
 
 // Determines whether to modify various segments of code needed for
 // integrating libflame into Windows.
@@ -78,20 +78,20 @@
 
 // Determines whether to enable the FLA_malloc()/FLA_free() memory counter
 // by default.
-#define FLA_ENABLE_MEMORY_LEAK_COUNTER
+//#define FLA_ENABLE_MEMORY_LEAK_COUNTER
 
 
 // --- Multithreading and SuperMatrix ------------------------------------------
 
 // Determines whether thread-specific blocks of code should be compiled.
-#define FLA_ENABLE_MULTITHREADING
+//#define FLA_ENABLE_MULTITHREADING
 
 // Encodes the type of multithreading chosen at configure-time.
-#define FLA_MULTITHREADING_MODEL 1   // OpenMP
+//#define FLA_MULTITHREADING_MODEL 1   // OpenMP
 // #define FLA_MULTITHREADING_MODEL 2   // POSIX threads
 
 // Determines whether SuperMatrix-specific blocks of code should be compiled.
-#define FLA_ENABLE_SUPERMATRIX
+//#define FLA_ENABLE_SUPERMATRIX
 
 
 // --- BLAS and blocksizes -----------------------------------------------------

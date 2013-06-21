@@ -36,12 +36,12 @@ void TLA_mxa_to_tensor(const mxArray * mxa, FLA_Obj* A){
     //Temp used as intermediate for converting MATLAB double arrays to dim_t arrays
     double* temp;
 
-    dim_t size[order];
+    dim_t size[FLA_MAX_ORDER];
     temp = mxGetPr(size_mxa);
     for(i = 0; i < order; i++)
         size[i] = (dim_t)(temp[i]);
 
-    dim_t stride[order];
+    dim_t stride[FLA_MAX_ORDER];
     stride[0] = 1;
     for(i = 1; i < order; i++)
         stride[i] = stride[i-1] * size[i-1];
@@ -105,8 +105,8 @@ void TLA_mxa_to_blocked_tensor(const mxArray * mxa, FLA_Obj* A){
     double* temp;
 
     order = (dim_t)mxGetNumberOfElements(flat_size_mxa);
-    dim_t flat_size[order];
-    dim_t blkSize[order];
+    dim_t flat_size[FLA_MAX_ORDER];
+    dim_t blkSize[FLA_MAX_ORDER];
     temp = mxGetPr(flat_size_mxa);
     for(i = 0; i < order; i++)
         flat_size[i] = (dim_t)(temp[i]);
@@ -123,7 +123,7 @@ void TLA_mxa_to_blocked_tensor(const mxArray * mxa, FLA_Obj* A){
         memcpy(&(dataBlocks[i][0]), FLA_Obj_base_buffer(curObj), curObj.base->n_elem_alloc * sizeof(double));
     }
 
-    dim_t stride[order];
+    dim_t stride[FLA_MAX_ORDER];
     stride[0] = 1;
     for(i = 1; i < order; i++)
         stride[i] = (flat_size[i-1]/blkSize[i-1]) * stride[i-1];
@@ -188,8 +188,8 @@ void TLA_mxa_to_blocked_psym_tensor(const mxArray * mxa, FLA_Obj* A){
     double* temp;
 
     order = (dim_t)mxGetNumberOfElements(flat_size_mxa);
-    dim_t flat_size[order];
-    dim_t blkSize[order];
+    dim_t flat_size[FLA_MAX_ORDER];
+    dim_t blkSize[FLA_MAX_ORDER];
     temp = mxGetPr(flat_size_mxa);
     for(i = 0; i < order; i++)
         flat_size[i] = (dim_t)(temp[i]);
@@ -209,7 +209,7 @@ void TLA_mxa_to_blocked_psym_tensor(const mxArray * mxa, FLA_Obj* A){
     TLA_sym sym;
     TLA_mxa_to_sym(sym_mxa, &sym);
 
-    dim_t stride[order];
+    dim_t stride[FLA_MAX_ORDER];
     stride[0] = 1;
     for(i = 1; i < order; i++)
         stride[i] = (flat_size[i-1]/blkSize[i-1]) * stride[i-1];
@@ -352,7 +352,7 @@ void TLA_blocked_psym_tensor_to_mxa(FLA_Obj A, mxArray ** mxa ){
 
     //Works for now
     dim_t* endIndex = A.size;
-    dim_t curIndex[order];
+    dim_t curIndex[FLA_MAX_ORDER];
     memset(&(curIndex[0]), 0, order * sizeof(dim_t));
     dim_t update_ptr = 0;
     dim_t uniqueCount = 0;
@@ -360,18 +360,18 @@ void TLA_blocked_psym_tensor_to_mxa(FLA_Obj A, mxArray ** mxa ){
     /**
      *  All this for psym
      */
-    dim_t permutation[order];
-    dim_t sortedIndex[order];
+    dim_t permutation[FLA_MAX_ORDER];
+    dim_t sortedIndex[FLA_MAX_ORDER];
     dim_t* stride_obj = FLA_Obj_stride(A);
     dim_t objLinIndex;
     dim_t nSymGroups = A.sym.nSymGroups;
     dim_t symGroupLens[nSymGroups];
-    dim_t symModes[order];
+    dim_t symModes[FLA_MAX_ORDER];
     memcpy(&(symGroupLens[0]), &(A.sym.symGroupLens[0]), nSymGroups * sizeof(dim_t));
     memcpy(&(symModes[0]), &(A.sym.symModes[0]), order* sizeof(dim_t));
 
-    FLA_Paired_Sort index_pairs[order];
-    dim_t orderedSymModes[order];
+    FLA_Paired_Sort index_pairs[FLA_MAX_ORDER];
+    dim_t orderedSymModes[FLA_MAX_ORDER];
     /**
      * End necessary for psym
      */

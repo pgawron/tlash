@@ -7,10 +7,11 @@ void initObj(FLA_Obj* obj){
   dim_t size[] = {3,4,5};
   dim_t stride[] = {1, 3, 12};
   dim_t nData = 1;
+  int* data;
   for(i = 0; i < order; i++)
     nData *= size[i];
 
-  int* data = FLA_malloc(nData * sizeof(int));
+  data = (int*)FLA_malloc(nData * sizeof(int));
   for(i = 0; i < nData; i++)
   	data[i] = i;
   FLA_Obj_create_tensor_without_buffer(FLA_INT, order, size, obj);
@@ -37,12 +38,19 @@ void printView(char* msg, FLA_Obj obj){
 
 void repart_test(){
   FLA_Obj A;
+  FLA_Obj A0, A1;
+  FLA_Obj A00, A10, A20;
+
+  dim_t* A00_buf;
+  dim_t* A10_buf;
+  dim_t* A20_buf;
+
   initObj(&A);
 
   printf("Hello world!\n");
   printView("A", A);
 
-  FLA_Obj A0, A1;
+
 
   FLA_Part_1xmode2(A, &A0, 
 					  &A1,
@@ -51,16 +59,16 @@ void repart_test(){
   printView("A0", A0);
   printView("A1", A1);
 
-  FLA_Obj A00, A10, A20;
+
 
   FLA_Repart_1xmode2_to_1xmode3(A0, &A00,
 								    &A10,
 								A1, &A20,
 								1, 2, FLA_TOP);
 
-  dim_t* A00_buf = ((dim_t*)FLA_Obj_buffer_at_view(A00));
-  dim_t* A10_buf = ((dim_t*)FLA_Obj_buffer_at_view(A10));
-  dim_t* A20_buf = ((dim_t*)FLA_Obj_buffer_at_view(A20));
+  A00_buf = ((dim_t*)FLA_Obj_buffer_at_view(A00));
+  A10_buf = ((dim_t*)FLA_Obj_buffer_at_view(A10));
+  A20_buf = ((dim_t*)FLA_Obj_buffer_at_view(A20));
 
   printf("%d %d %d\n", A00_buf[0], A10_buf[0], A20_buf[0]);
 
@@ -84,13 +92,16 @@ void repart_test(){
 
 void permute_test(){
   FLA_Obj A;
-  initObj(&A);
-
   FLA_Obj A0, A1;
   FLA_Obj A00, A01,  A10, A11;
 
   FLA_Obj A000, A010,    A001, A011,
           A100, A110,    A101, A111;
+
+  FLA_Obj blk_B[8];
+
+  initObj(&A);
+
 
   FLA_Part_1xmode2(A, &A0, &A1, 1, 2, FLA_TOP);
 
@@ -118,8 +129,6 @@ void permute_test(){
   FLA_Obj_show("data:", A110, "%d", "");
   printView("A111", A111);
   FLA_Obj_show("data:", A111, "%d", "");
-
-  FLA_Obj blk_B[8];
 
 
   //FLA_Permute(permutation, A.order, blk_A_size, blk_A, &B_order, &B_size, &blk_B);
