@@ -12,7 +12,7 @@
 
 /* Determines whether to use control trees to select a reasonable FLAME
    variant and blocksize when level-3 BLAS front-ends are invoked. */
-#define FLA_ENABLE_BLAS3_FRONT_END_CNTL_TREES 1
+/* #undef FLA_ENABLE_BLAS3_FRONT_END_CNTL_TREES */
 
 /* Determines whether to define bli_malloc() in terms of FLA_malloc(). */
 #define FLA_ENABLE_BLIS_USE_OF_FLA_MALLOC 1

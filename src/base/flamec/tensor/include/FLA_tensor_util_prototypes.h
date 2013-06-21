@@ -41,17 +41,17 @@ FLA_Error FLA_Random_psym_tensor(FLA_Obj obj);
 int compare_pairwise_sort(const void* a, const void* b);
 int compare_dim_t(const void* a, const void* b);
 dim_t binomial(dim_t n, dim_t k);
-dim_t FLA_get_unique_info( TLA_sym sym, dim_t index[sym.order], dim_t* sortedIndex, dim_t* permutation, dim_t* ipermutation);
-FLA_Error FLA_Set_tensor_stride( dim_t order, dim_t size[order], dim_t* stride);
-dim_t FLA_TIndex_to_LinIndex( dim_t order, dim_t const stride[order], dim_t const index[order]);
-FLA_Error FLA_LinIndex_to_TIndex( dim_t order, dim_t const stride[order], dim_t const linIndex, dim_t index[order]);
-dim_t FLA_Ttm_Ops( dim_t order, dim_t size_A[order], dim_t size_B[2], dim_t mode);
+dim_t FLA_get_unique_info( TLA_sym sym, const dim_t index[], dim_t* sortedIndex, dim_t* permutation, dim_t* ipermutation);
+FLA_Error FLA_Set_tensor_stride( dim_t order, const dim_t size[], dim_t* stride);
+dim_t FLA_TIndex_to_LinIndex( dim_t order, dim_t const stride[], dim_t const index[]);
+FLA_Error FLA_LinIndex_to_TIndex( dim_t order, dim_t const stride[], dim_t const linIndex, dim_t index[]);
+dim_t FLA_Ttm_Ops( dim_t order, const dim_t size_A[], const dim_t size_B[2], dim_t mode);
 
 //---  Array routines --------------
-void print_array(const char* header, dim_t nElem, dim_t arr[nElem]);
-dim_t FLA_array_product( dim_t order, dim_t arr[order]);
-FLA_Error FLA_array_elemwise_product( dim_t order, dim_t arr1[order], dim_t arr2[order], dim_t* arrOut);
-FLA_Error FLA_array_elemwise_quotient( dim_t order, dim_t arr1[order], dim_t arr2[order], dim_t* arrOut);
+void print_array(const char* header, dim_t nElem, const dim_t arr[]);
+dim_t FLA_array_product( dim_t order, const dim_t arr[]);
+FLA_Error FLA_array_elemwise_product( dim_t order, const dim_t arr1[], const dim_t arr2[], dim_t* arrOut);
+FLA_Error FLA_array_elemwise_quotient( dim_t order, const dim_t arr1[], const dim_t arr2[], dim_t* arrOut);
 
 //--- Symmetry View routines ---------
 FLA_Error TLA_create_part_obj( dim_t nPart, FLA_Obj* partitions[]);

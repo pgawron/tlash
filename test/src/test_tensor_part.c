@@ -10,9 +10,9 @@ void Usage()
     printf("  bA: mode-length of block of A\n");
 }
 
-void initBlockedTensor(dim_t order, dim_t size[order], dim_t bSize[order], FLA_Obj* obj){
+void initBlockedTensor(dim_t order, dim_t size[], dim_t bSize[], FLA_Obj* obj){
   dim_t i;
-  dim_t stride[order];
+  dim_t stride[FLA_MAX_ORDER];
   stride[0] = 1;
   for(i = 1; i < order; i++)
 	stride[i] = size[i-1]*stride[i-1];
@@ -24,11 +24,11 @@ void initBlockedTensor(dim_t order, dim_t size[order], dim_t bSize[order], FLA_O
 void print_Part(FLA_Obj A, FLA_Obj* parts[]){
 	dim_t i;
 	dim_t order = FLA_Obj_order(A);
-
-	dim_t curIndex[order];
-	memset(&(curIndex[0]), 0, order * sizeof(dim_t));
+	dim_t curIndex[FLA_MAX_ORDER];
 	dim_t update_ptr = 0;
 	dim_t curPart = 0;
+
+	memset(&(curIndex[0]), 0, order * sizeof(dim_t));
 	while(TRUE){
 		printf("A");
 		for(i = 0; i < order; i++)
@@ -57,10 +57,15 @@ void print_Part(FLA_Obj A, FLA_Obj* parts[]){
 void test_tlash_part_routines(dim_t m, dim_t nA, dim_t bA){
   dim_t i;
   FLA_Obj A;
-  dim_t sizeA[m];
-  dim_t sizeBlock[m];
-  dim_t partSize[m];
-  FLA_Side sides[m];
+  dim_t sizeA[FLA_MAX_ORDER];
+  dim_t sizeBlock[FLA_MAX_ORDER];
+  dim_t partSize[FLA_MAX_ORDER];
+  FLA_Side sides[FLA_MAX_ORDER];
+  dim_t nPartitions;
+  FLA_Obj** Apart;
+  dim_t nModes_repart = m;
+  dim_t repart_modes[FLA_MAX_ORDER];
+
   for(i = 0; i < m; i++){
 	sizeA[i] = nA;
 	sizeBlock[i] = bA;
@@ -70,9 +75,9 @@ void test_tlash_part_routines(dim_t m, dim_t nA, dim_t bA){
 
   initBlockedTensor(m, sizeA, sizeBlock, &(A) );
 
-  dim_t nPartitions = (1 << m);
+  nPartitions = (1 << m);
 
-  FLA_Obj* Apart[nPartitions];
+  Apart = (FLA_Obj**)FLA_malloc(nPartitions * sizeof(FLA_Obj*));
 
   TLA_create_part_obj(nPartitions, Apart);
 
@@ -81,8 +86,7 @@ void test_tlash_part_routines(dim_t m, dim_t nA, dim_t bA){
   printf("];\n");
 
   printf("Partitioning A\n");
-  dim_t nModes_repart = m;
-  dim_t repart_modes[m];
+
   for(i = 0; i < m; i++)
       repart_modes[i] = i;
   FLA_Part_2powm(A, Apart, nModes_repart, repart_modes, partSize, sides);
@@ -92,33 +96,55 @@ void test_tlash_part_routines(dim_t m, dim_t nA, dim_t bA){
   TLA_destroy_part_obj(nPartitions, Apart);
 }
 
+FLA_Error parse_input(int argc, char* argv[], dim_t* order, dim_t* nA, dim_t* bA){
+    int argNum = 0;
+
+    if(argc != 4){
+        return FLA_FAILURE;
+    }
+
+    *order = atoi(argv[++argNum]);
+    *nA = atoi(argv[++argNum]);
+    *bA = atoi(argv[++argNum]);
+
+    return FLA_SUCCESS;
+}
+
+FLA_Error check_errors(dim_t order, dim_t nA, dim_t bA){
+
+	if(order <= 0 || nA <= 0 || bA <= 0){
+		printf("m, nA, and bA must be greater than 0\n");
+		return FLA_FAILURE;
+	}
+
+	if(nA % bA != 0){
+		printf("bA must evenly divide nA\n");
+		return FLA_FAILURE;
+	}
+
+	return FLA_SUCCESS;
+}
+
 int main(int argc, char* argv[]){
+	dim_t order;
+	dim_t nA;
+	dim_t bA;
+
 	FLA_Init();
 
-	if(argc < 4){
+	if(parse_input(argc, argv, &order, &nA, &bA) == FLA_FAILURE){
 		Usage();
 		FLA_Finalize();
 		return 0;
 	}
-		
-	int argNum = 0;
-	const int m = atoi(argv[++argNum]);
-	const int nA = atoi(argv[++argNum]);
-	const int bA = atoi(argv[++argNum]);
 
-	if(nA % bA != 0){
-		printf("bA must evenly divide nA\n");
+	if(check_errors(order, nA, bA) == FLA_FAILURE){
+		Usage();
 		FLA_Finalize();
 		return 0;
 	}
 
-	if(m <= 0 || nA <= 0 || bA <= 0){
-		printf("m, nA, and bA must be greater than 0\n");
-		FLA_Finalize();
-		return 0;
-	}
-
-	test_tlash_part_routines(m, nA, bA);
+	test_tlash_part_routines(order, nA, bA);
 
 	FLA_Finalize();
 

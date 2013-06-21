@@ -34,9 +34,15 @@
 
 
 //FLAME way of permuting.... Very slow
-FLA_Error FLA_Permute_helper(FLA_Obj A, dim_t permutation[], FLA_Obj B, dim_t repart_mode_index){
+FLA_Error FLA_Permute_helper(FLA_Obj A, const dim_t permutation[], FLA_Obj B, dim_t repart_mode_index){
 	dim_t repartModeA = A.permutation[permutation[repart_mode_index]];
 	dim_t repartModeB = repart_mode_index;
+
+	FLA_Obj AT, AB;
+	FLA_Obj A0, A1, A2;
+
+	FLA_Obj BT, BB;
+	FLA_Obj B0, B1, B2;
 
 	//Down to a single column copy, call routine
 	if(repart_mode_index == 0){
@@ -44,11 +50,7 @@ FLA_Error FLA_Permute_helper(FLA_Obj A, dim_t permutation[], FLA_Obj B, dim_t re
 		return FLA_SUCCESS;
 	}
 
-	FLA_Obj AT, AB;
-	FLA_Obj A0, A1, A2;
 
-	FLA_Obj BT, BB;
-	FLA_Obj B0, B1, B2;
 
 	FLA_Part_1xmode2(A, &AT,
 						&AB, repartModeA, 0, FLA_TOP);
@@ -78,23 +80,23 @@ FLA_Error FLA_Permute_helper(FLA_Obj A, dim_t permutation[], FLA_Obj B, dim_t re
 
 
 //Permutes a tensor via permutation (loop-based)
-FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
+FLA_Error FLA_Permute_single( FLA_Obj A, const dim_t permutation[], FLA_Obj* B){
 	dim_t i;
 
 	//FLA_Obj data
 	dim_t order = FLA_Obj_order(A);
-	dim_t stride_A[order];
-	dim_t stride_B[order];
-	dim_t size_A[order];
-	dim_t size_B[order];
+	dim_t stride_A[FLA_MAX_ORDER];
+	dim_t stride_B[FLA_MAX_ORDER];
+	dim_t size_A[FLA_MAX_ORDER];
+	dim_t size_B[FLA_MAX_ORDER];
 	double* buf_A;
 	double* buf_B;
 	
 	//Inverse Permutation data
-	dim_t ipermutation[A.order];
+	dim_t ipermutation[FLA_MAX_ORDER];
 
 	//Loop data
-	dim_t curIndex[order];
+	dim_t curIndex[FLA_MAX_ORDER];
 	dim_t updatePtr;
 	dim_t linIndexFro;
 	dim_t linIndexTo;
@@ -140,7 +142,7 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 		}
 		if(updatePtr >= order)
 			break;
-		for(dim_t i = updatePtr-1; i < order; i--){
+		for(i = updatePtr-1; i < order; i--){
 			curIndex[i] = 0;
 			linIndexFro -= stride_A[i]*size_A[i];
 			linIndexTo -= stride_B[ipermutation[i]]*size_B[ipermutation[i]];
@@ -151,16 +153,18 @@ FLA_Error FLA_Permute_single( FLA_Obj A, dim_t permutation[], FLA_Obj* B){
 	return FLA_SUCCESS;
 }
 
-FLA_Error FLA_Permute(FLA_Obj A, dim_t permutation[], FLA_Obj* B){
+FLA_Error FLA_Permute(FLA_Obj A, const dim_t permutation[], FLA_Obj* B){
+	//Account for A having a permutation of its own
+	dim_t i;
+	dim_t order = FLA_Obj_order(A);
+	dim_t full_perm[FLA_MAX_ORDER];
+
 	if(FLA_Obj_elemtype(A) != FLA_SCALAR){
 		printf("FLA_Permute: Only defined for objects with FLA_SCALAR elements");
 		return FLA_SUCCESS;
 	}
 
-	//Account for A having a permutation of its own
-	dim_t i;
-	dim_t order = FLA_Obj_order(A);
-	dim_t full_perm[order];
+
 	for(i = 0; i < order; i++)
 		full_perm[i] = A.permutation[permutation[i]];
 
