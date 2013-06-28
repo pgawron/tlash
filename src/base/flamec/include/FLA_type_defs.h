@@ -109,7 +109,7 @@ typedef union
 
 typedef struct FLA_Lock_s     FLA_Lock;
 
-//#ifdef FLA_ENABLE_MULTITHREADING
+#ifdef FLA_ENABLE_MULTITHREADING
 struct FLA_Lock_s
 {
   // Implementation-specific lock object
@@ -119,7 +119,7 @@ struct FLA_Lock_s
   pthread_mutex_t  lock;
 #endif
 };
-//#endif
+#endif
 
 #ifdef FLA_ENABLE_SUPERMATRIX
 typedef int                   FLASH_Verbose;

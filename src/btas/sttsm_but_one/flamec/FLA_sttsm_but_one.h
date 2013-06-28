@@ -31,5 +31,5 @@
 */
 #include "FLAME.h"
 
-FLA_Error FLA_Sttsm_but_one_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, dim_t ignore_mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C, dim_t maxIndex, FLA_Obj* temps[] );
-FLA_Error FLA_Sttsm_but_one( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C );
+FLA_Error FLA_Sttsm_but_one_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, dim_t last_compute_mode, dim_t ignore_ind, dim_t ignore_modes[], FLA_Obj beta, FLA_Obj B, FLA_Obj C, dim_t maxIndex, FLA_Obj* temps[] );
+FLA_Error FLA_Sttsm_but_some( FLA_Obj alpha, FLA_Obj A, dim_t mode, dim_t nModes_ignore, dim_t ignore_modes[], FLA_Obj beta, FLA_Obj B, FLA_Obj C );

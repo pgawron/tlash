@@ -1,45 +1,50 @@
 #include "FLAME.h"
 #include "stdio.h"
 
-void* genRandomData(dim_t order, dim_t size[order]){
+void* genRandomData(dim_t order, dim_t size[]){
 	dim_t i;
 	dim_t numel = 1;
+	double* buffer;
+
 	for(i = 0; i < order; i++)
 		numel *= size[i];
 
-	double* buffer = (double*)FLA_malloc(numel * sizeof(double));
+	buffer = (double*)FLA_malloc(numel * sizeof(double));
 	for(i = 0; i < numel; i++)
 		buffer[i] = ((double) rand() / ((double)RAND_MAX / 2.0F) ) - 1.0F;
 
 	return (void*)buffer;
 }
 
-void* genSequentialData(dim_t order, dim_t size[order]){
+void* genSequentialData(dim_t order, dim_t size[]){
 	dim_t i;
 	dim_t numel = 1;
+	double* buffer;
+
 	for(i = 0; i < order; i++)
 		numel *= size[i];
 
-	double* buffer = (double*)FLA_malloc(numel * sizeof(double));
+	buffer = (double*)FLA_malloc(numel * sizeof(double));
 	for(i = 0; i < numel; i++)
 		buffer[i] = (double)i;
 
 	return (void*)buffer;
 }
 
-void initObj_ttm(dim_t order, dim_t size[order], dim_t isRandom, FLA_Obj* obj){
+void initObj_ttm(dim_t order, dim_t size[], dim_t isRandom, FLA_Obj* obj){
   dim_t i;
+  dim_t stride[FLA_MAX_ORDER];
+  dim_t nData;
+  double* data;
 
-  dim_t stride[order];
   stride[0] = 1;
   for(i = 1; i < order; i++)
 	stride[i] = stride[i-1]*size[i-1];
 
-  dim_t nData = 1;
+  nData = 1;
   for(i = 0; i < order; i++)
     nData *= size[i];
 
-  double* data;
   if(isRandom == 1)
 	data = genRandomData(order, size);
   else
@@ -49,19 +54,21 @@ void initObj_ttm(dim_t order, dim_t size[order], dim_t isRandom, FLA_Obj* obj){
   	FLA_Obj_attach_buffer_to_tensor(data, order, stride, obj);
 }
 
-void initObjZero_ttm(dim_t order, dim_t size[order], FLA_Obj* obj){
+void initObjZero_ttm(dim_t order, dim_t size[], FLA_Obj* obj){
   dim_t i;
+  dim_t stride[FLA_MAX_ORDER];
+  dim_t nData = 1;
+  double* data;
 
-  dim_t stride[order];
   stride[0] = 1;
   for(i = 1; i < order; i++)
 	stride[i] = stride[i-1]*size[i-1];
 
-  dim_t nData = 1;
+
   for(i = 0; i < order; i++)
     nData *= size[i];
 
-  double* data = (double*)FLA_malloc(nData * sizeof(double));;
+  data = (double*)FLA_malloc(nData * sizeof(double));;
   memset(data, 0, nData * sizeof(double));
 
   	FLA_Obj_create_tensor_without_buffer(FLA_DOUBLE, order, size, obj);
@@ -72,6 +79,7 @@ void setToZero(FLA_Obj obj){
 	dim_t i;
 	dim_t order = FLA_Obj_order(obj);
 	dim_t numel = 1;
+
 	for(i = 0; i < order; i++)
 		numel *= FLA_Obj_dimsize(obj, i);
 

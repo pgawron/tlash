@@ -32,7 +32,7 @@
 
 #include "FLAME.h"
 
-FLA_Error FLA_array_elemwise_quotient( dim_t order, dim_t arr1[order], dim_t arr2[order], dim_t* arrOut)
+FLA_Error FLA_array_elemwise_quotient( dim_t order, const dim_t arr1[], const dim_t arr2[], dim_t* arrOut)
 {
 	dim_t i;
 	for(i = 0; i < order; i++){

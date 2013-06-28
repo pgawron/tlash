@@ -70,7 +70,7 @@ LIBFLAME_HEADERS = $(INSTALL_PREFIX_INC)
 LOCAL_HEADERS    = $(SRC_PATH)
 
 # The installation paths for the static and dynamic libflame library builds.
-LIB_LIBPATH      = $(INSTALL_PREFIX_LIB)
+LIB_LIBPATH      = C:\tlash_trunk\windows\lib\x86\debug
 DLL_LIBPATH      = $(INSTALL_PREFIX_DLL)
 
 # We have to reconstruct the C compiler flags with the new include paths.
@@ -84,38 +84,18 @@ LINKER           = $(CC)
 # The linker flags. This might need to be modified depending on your build
 # environment.
 LDFLAGS          = /nologo /link \
-                   /LIBPATH:"C:\Program Files\Microsoft SDKs\Windows\v6.0A\Lib" \
-                   /LIBPATH:"C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\lib" \
+                   /LIBPATH:"C:\Program Files\Microsoft SDKs\Windows\v7.0A\Lib" \
+                   /LIBPATH:"C:\Program Files\Microsoft Visual Studio 10.0\VC\lib" \
                    /nodefaultlib:libcmt /nodefaultlib:libc /nodefaultlib:libmmt \
                    msvcrt.lib \
-                   /LIBPATH:"C:\Program Files (x86)\Intel\Compiler\11.1\048\lib\ia32" \
-                   /LIBPATH:"C:\Program Files (x86)\Intel\Compiler\11.1\048\mkl\ia32\lib" \
-                   mkl_intel_c.lib \
-                   mkl_sequential.lib \
-                   mkl_core.lib
+				   /LIBPATH:"C:\tlash_trunk\windows\lib\x86\debug" \
+				   libblas.lib
 
-TEST_OBJS        = $(OBJ_PATH)\test_libflame.obj \
-                   $(OBJ_PATH)\test_chol.obj \
-                   $(OBJ_PATH)\test_lu_nopiv.obj \
-                   $(OBJ_PATH)\test_lu_piv.obj \
-                   $(OBJ_PATH)\test_lu_incpiv.obj \
-                   $(OBJ_PATH)\test_qrut.obj \
-                   $(OBJ_PATH)\test_qrutinc.obj \
-                   $(OBJ_PATH)\test_lqut.obj \
-                   $(OBJ_PATH)\test_uddateut.obj \
-                   $(OBJ_PATH)\test_uddateutinc.obj \
-                   $(OBJ_PATH)\test_apqudut.obj \
-                   $(OBJ_PATH)\test_apqudutinc.obj \
-                   $(OBJ_PATH)\test_hessut.obj \
-                   $(OBJ_PATH)\test_tridiagut.obj \
-                   $(OBJ_PATH)\test_bidiagut.obj \
-                   $(OBJ_PATH)\test_trinv.obj \
-                   $(OBJ_PATH)\test_spdinv.obj \
-                   $(OBJ_PATH)\test_sylv.obj
+TEST_OBJS        = $(OBJ_PATH)\test_sttsm.obj
 
 # Binary path. We put it one directory up because that is where the input
 # paremeter files reside.
-TEST_BIN         = ..\test_libflame.exe
+TEST_BIN         = ..\test_sttsm.exe
 
 # The inference rule to compile source to object files.
 {$(SRC_PATH)}.c{$(OBJ_PATH)}.obj:

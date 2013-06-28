@@ -15,75 +15,61 @@ void Usage()
 	printf("  partModeK: Kth mode to partition\n");
 }
 
-void print_tensor(const char* varName, FLA_Obj A){
-	dim_t i;
-	printf("%s tensor\n", varName);
-	printf("%s = tensor([", varName);
-	FLA_Obj_print_tensor(A);
-	printf("],[");
-	for(i = 0; i < FLA_Obj_order(A); i++)
-		printf("%d ", FLA_Obj_dimsize(((FLA_Obj*)(FLA_Obj_base_buffer(A)))[0],i) * FLA_Obj_dimsize(A,i));
-	printf("]);\n\n");
-}
-
 void create_psym_tensor(dim_t order, dim_t nA, dim_t bA, TLA_sym sym, FLA_Obj* A){
 	dim_t i;
-	dim_t flat_size[order];
-	dim_t block_size[order];
+	dim_t flat_size[FLA_MAX_ORDER];
+	dim_t blocked_size[FLA_MAX_ORDER];
+	dim_t block_size[FLA_MAX_ORDER];
+	dim_t blocked_stride[FLA_MAX_ORDER];
+
 	for(i = 0; i < order; i++){
 		flat_size[i] = nA;
 		block_size[i] = bA;
 	}
 
-	dim_t blocked_stride[order];
-	blocked_stride[0] = 1;
-
-	for(i = 1; i < order; i++)
-		blocked_stride[i] = flat_size[i-1]/bA * blocked_stride[i-1];
+	FLA_array_elemwise_quotient(order, flat_size, block_size, blocked_size);
+	FLA_Set_tensor_stride(order, blocked_size, blocked_stride);
 
 	FLA_Obj_create_blocked_psym_tensor(FLA_DOUBLE, order, flat_size, blocked_stride, block_size, sym, A);
 	FLA_Random_psym_tensor(*A);
 }
 
 void test_repart_routines(FLA_Obj A, dim_t nModes_repart, dim_t repart_modes[nModes_repart]){
-
     dim_t i;
     dim_t nParts = 1 << nModes_repart;
-    dim_t nReparts = 1;
+    dim_t nReparts;
+    FLA_Obj** Apart;
+    FLA_Obj** Arepart;
+    dim_t* part_sizes;
+    FLA_Side* part_sides;
+    FLA_Side* repart_sides;
+    dim_t* repart_sizes;
+
+    nReparts = 1;
     for(i = 0; i < nModes_repart; i++)
         nReparts *= 3;
 
-    FLA_Obj* Apart[nParts];
-    for(i = 0; i < nParts; i++){
-        Apart[i] = (FLA_Obj*)FLA_malloc(sizeof(FLA_Obj));
-    }
-    FLA_Obj* Arepart[nReparts];
-    for(i = 0; i < nReparts; i++){
-        Arepart[i] = (FLA_Obj*)FLA_malloc(sizeof(FLA_Obj));
-    }
+    Apart = (FLA_Obj**)FLA_malloc(nParts * sizeof(FLA_Obj*));
+    Arepart = (FLA_Obj**)FLA_malloc(nReparts * sizeof(FLA_Obj*));
+    part_sizes = (dim_t*)FLA_malloc(nModes_repart * sizeof(dim_t));
+    part_sides = (FLA_Side*)FLA_malloc(nModes_repart * sizeof(FLA_Side));
+    repart_sides = (FLA_Side*)FLA_malloc(nModes_repart * sizeof(FLA_Side));
+    repart_sizes = (dim_t*)FLA_malloc(nModes_repart * sizeof(dim_t));
 
-    dim_t part_sizes[nModes_repart];
+    TLA_create_part_obj(nParts, Apart);
+    TLA_create_part_obj(nReparts, Arepart);
+
     memset(&(part_sizes[0]), 0, nModes_repart * sizeof(dim_t));
 
-    FLA_Side part_sides[nModes_repart];
-    FLA_Side repart_sides[nModes_repart];
     for(i = 0; i < nModes_repart; i++){
         part_sides[i] = FLA_TOP;
         repart_sides[i] = FLA_BOTTOM;
+        repart_sizes[i] = 1;
     }
 
     FLA_Part_2powm(A, Apart, nModes_repart, repart_modes, part_sizes, part_sides);
 
-    //Hack, need to make this better
-    dim_t continueLooping = FALSE;
-    for(i = 0; i < nModes_repart; i++)
-        if(FLA_Obj_dimsize(*(Apart[0]),repart_modes[i]) < FLA_Obj_dimsize(A,repart_modes[i])){
-            continueLooping = TRUE;
-        }
-    while(continueLooping){
-        dim_t repart_sizes[nModes_repart];
-        for(i = 0; i < nModes_repart; i++)
-            repart_sizes[i] = 1;
+    while(FLA_Obj_dimsize(*(Apart[0]), repart_modes[0]) < FLA_Obj_dimsize(A, repart_modes[0])){
         FLA_Repart_2powm_to_3powm(Apart, Arepart,
                                   nModes_repart, repart_modes,
                                   repart_sizes, repart_sides);
@@ -92,95 +78,172 @@ void test_repart_routines(FLA_Obj A, dim_t nModes_repart, dim_t repart_modes[nMo
         for(i = 0; i < nParts; i++){
             printf("A[%d] ", i);
             print_array("offset", Apart[i]->order, (Apart[i]->offset));
-            print_tensor("", *(Apart[i]));
-            printf("\n");
+            FLA_Obj_print_matlab("", *(Apart[i]));
         }
         /*********************************/
         FLA_Cont_with_3powm_to_2powm(Apart, Arepart,
                                      nModes_repart, repart_modes,
                                      part_sides);
-
-        continueLooping = FALSE;
-        for(i = 0; i < nModes_repart; i++)
-            if(FLA_Obj_dimsize(*(Apart[0]),repart_modes[i]) < FLA_Obj_dimsize(A,repart_modes[i])){
-                continueLooping = TRUE;
-            }
     }
 
     for(i = 0; i < nParts; i++){
         printf("A[%d]:\n", i);
-        print_tensor("", *(Apart[i]));
-        printf("\n");
+        FLA_Obj_print_matlab("", *(Apart[i]));
     }
-    FLA_Merge_2powm( Apart, &A, nModes_repart, repart_modes);
-    printf("A final:");
-    print_tensor("", A);
-    printf("\n");
 
-    for(i = 0; i < nParts; i++)
-        FLA_free(Apart[i]);
-    for(i = 0; i < nReparts; i++)
-        FLA_free(Arepart[i]);
+    FLA_Merge_2powm( Apart, &A, nModes_repart, repart_modes);
+    FLA_Obj_print_matlab("A_final", A);
+
+    TLA_destroy_part_obj(nParts, Apart);
+    TLA_destroy_part_obj(nReparts, Arepart);
+
+    FLA_free(Apart);
+    FLA_free(Arepart);
+    FLA_free(part_sizes);
+    FLA_free(part_sides);
+    FLA_free(repart_sides);
+    FLA_free(repart_sizes);
+}
+
+FLA_Error parse_input(int argc, char* argv[], dim_t* order, dim_t* nA, dim_t* bA, dim_t* nPartModes, dim_t* partModes, TLA_sym* sym){
+    dim_t i;
+    int argNum = 0;
+
+    if(argc < 5){
+        return FLA_FAILURE;
+    }
+
+    *order = atoi(argv[++argNum]);
+    *nA = atoi(argv[++argNum]);
+    *bA = atoi(argv[++argNum]);
+
+    sym->order = *order;
+    sym->nSymGroups = atoi(argv[++argNum]);
+
+
+    if(argc < 5 + sym->nSymGroups + *order){
+    	return FLA_FAILURE;
+    }
+
+    for(i = 0; i < sym->nSymGroups; i++)
+    	(sym->symGroupLens)[i] = atoi(argv[++argNum]);
+    for(i = 0; i < *order; i++)
+        	(sym->symModes)[i] = atoi(argv[++argNum]);
+
+    *nPartModes = atoi(argv[++argNum]);
+
+    if(argc != 5 + sym->nSymGroups + (*order) + 1 + (*nPartModes)){
+        return FLA_FAILURE;
+    }
+
+    for(i = 0; i < *nPartModes; i++)
+		partModes[i] = atoi(argv[++argNum]);
+
+
+    return FLA_SUCCESS;
+}
+
+FLA_Error check_errors(dim_t order, dim_t nA, dim_t bA, dim_t nPartModes, dim_t partModes[], TLA_sym sym){
+	dim_t i;
+	dim_t j;
+	dim_t count;
+
+	if(nA % bA != 0){
+		printf("bA must evenly divide nA\n");
+		return FLA_FAILURE;
+	}
+	if(order <= 0 || nA <= 0 || bA <= 0){
+		printf("m, nA and bA must be greater than 0\n");
+		return FLA_FAILURE;
+	}
+
+	if(sym.nSymGroups <= 0){
+		printf("nSymGroups must be greater than 0\n");
+		return FLA_FAILURE;
+	}
+
+	count = 0;
+	for(i = 0; i < sym.nSymGroups; i++){
+		count += sym.symGroupLens[i];
+		if(sym.symGroupLens[i] > order){
+			printf("symGroupLens[i] must not be greater than order\n");
+			return FLA_FAILURE;
+		}
+	}
+
+	if(count != order){
+		printf("Sum of symGroupLens must equal order\n");
+		return FLA_FAILURE;
+	}
+
+	for(i = 0; i < order; i++){
+		if((i < order - 1) && (sym.symModes[i+1] < sym.symModes[i])){
+			printf("symModes must be in ascending order\n");
+			return FLA_FAILURE;
+		}
+
+		if(sym.symModes[i] >= order){
+			printf("symModes[i] must be less than order\n");
+			return FLA_FAILURE;
+		}
+		for(j = 0; j < order; j++){
+			if((i != j) && (sym.symModes[i] == sym.symModes[j])){
+				printf("symModes[i] must not contain duplicates\n");
+				return FLA_FAILURE;
+			}
+		}
+	}
+
+	if(nPartModes > order){
+		printf("nPartModes must be less than order\n");
+		return FLA_FAILURE;
+	}
+
+	for(i = 0; i < nPartModes; i++){
+			if((i < nPartModes - 1) && (partModes[i+1] < partModes[i])){
+				printf("partModes must be in ascending order\n");
+				return FLA_FAILURE;
+			}
+			if(partModes[i] >= order){
+				printf("partModes[i] must be less than order\n");
+				return FLA_FAILURE;
+			}
+			for(j = 0; j < nPartModes; j++){
+				if((i != j) && (partModes[i] == partModes[j])){
+					printf("partModes[i] must not contain duplicates\n");
+					return FLA_FAILURE;
+				}
+			}
+		}
+
+	return FLA_SUCCESS;
 }
 
 int main(int argc, char* argv[]){
-	dim_t i;
+	dim_t order;
+	dim_t nA;
+	dim_t bA;
+	TLA_sym sym;
+	dim_t nPartModes;
+	dim_t partModes[FLA_MAX_ORDER];
+	FLA_Obj T;
 
 	FLA_Init();
 
-	if(argc < 5){
+	if(parse_input(argc, argv, &order, &nA, &bA, &nPartModes, partModes, &sym) == FLA_FAILURE){
 		Usage();
 		FLA_Finalize();
 		return 0;
 	}
-		
-	TLA_sym sym;
-	int argNum = 0;
-	const dim_t m = atoi(argv[++argNum]);
-	sym.order = m;
-	const dim_t nA = atoi(argv[++argNum]);
-	const dim_t bA = atoi(argv[++argNum]);
-	sym.nSymGroups = atoi(argv[++argNum]);
 
-	if(argc < 5 + sym.nSymGroups + m){
-        Usage();
-        FLA_Finalize();
-        return 0;
-    }
-
-	for(i = 0; i < sym.nSymGroups; i++)
-		sym.symGroupLens[i] = atoi(argv[++argNum]);
-	for(i = 0; i < m; i++)
-		sym.symModes[i] = atoi(argv[++argNum]);
-
-	const dim_t nPartModes = atoi(argv[++argNum]);
-
-    if(argc != 5 + sym.nSymGroups + m + 1 + nPartModes){
-        Usage();
-        FLA_Finalize();
-        return 0;
-    }
-
-	dim_t partModes[nPartModes];
-	for(i = 0; i < nPartModes; i++)
-	    partModes[i] = atoi(argv[++argNum]);
-
-
-	if(nA % bA != 0){
-		printf("bA must evenly divide nA\n");
-		FLA_Finalize();
-		return 0;
-	}
-	if(m <= 0 || bA <= 0){
-		printf("m and bA must be greater than 0\n");
+	if(check_errors(order, nA, bA, nPartModes, partModes, sym) == FLA_FAILURE){
+		Usage();
 		FLA_Finalize();
 		return 0;
 	}
 
-	FLA_Obj T;
-
-	create_psym_tensor(m, nA, bA, sym, &T);
-	print_tensor("T", T);
+	create_psym_tensor(order, nA, bA, sym, &T);
+	FLA_Obj_print_matlab("T", T);
 	
 	test_repart_routines(T, nPartModes, partModes);
 

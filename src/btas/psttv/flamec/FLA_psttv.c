@@ -62,34 +62,39 @@ FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
 		//This is the symmetric group to split
 	    dim_t symGroupToSplitOffset = TLA_sym_group_mode_offset(symC, symGroupToSplit);
 
+	    dim_t* part_modes;
+	    dim_t* sizes;
+	    dim_t* repart_sizes;
+	    FLA_Side* sides;
+	    FLA_Side* repart_sides;
+
+	    dim_t isSingleBlock;
+
+	    FLA_Obj** Apart;
+	    FLA_Obj** Cpart;
+	    FLA_Obj** Arepart;
+	    FLA_Obj** Crepart;
+
+	    dim_t update_region_stride;
+	    dim_t update_region;
+
+	    FLA_Obj Apass;
+	    FLA_Obj Cpass;
+
 	    //Initialize Views & data for loop
 	    dim_t nPart = 1 << nModes_part;
 	    dim_t nRepart = 1;
 	    for(i = 0; i < nModes_part; i++)
 	        nRepart *= 3;
 
-	    dim_t part_modes[nModes_part];
-	    dim_t sizes[nModes_part];
-	    dim_t repart_sizes[nModes_part];
-	    FLA_Side sides[nModes_part];
-	    FLA_Side repart_sides[nModes_part];
-	    for(i = 0; i < nModes_part; i++){
-	        part_modes[i] = symC.symModes[symGroupToSplitOffset + i];
-	        sizes[i] = 0;
-	        repart_sizes[i] = 1;
-	        sides[i] = FLA_TOP;
-	        repart_sides[i] = FLA_BOTTOM;
-	    }
-
-
 	    //Check if we are dealing with a single block
 	    //If so, we get to just multiply in a mode
-	    dim_t isSingleBlock = TRUE;
+	    isSingleBlock = TRUE;
 	    for(i = 0; i < nModes_part; i++){
-	        if(FLA_Obj_dimsize(C,part_modes[i]) == 0){
+	        if(FLA_Obj_dimsize(C, symC.symModes[symGroupToSplitOffset + i]) == 0){
 	            return FLA_SUCCESS;
 	        }
-	        if(FLA_Obj_dimsize(C, part_modes[i]) > 1){
+	        if(FLA_Obj_dimsize(C, symC.symModes[symGroupToSplitOffset + i]) > 1){
 	            isSingleBlock = FALSE;
 	        }
 	    }
@@ -99,12 +104,26 @@ FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
 	        return FLA_SUCCESS;
 	    }
 
-	    //Begin loop for general tensor case
-	    FLA_Obj* Apart[nPart];
-	    FLA_Obj* Cpart[nPart];
+	    part_modes = (dim_t*)FLA_malloc(nModes_part * sizeof(dim_t));
+	    sizes = (dim_t*)FLA_malloc(nModes_part * sizeof(dim_t));
+	    repart_sizes = (dim_t*)FLA_malloc(nModes_part * sizeof(dim_t));
+	    sides = (FLA_Side*)FLA_malloc(nModes_part * sizeof(dim_t));
+	    repart_sides = (FLA_Side*)FLA_malloc(nModes_part * sizeof(dim_t));
 
-	    FLA_Obj* Arepart[nRepart];
-	    FLA_Obj* Crepart[nRepart];
+	    for(i = 0; i < nModes_part; i++){
+	    	part_modes[i] = symC.symModes[symGroupToSplitOffset + i];
+	        sizes[i] = 0;
+	        repart_sizes[i] = 1;
+	        sides[i] = FLA_TOP;
+	        repart_sides[i] = FLA_BOTTOM;
+	    }
+
+	    //Begin loop for general tensor case
+	    Apart = (FLA_Obj**)FLA_malloc(nPart * sizeof(FLA_Obj*));
+	    Cpart = (FLA_Obj**)FLA_malloc(nPart * sizeof(FLA_Obj*));
+
+	    Arepart = (FLA_Obj**)FLA_malloc(nRepart * sizeof(FLA_Obj*));
+	    Crepart = (FLA_Obj**)FLA_malloc(nRepart * sizeof(FLA_Obj*));
 
 	    TLA_create_part_obj(nPart, Apart);
 	    TLA_create_part_obj(nPart, Cpart);
@@ -129,7 +148,7 @@ FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
 	                                      repart_sizes, repart_sides);
 
 			/******************************/
-	        dim_t update_region_stride = 1;
+	        update_region_stride = 1;
 	        for(i = 1; i < nModes_part; i++){
 	            update_region_stride *= 3;
 	        }
@@ -137,10 +156,10 @@ FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
 	        //Symmetric region being partitioned includes
 	        //symmetric tensors of order 0->order-1
 	        //Must update ALL of them
-	        dim_t update_region = update_region_stride;
+	        update_region = update_region_stride;
 	        for(i = 0; i < nModes_part; i++){
-                FLA_Obj Apass = *(Arepart[update_region]);
-                FLA_Obj Cpass = *(Crepart[update_region]);
+                Apass = *(Arepart[update_region]);
+                Cpass = *(Crepart[update_region]);
 	            FLA_Psttv(alpha, Apass, mode, beta, B, Cpass);
 	            update_region_stride /= 3;
 	            update_region += update_region_stride;
@@ -161,6 +180,17 @@ FLA_Error FLA_Psttv( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj
 	    TLA_destroy_part_obj(nRepart, Arepart);
 	    TLA_destroy_part_obj(nRepart, Crepart);
 
+
+	    FLA_free(part_modes);
+	    FLA_free(sizes);
+	    FLA_free(repart_sizes);
+	    FLA_free(sides);
+	    FLA_free(repart_sides);
+
+	    FLA_free(Apart);
+	    FLA_free(Cpart);
+	    FLA_free(Arepart);
+	    FLA_free(Crepart);
 	}
 
 	return FLA_SUCCESS;
