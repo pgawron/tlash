@@ -41,6 +41,7 @@ FLA_Error FLA_Random_tensor( FLA_Obj A )
 		FLA_Random_tensor(buffer[i]);
 	return FLA_SUCCESS;
   }
+  FLA_Adjust_2D_info(&A);
   return FLA_Random_matrix(A);
 }
 

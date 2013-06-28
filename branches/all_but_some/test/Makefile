@@ -131,6 +131,9 @@ sttsm: $(TEST_OBJS)
 sttsm_but_one: $(TEST_OBJS)
 		$(LINKER) $(TEST_OBJ_PATH)/test_sttsm_but_one.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm_but_one
 		
+sttsm_but_some: $(TEST_OBJS)
+		$(LINKER) $(TEST_OBJ_PATH)/test_sttsm_but_some.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o test_sttsm_but_some
+		
 tensor_print: $(TEST_OBJS)
 		$(LINKER) $(TEST_OBJ_PATH)/test_tensor_print.o $(LDFLAGS) $(LIBFLAME) $(LIBLAPACK) $(LIBBLAS) -o tensor_print
 
@@ -167,3 +170,4 @@ sttsm_dense_prof: $(TEST_OBJS)
 clean:
 		$(RM_F) $(TEST_OBJS) $(TEST_BIN)
 
+all: sttsm sttsm_but_one tensor_print tensor_part tensor_permute tensor_ttm tensor_sym tensor_sym_view tensor_psym tensor_psttm sttsm_dense

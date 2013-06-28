@@ -38,20 +38,16 @@
 //TODO: Quadrant not yet generalized.  For now only handles TTTTTT... quadrant
 
 FLA_Error FLA_Part_2powm( FLA_Obj A, FLA_Obj* Apart[],
-                          dim_t nModes_part, dim_t part_modes[nModes_part],
-                          dim_t sizes[], FLA_Side sides[]){
+                          dim_t nModes_part, const dim_t part_modes[],
+                          const dim_t sizes[], const FLA_Side sides[]){
 
     dim_t i,j,k;
     dim_t num_part = 1 << nModes_part;
 
-    dim_t order = FLA_Obj_order(A);
-    dim_t mode_size[order];
-    dim_t mode_offset[order];
+    //dim_t order = FLA_Obj_order(A);
+    const dim_t* mode_size = A.size;
+    const dim_t* mode_offset = A.offset;
     dim_t part_mode_stride = 1;              //mode stride of part array
-
-    //Copy offset and size data
-    memcpy(&(mode_size[0]), &(A.size[0]), order * sizeof(dim_t));
-    memcpy(&(mode_offset[0]), &(A.offset[0]), order * sizeof(dim_t));
 
     //For each mode, we update all regions appropriately
     //Apart regions are laid out in column-major order, so each offset of the regions in linear array
@@ -107,6 +103,8 @@ FLA_Error FLA_Part_1xmode2( FLA_Obj A,  FLA_Obj *A1,
                                         FLA_Obj *A2,
                             dim_t mode, dim_t  b,  FLA_Side side )
 {
+  dim_t split_mode_arr[1];
+
   if ( FLA_Check_error_level() == FLA_FULL_ERROR_CHECKING )
     FLA_Part_1xmode2_check( A,    A1,
                                   A2, mode, b, side );
@@ -135,7 +133,7 @@ FLA_Error FLA_Part_1xmode2( FLA_Obj A,  FLA_Obj *A1,
   memcpy(&((A2->permutation)[0]), &(A.permutation[0]), A.order * sizeof(dim_t));
 
   //Update symmetries
-  dim_t split_mode_arr[1];
+
   split_mode_arr[0] = mode;
   TLA_split_sym_group(A.sym, 1, split_mode_arr, &(A1->sym));
   TLA_split_sym_group(A.sym, 1, split_mode_arr, &(A2->sym));
@@ -159,19 +157,24 @@ FLA_Error FLA_Part_1xmode2( FLA_Obj A,  FLA_Obj *A1,
 //FLA_Obj const * const Apart[]
 FLA_Error FLA_Repart_2powm_to_3powm( FLA_Obj* Apart[], FLA_Obj* Arepart[],
                                      dim_t nModes_repart,
-                                     dim_t repart_modes[nModes_repart],
-                                     dim_t sizes[nModes_repart],
-                                     FLA_Side sides[nModes_repart] )
+                                     const dim_t repart_modes[],
+                                     const dim_t sizes[],
+                                     const FLA_Side sides[] )
 {
     dim_t i, j, k;
     dim_t nReparts = 1;
+    dim_t* part_base;
+
+    dim_t part_mode_stride;
+    dim_t repart_mode_stride;
     for(i = 0; i < nModes_repart; i++)
         nReparts *= 3;
 
-    dim_t part_base[nReparts];
+    part_base = (dim_t*)FLA_malloc(nReparts * sizeof(dim_t));
     memset(&(part_base[0]), 0, nReparts * sizeof(dim_t));
-    dim_t part_mode_stride = 1;
-    dim_t repart_mode_stride = 1;
+
+    part_mode_stride = 1;
+    repart_mode_stride = 1;
     for(i = 0; i < nModes_repart; i++){
         for(j = 0; j < nReparts / (repart_mode_stride * 3); j++){
             //Region with 1 or 2 in current mode (share same base object)
@@ -187,7 +190,7 @@ FLA_Error FLA_Repart_2powm_to_3powm( FLA_Obj* Apart[], FLA_Obj* Arepart[],
     for(i = 0; i < nReparts; i++){
         Arepart[i]->order = Apart[part_base[i]]->order;
         Arepart[i]->base = Apart[part_base[i]]->base;
-        Arepart[i]->sym = Apart[part_base[i]]->sym;
+		Arepart[i]->sym = Apart[part_base[i]]->sym;
         memcpy(&((Arepart[i]->permutation)[0]), &((Apart[part_base[i]]->permutation)[0]), (Apart[part_base[i]]->order) * sizeof(dim_t));
         //Very well could be wrong
         memcpy(&((Arepart[i]->size)[0]), &((Apart[part_base[i]]->size)[0]), (Apart[part_base[i]]->order) * sizeof(dim_t));
@@ -216,6 +219,8 @@ FLA_Error FLA_Repart_2powm_to_3powm( FLA_Obj* Apart[], FLA_Obj* Arepart[],
     for(i = 0; i < nReparts; i++){
         TLA_update_sym_based_offset(Arepart[i]->sym, Arepart[i]);
     }
+
+    FLA_free(part_base);
     return FLA_SUCCESS;
 }
 
@@ -279,19 +284,20 @@ FLA_Error FLA_Repart_1xmode2_to_1xmode3( FLA_Obj AT,   FLA_Obj *A0,
                                                           //C won't allow
                                                           //FLA_Obj const * const Arepart[]
 FLA_Error FLA_Cont_with_3powm_to_2powm( FLA_Obj* Apart[], FLA_Obj * Arepart[],
-                                        dim_t nModes_cont_with, dim_t cont_with_modes[nModes_cont_with],
-                                        FLA_Side sides[nModes_cont_with]){
+                                        dim_t nModes_cont_with, const dim_t cont_with_modes[],
+                                        const FLA_Side sides[]){
     dim_t i,j,k;
     dim_t const num_part = 1 << nModes_cont_with;
     dim_t num_repart = 1;
-    for(i = 0; i < nModes_cont_with; i++)
-        num_repart *= 3;
 
     dim_t part_mode_stride = 1;
     dim_t repart_mode_stride = 1;
 
-    dim_t repart_base[num_part];
-    dim_t repart_update[num_part];
+    dim_t* repart_base = (dim_t*)FLA_malloc(num_part * sizeof(dim_t));
+    dim_t* repart_update = (dim_t*)FLA_malloc(num_part * sizeof(dim_t));
+
+    for(i = 0; i < nModes_cont_with; i++)
+        num_repart *= 3;
 
     memset(&(repart_base[0]), 0, num_part * sizeof(dim_t));
     memset(&(repart_update[0]), 0, num_part * sizeof(dim_t));
@@ -330,6 +336,9 @@ FLA_Error FLA_Cont_with_3powm_to_2powm( FLA_Obj* Apart[], FLA_Obj * Arepart[],
         }
         part_mode_stride *= 2;
     }
+
+    FLA_free(repart_base);
+    FLA_free(repart_update);
 
     return FLA_SUCCESS;
 }
@@ -417,7 +426,7 @@ FLA_Error FLA_Merge_1xmode2( FLA_Obj AT,
                         //C won't allow
                         //FLA_Obj const * const Apart[]
 FLA_Error FLA_Merge_2powm(FLA_Obj* Apart[], FLA_Obj* A,
-                          dim_t nModes_merge, dim_t merge_modes[nModes_merge])
+                          dim_t nModes_merge, const dim_t merge_modes[])
 {
     dim_t i;
     dim_t stride = 1;

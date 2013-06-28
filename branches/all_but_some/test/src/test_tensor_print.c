@@ -15,82 +15,101 @@ void test_tlash_print_routines(dim_t order, dim_t nA, dim_t bA){
   FLA_Obj Ascalar;
   FLA_Obj Ablocked;
 
-  dim_t scalar_sizeA[order];
-  dim_t block_sizeA[order];
-  dim_t stride_A[order];
+  dim_t scalar_sizeA[FLA_MAX_ORDER];
+  dim_t block_sizeA[FLA_MAX_ORDER];
+  dim_t blocked_sizeA[FLA_MAX_ORDER];
+  dim_t stride_A[FLA_MAX_ORDER];
+
+  FLA_Obj* buf;
 
   for(i = 0; i < order; i++){
 	scalar_sizeA[i] = nA;
 	block_sizeA[i] = bA;
   }
 
-  stride_A[0] = 1;
-  for(i = 1; i < order; i++)
-	stride_A[i] = scalar_sizeA[i-1]*stride_A[i-1];
+  FLA_array_elemwise_quotient(order, scalar_sizeA, block_sizeA, blocked_sizeA);
+  FLA_Set_tensor_stride(order, blocked_sizeA, stride_A);
 
   printf("scalar tensor test\n");
   FLA_Obj_create_tensor(FLA_DOUBLE, order, scalar_sizeA, stride_A, &Ascalar);
   FLA_Random_tensor(Ascalar);
-  FLA_Obj_print_tensor(Ascalar);
+  FLA_Obj_print_matlab("Ascalar", Ascalar);
 	
   printf("\n\n");
   printf("blocked tensor test\n");
   FLA_Obj_create_blocked_tensor(FLA_DOUBLE, order, scalar_sizeA, stride_A, block_sizeA, &Ablocked);
   FLA_Random_tensor(Ablocked);
-  FLA_Obj_print_tensor(Ablocked);
+  FLA_Obj_print_matlab("Ablocked", Ablocked);
   
   printf("\n\n");
 
-  FLA_Obj* buf = FLA_Obj_base_buffer(Ablocked);	
-//  for(i = 0; i < order; i++)
-//    (*buf).permutation[i] = i;
+  buf = FLA_Obj_base_buffer(Ablocked);
 
   (*buf).permutation[0] = order - 1;
   for(i = 1; i < order; i++)
   	(*buf).permutation[i] = i-1;
 
-  printf("[ ");  
-  for(i = 0; i < order; i++)
-    printf("%d ", (*buf).permutation[i]);
-  printf("] ");
+  print_array("permutation", order, buf->permutation);
   printf("permuted blocked tensor test\n");  
 
-  FLA_Obj_print_tensor(Ablocked);
+  FLA_Obj_print_matlab("Ablocked", Ablocked);
 
   FLA_Obj_free_buffer(&Ascalar);
   FLA_Obj_free_without_buffer(&Ascalar);
 
-  FLA_Obj_blocked_free_buffer(&Ablocked);
+  FLA_Obj_blocked_tensor_free_buffer(&Ablocked);
   FLA_Obj_free_without_buffer(&Ablocked);
 }
 
+FLA_Error parse_input(int argc, char* argv[], dim_t* order, dim_t* nA, dim_t* bA){
+    int argNum = 0;
+
+    if(argc != 4){
+        return FLA_FAILURE;
+    }
+
+    *order = atoi(argv[++argNum]);
+    *nA = atoi(argv[++argNum]);
+    *bA = atoi(argv[++argNum]);
+
+    return FLA_SUCCESS;
+}
+
+FLA_Error check_errors(dim_t order, dim_t nA, dim_t bA){
+
+	if(order <= 0 || nA <= 0 || bA <= 0){
+		printf("m, nA, and bA must be greater than 0\n");
+		return FLA_FAILURE;
+	}
+
+	if(nA % bA != 0){
+		printf("bA must evenly divide nA\n");
+		return FLA_FAILURE;
+	}
+
+	return FLA_SUCCESS;
+}
+
 int main(int argc, char* argv[]){
+	dim_t order;
+	dim_t nA;
+	dim_t bA;
+
 	FLA_Init();
 
-	if(argc < 4){
+	if(parse_input(argc, argv, &order, &nA, &bA) == FLA_FAILURE){
 		Usage();
 		FLA_Finalize();
 		return 0;
 	}
-		
-	int argNum = 0;
-	const int m = atoi(argv[++argNum]);
-	const int nA = atoi(argv[++argNum]);
-	const int bA = atoi(argv[++argNum]);
 
-	if(nA % bA != 0){
-		printf("bA must evenly divide nA\n");
+	if(check_errors(order, nA, bA) == FLA_FAILURE){
+		Usage();
 		FLA_Finalize();
 		return 0;
 	}
 
-	if(m <= 0 || nA <= 0 || bA <= 0){
-		printf("m, nA, and bA must be greater than 0\n");
-		FLA_Finalize();
-		return 0;
-	}
-
-	test_tlash_print_routines(m, nA, bA);
+	test_tlash_print_routines(order, nA, bA);
 
 	FLA_Finalize();
 

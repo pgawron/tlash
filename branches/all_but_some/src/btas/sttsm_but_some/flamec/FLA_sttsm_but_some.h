@@ -29,7 +29,6 @@
    1 University Station C0500
    Austin TX 78712
 */
-
 #include "FLAME.h"
 
-FLA_Error FLA_Permute(FLA_Obj A, const dim_t permutation[], FLA_Obj* B);
+FLA_Error FLA_Sttsm_but_some( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C );

@@ -39,6 +39,7 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 	FLA_Obj B0, B1, B2;
 	FLA_Obj CT, CB;
 	FLA_Obj C0, C1, C2;
+	dim_t loopCount;
 
 	FLA_Part_1xmode2(B, &BT,
 						&BB, 0, 0, FLA_TOP);
@@ -46,7 +47,7 @@ FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, 
 						&CB, mode, 0, FLA_TOP);
 	//Only symmetric part touched
 	//Ponder this
-	dim_t loopCount = 0;
+	loopCount = 0;
 	while(loopCount <= endIndex){
 		dim_t b = 1;
 		FLA_Repart_1xmode2_to_1xmode3(BT, &B0,
@@ -95,13 +96,15 @@ FLA_Error FLA_Sttsm_single_psttm( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj 
     FLA_Obj CT, CB;
     FLA_Obj C0, C1, C2;
 
+    dim_t loopCount;
+
     FLA_Part_1xmode2(B, &BT,
                         &BB, 0, 0, FLA_TOP);
     FLA_Part_1xmode2(C, &CT,
                         &CB, mode, 0, FLA_TOP);
     //Only symmetric part touched
     //Ponder this
-    dim_t loopCount = 0;
+    loopCount = 0;
     while(loopCount <= endIndex){
         dim_t b = 1;
         FLA_Repart_1xmode2_to_1xmode3(BT, &B0,
@@ -144,10 +147,10 @@ FLA_Error FLA_Sttsm_single_psttm( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj 
 void initialize_psym_temporaries(FLA_Obj A, FLA_Obj C, FLA_Obj* temps[]){
 	dim_t i, j;
 	dim_t order = FLA_Obj_order(A);
-	dim_t temp_blocked_size[order];
-	dim_t temp_blocked_stride[order];
-	dim_t temp_block_size[order];
-	dim_t temp_flat_size[order];
+	dim_t temp_blocked_size[FLA_MAX_ORDER];
+	dim_t temp_blocked_stride[FLA_MAX_ORDER];
+	dim_t temp_block_size[FLA_MAX_ORDER];
+	dim_t temp_flat_size[FLA_MAX_ORDER];
 	FLA_Obj* buf_A = (FLA_Obj*)FLA_Obj_base_buffer(A);
 	FLA_Obj* buf_C = (FLA_Obj*)FLA_Obj_base_buffer(C);
 	
@@ -191,10 +194,10 @@ void destroy_psym_temporaries(dim_t order, FLA_Obj* temps[]){
 void initialize_temporaries(FLA_Obj A, FLA_Obj C, FLA_Obj* temps[]){
 	dim_t i, j;
 	dim_t order = FLA_Obj_order(A);
-	dim_t temp_blocked_size[order];
-	dim_t temp_blocked_stride[order];
-	dim_t temp_block_size[order];
-	dim_t temp_flat_size[order];
+	dim_t temp_blocked_size[FLA_MAX_ORDER];
+	dim_t temp_blocked_stride[FLA_MAX_ORDER];
+	dim_t temp_block_size[FLA_MAX_ORDER];
+	dim_t temp_flat_size[FLA_MAX_ORDER];
 	FLA_Obj* buf_A = (FLA_Obj*)FLA_Obj_base_buffer(A);
 	FLA_Obj* buf_C = (FLA_Obj*)FLA_Obj_base_buffer(C);
 
@@ -223,7 +226,7 @@ void initialize_temporaries(FLA_Obj A, FLA_Obj C, FLA_Obj* temps[]){
 void destroy_temporaries(dim_t order, FLA_Obj* temps[]){
 	dim_t i;
 	for(i = order - 1; i > 0; i--){
-		FLA_Obj_blocked_free_buffer(temps[i]);
+		FLA_Obj_blocked_tensor_free_buffer(temps[i]);
         FLA_Obj_free_without_buffer(temps[i]);
 		FLA_free(temps[i]);
 	}
@@ -233,7 +236,7 @@ void destroy_temporaries(dim_t order, FLA_Obj* temps[]){
 FLA_Error FLA_Sttsm_without_psym_temps( FLA_Obj alpha, FLA_Obj A, FLA_Obj beta, FLA_Obj B, FLA_Obj C )
 {
 	//Create temporaries used in sttsm
-	FLA_Obj* temps[A.order];
+	FLA_Obj* temps[FLA_MAX_ORDER];
 	initialize_temporaries(A, C, temps);
 	
 	//Compute
@@ -251,7 +254,7 @@ FLA_Error FLA_Sttsm_without_psym_temps( FLA_Obj alpha, FLA_Obj A, FLA_Obj beta, 
 FLA_Error FLA_Sttsm_with_psym_temps( FLA_Obj alpha, FLA_Obj A, FLA_Obj beta, FLA_Obj B, FLA_Obj C )
 {
 	//Create temporaries used in sttsm
-	FLA_Obj* temps[A.order];
+	FLA_Obj* temps[FLA_MAX_ORDER];
 	initialize_psym_temporaries(A, C, temps);
 
 	//Compute

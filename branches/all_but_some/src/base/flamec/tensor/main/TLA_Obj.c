@@ -32,7 +32,7 @@
 
 #include "FLAME.h"
 
-FLA_Error FLA_Obj_create_tensor( FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t stride[order], FLA_Obj *obj)
+FLA_Error FLA_Obj_create_tensor( FLA_Datatype datatype, dim_t order, const dim_t size[], const dim_t stride[], FLA_Obj *obj)
 {
 
   FLA_Obj_create_tensor_ext( datatype, FLA_SCALAR, order, size, size, stride, obj );
@@ -40,7 +40,7 @@ FLA_Error FLA_Obj_create_tensor( FLA_Datatype datatype, dim_t order, dim_t size[
   return FLA_SUCCESS;
 }
 
-FLA_Error FLA_Obj_create_psym_tensor(FLA_Datatype datatype, dim_t order, dim_t size[order], dim_t stride[order], TLA_sym sym, FLA_Obj *obj){
+FLA_Error FLA_Obj_create_psym_tensor(FLA_Datatype datatype, dim_t order, const dim_t size[], const dim_t stride[], TLA_sym sym, FLA_Obj *obj){
   FLA_Obj_create_tensor( datatype, order, size, stride, obj);
 
   //Update symmetries
@@ -49,11 +49,13 @@ FLA_Error FLA_Obj_create_psym_tensor(FLA_Datatype datatype, dim_t order, dim_t s
   return FLA_SUCCESS;
 }
 
-FLA_Error FLA_Obj_create_blocked_tensor_ext( FLA_Datatype datatype, FLA_Elemtype elemtype, dim_t order, dim_t flat_size[order], dim_t size_inner[order], dim_t stride[order], dim_t blk_size[order], FLA_Obj *obj )
+FLA_Error FLA_Obj_create_blocked_tensor_ext( FLA_Datatype datatype, FLA_Elemtype elemtype, dim_t order, const dim_t flat_size[], const dim_t size_inner[], const dim_t stride[], const dim_t blk_size[], FLA_Obj *obj )
 {
   dim_t i;
-  dim_t size_obj[order];
-  dim_t stride_obj[order];
+  dim_t size_obj[FLA_MAX_ORDER];
+  dim_t stride_obj[FLA_MAX_ORDER];
+  dim_t stride_blk[FLA_MAX_ORDER];
+  FLA_Obj* buf;
 
   //First set up the obj to store the FLA_Objs
   //Set the blocked-object size & stride
@@ -63,8 +65,7 @@ FLA_Error FLA_Obj_create_blocked_tensor_ext( FLA_Datatype datatype, FLA_Elemtype
   FLA_Obj_create_tensor_ext( datatype, FLA_TENSOR, order, size_obj, size_obj, stride_obj, obj);
 
   //Create the blocks of obj
-  FLA_Obj* buf = (FLA_Obj*)FLA_Obj_base_buffer(*obj);
-  dim_t stride_blk[order];
+  buf = (FLA_Obj*)FLA_Obj_base_buffer(*obj);
   FLA_Set_tensor_stride(order, blk_size, stride_blk);
 
   for(i = 0; i < FLA_Obj_num_elem_alloc(*obj); i++){
@@ -75,7 +76,7 @@ FLA_Error FLA_Obj_create_blocked_tensor_ext( FLA_Datatype datatype, FLA_Elemtype
 }
 
 
-FLA_Error FLA_Obj_create_tensor_ext( FLA_Datatype datatype, FLA_Elemtype elemtype, dim_t order, dim_t size[order], dim_t size_inner[order], dim_t stride[order], FLA_Obj *obj )
+FLA_Error FLA_Obj_create_tensor_ext( FLA_Datatype datatype, FLA_Elemtype elemtype, dim_t order, const dim_t size[], const dim_t size_inner[], const dim_t stride[], FLA_Obj *obj )
 {
   dim_t i;
   dim_t nSecondDim;
@@ -111,7 +112,7 @@ FLA_Error FLA_Obj_create_tensor_ext( FLA_Datatype datatype, FLA_Elemtype elemtyp
 }
 
 
-FLA_Error FLA_Obj_create_tensor_without_buffer( FLA_Datatype datatype, dim_t order, dim_t size[order], FLA_Obj *obj ){
+FLA_Error FLA_Obj_create_tensor_without_buffer( FLA_Datatype datatype, dim_t order, const dim_t size[], FLA_Obj *obj ){
 	dim_t i;
 	dim_t nSecondDim;
 
@@ -146,7 +147,7 @@ FLA_Error FLA_Obj_create_tensor_without_buffer( FLA_Datatype datatype, dim_t ord
 }
 
 
-FLA_Error FLA_Obj_attach_buffer_to_tensor( void *buffer, dim_t order, dim_t stride[order], FLA_Obj *obj ){
+FLA_Error FLA_Obj_attach_buffer_to_tensor( void *buffer, dim_t order, const dim_t stride[], FLA_Obj *obj ){
 	//Omitting some things attach_buffer does because not sure how to extend yet
 
 	//Attach and adjust meta-data
@@ -160,32 +161,46 @@ FLA_Error FLA_Obj_attach_buffer_to_tensor( void *buffer, dim_t order, dim_t stri
 	return FLA_SUCCESS;
 }
 
+FLA_Error FLA_Obj_blocked_tensor_free_buffer( FLA_Obj *obj)
+{
+	if(FLA_Obj_elemtype(*obj) == FLA_TENSOR || FLA_Obj_elemtype(*obj) == FLA_MATRIX){
+		dim_t i;
+		FLA_Obj* buf = (FLA_Obj*)FLA_Obj_base_buffer(*obj);
+		for(i = 0; i < FLA_Obj_num_elem_alloc(*obj); i++){
+			FLA_Obj_free_buffer(&(buf[i]));
+			FLA_Obj_free_without_buffer(&(buf[i]));
+		}
+		FLA_Obj_free_buffer(obj);
+	}
+	return FLA_SUCCESS;
+}
+
 FLA_Error FLA_Obj_blocked_psym_tensor_free_buffer( FLA_Obj *obj)
 {
 	dim_t order = FLA_Obj_order(*obj);
-	dim_t* stride;
+	const dim_t* stride = obj->base->stride;
 	FLA_Obj* buf;
 
 	dim_t update_ptr;
-	dim_t* endIndex;
-	dim_t curIndex[order];
+	const dim_t* endIndex = obj->size;
+	dim_t curIndex[FLA_MAX_ORDER];
 	dim_t linIndex;
 
 	//Init obj data
-	stride = FLA_Obj_stride(*obj);
 	buf = (FLA_Obj*)FLA_Obj_base_buffer(*obj);
 
 	//Init loop data
 	update_ptr = order - 1;
 	memset(&(curIndex[0]), 0, order * sizeof(dim_t));
-	endIndex = FLA_Obj_size(*obj);
 
 	//Loop over all blocked indices, if block is stored, free it
 	while(TRUE){
+		dim_t i;
+		dim_t isUnique;
 		//For this index, find which block it is
 		linIndex = FLA_TIndex_to_LinIndex(order, curIndex, stride);
 
-		dim_t isUnique = buf[linIndex].isStored;
+		isUnique = buf[linIndex].isStored;
 		if(isUnique){
 			FLA_Obj_free_buffer(&(buf[linIndex]));
 			FLA_Obj_free_without_buffer(&(buf[linIndex]));
@@ -200,26 +215,24 @@ FLA_Error FLA_Obj_blocked_psym_tensor_free_buffer( FLA_Obj *obj)
 		}
 		if(update_ptr >= order)
 			break;
-		for(dim_t i = update_ptr+1; i < order; i++)
+		for(i = update_ptr+1; i < order; i++)
 			curIndex[i] = 0;
 		update_ptr = order - 1;
 	}
 
 	//Free alloc'd data
 	FLA_Obj_free_buffer(obj);
-	FLA_free(endIndex);
-	FLA_free(stride);
 	return FLA_SUCCESS;
 }
 
 
 //NOTE: This function doesn't set the offset array of the FLA_View
-FLA_Error FLA_Obj_create_blocked_tensor_without_buffer(FLA_Datatype datatype, dim_t order, dim_t flat_size[order], dim_t blk_size[order], FLA_Obj *obj){
+FLA_Error FLA_Obj_create_blocked_tensor_without_buffer(FLA_Datatype datatype, dim_t order, const dim_t flat_size[], const dim_t blk_size[], FLA_Obj *obj){
     dim_t i;
-    dim_t blked_size[order];
+    dim_t blked_size[FLA_MAX_ORDER];
     dim_t nTBlks;
     FLA_Obj* t_blks;
-    dim_t stride_obj[order];
+    dim_t stride_obj[FLA_MAX_ORDER];
 
     //Determine blocked size of tensor (size of tensor whose elements are the blocks)
     FLA_array_elemwise_quotient(order, flat_size, blk_size, blked_size);
@@ -244,16 +257,18 @@ FLA_Error FLA_Obj_create_blocked_tensor_without_buffer(FLA_Datatype datatype, di
     return FLA_SUCCESS;
 }
 
-FLA_Error FLA_Obj_create_blocked_psym_tensor_without_buffer(FLA_Datatype datatype, dim_t order, dim_t flat_size[order], dim_t blk_size[order], TLA_sym sym, FLA_Obj *obj){
+
+FLA_Error FLA_Obj_create_blocked_psym_tensor_without_buffer(FLA_Datatype datatype, dim_t order, const dim_t flat_size[], const dim_t blk_size[], TLA_sym sym, FLA_Obj *obj){
     dim_t i;
-    dim_t blked_size[order];
+    dim_t blked_size[FLA_MAX_ORDER];
     dim_t nTBlks;
     FLA_Obj* t_blks;
 
-    dim_t curIndex[order];
-    dim_t endIndex[order];
+    dim_t curIndex[FLA_MAX_ORDER];
     dim_t updateIndex;
     dim_t objLinIndex;
+
+    dim_t stride_obj[FLA_MAX_ORDER];
 
 //    if ( FLA_Check_error_level() >= FLA_MIN_ERROR_CHECKING )
 //        FLA_Obj_create_blocked_sym_tensor_without_buffer_check( datatype, order, size, blkSize, obj );
@@ -266,7 +281,6 @@ FLA_Error FLA_Obj_create_blocked_psym_tensor_without_buffer(FLA_Datatype datatyp
     t_blks = (FLA_Obj*)FLA_malloc(nTBlks * sizeof(FLA_Obj));
 
     memset(curIndex, 0, order * sizeof(dim_t));
-    memcpy(endIndex, blked_size, order * sizeof(dim_t));
     updateIndex = 0;
     objLinIndex = 0;
 
@@ -283,7 +297,7 @@ FLA_Error FLA_Obj_create_blocked_psym_tensor_without_buffer(FLA_Datatype datatyp
         curIndex[updateIndex]++;
         objLinIndex++;
         //If we hit the end, loop until we find the index to update
-        while(updateIndex < order && curIndex[updateIndex] == endIndex[updateIndex]){
+        while(updateIndex < order && curIndex[updateIndex] == blked_size[updateIndex]){
             updateIndex++;
             if(updateIndex < order)
                 curIndex[updateIndex]++;
@@ -303,7 +317,7 @@ FLA_Error FLA_Obj_create_blocked_psym_tensor_without_buffer(FLA_Datatype datatyp
     obj->sym = sym;
     obj->base->elemtype = FLA_TENSOR;
 
-    dim_t stride_obj[order];
+
     FLA_Set_tensor_stride(order, blked_size, stride_obj);
     FLA_Obj_attach_buffer_to_tensor(t_blks, order, stride_obj, obj);
 
@@ -311,11 +325,13 @@ FLA_Error FLA_Obj_create_blocked_psym_tensor_without_buffer(FLA_Datatype datatyp
 }
 
 
-FLA_Error FLA_Obj_create_blocked_tensor(FLA_Datatype datatype, dim_t order, dim_t flat_size[order], dim_t blocked_stride[order], dim_t blk_size[order], FLA_Obj *obj){
+FLA_Error FLA_Obj_create_blocked_tensor(FLA_Datatype datatype, dim_t order, const dim_t flat_size[], const dim_t blocked_stride[], const dim_t blk_size[], FLA_Obj *obj){
     dim_t i;
-    dim_t blked_size[order];
+    dim_t blked_size[FLA_MAX_ORDER];
     dim_t nBlocks;
     dim_t nBlockElems;
+
+    void** dataBuffers;
 
     //Set up the sym struct
     TLA_sym sym;
@@ -331,7 +347,7 @@ FLA_Error FLA_Obj_create_blocked_tensor(FLA_Datatype datatype, dim_t order, dim_
     nBlockElems = FLA_array_product(order, blk_size);
 
     //Create dataBuffers for each block
-    void** dataBuffers = (void**) FLA_malloc( nBlocks * sizeof(void*) );
+    dataBuffers = (void**) FLA_malloc( nBlocks * sizeof(void*) );
     for (i = 0; i < nBlocks; i++)
     {
         dataBuffers[i] = (double*) FLA_malloc( nBlockElems * sizeof(double) );
@@ -347,10 +363,14 @@ FLA_Error FLA_Obj_create_blocked_tensor(FLA_Datatype datatype, dim_t order, dim_
     return FLA_SUCCESS;
 }
 
-FLA_Error FLA_Obj_create_blocked_psym_tensor(FLA_Datatype datatype, dim_t order, dim_t flat_size[order], dim_t blocked_stride[order], dim_t blk_size[order], TLA_sym sym, FLA_Obj *obj){
+FLA_Error FLA_Obj_create_blocked_psym_tensor(FLA_Datatype datatype, dim_t order, const dim_t flat_size[], const dim_t blocked_stride[], const dim_t blk_size[], TLA_sym sym, FLA_Obj *obj){
 	dim_t i;
 	dim_t nBlockElems;
-	dim_t blked_size[order];
+	dim_t blked_size[FLA_MAX_ORDER];
+	dim_t nUniques = 1;
+	dim_t modeOffset = 0;
+
+	void** dataBuffers;
 
 	//First set up the hierarchy without buffers
 	FLA_Obj_create_blocked_psym_tensor_without_buffer(datatype, order, flat_size, blk_size, sym, obj);
@@ -360,8 +380,7 @@ FLA_Error FLA_Obj_create_blocked_psym_tensor(FLA_Datatype datatype, dim_t order,
 
 	//Determine number of unique blocks in tensor
 	FLA_array_elemwise_quotient(order, flat_size, blk_size, blked_size);
-	dim_t nUniques = 1;
-	dim_t modeOffset = 0;
+
 	for(i = 0; i < (obj->sym).nSymGroups; i++){
 	    dim_t mode = (obj->sym).symModes[modeOffset];
 	    dim_t symGroupLen = (obj->sym).symGroupLens[i];
@@ -372,7 +391,7 @@ FLA_Error FLA_Obj_create_blocked_psym_tensor(FLA_Datatype datatype, dim_t order,
 	}
 
 	//Create data arrays for each block
-	void** dataBuffers = (void**)FLA_malloc(nUniques * sizeof(void*));
+	dataBuffers = (void**)FLA_malloc(nUniques * sizeof(void*));
 	for(i = 0; i < nUniques; i++){
 		dataBuffers[i] = (double*)FLA_malloc(nBlockElems * sizeof(double));
 		memset(&(((double*)dataBuffers[i])[0]), 0, nBlockElems * sizeof(double));
@@ -387,18 +406,16 @@ FLA_Error FLA_Obj_create_blocked_psym_tensor(FLA_Datatype datatype, dim_t order,
 }
 
 
-FLA_Error FLA_Obj_attach_buffer_to_blocked_tensor( void *buffer[], dim_t order, dim_t stride[order], FLA_Obj *obj ){
+FLA_Error FLA_Obj_attach_buffer_to_blocked_tensor( void *buffer[], dim_t order, const dim_t stride[], FLA_Obj *obj ){
     dim_t i, j;
-    dim_t size_obj[order];
-    dim_t stride_obj[order];
+    const dim_t* size_obj = obj->size;
+    //const dim_t* stride_obj = obj->base->stride;
     FLA_Obj *buffer_obj;
 
     dim_t nBlocks;
 
     //Get needed info from object
     buffer_obj = (FLA_Obj*)FLA_Obj_base_buffer(*obj);
-    memcpy(&(size_obj[0]), &((obj->size)[0]), order * sizeof(dim_t));
-    memcpy(&(stride_obj[0]), &((obj->base->stride)[0]), order * sizeof(dim_t));
 
     nBlocks = FLA_array_product(order, size_obj);
 
@@ -418,34 +435,30 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_tensor( void *buffer[], dim_t order, 
     return FLA_SUCCESS;
 }
 
-FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t order, dim_t stride[order], FLA_Obj *obj ){
+FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t order, const dim_t stride[], FLA_Obj *obj ){
 	dim_t i;
 	//FLA_Obj-related data
-	dim_t size_obj[order];
-	dim_t stride_obj[order];
+    const dim_t* size_obj = obj->size;
+    const dim_t* stride_obj = obj->base->stride;
 	FLA_Obj *buffer_obj;
 
 	//Loop-related data
 	dim_t updateIndex;
-	dim_t curIndex[order];
-	dim_t endIndex[order];
+	dim_t curIndex[FLA_MAX_ORDER];
 
 	//Attach buffer-related data
 	dim_t countBuffer;
 	dim_t objLinIndex;
-	dim_t sortedIndex[order];
-	dim_t permutation[order];
-	dim_t ipermutation[order];
+	dim_t sortedIndex[FLA_MAX_ORDER];
+	dim_t permutation[FLA_MAX_ORDER];
+	dim_t ipermutation[FLA_MAX_ORDER];
 	dim_t isUniqueIndex;
 
 	//Set needed info of obj
     buffer_obj = (FLA_Obj*)FLA_Obj_base_buffer(*obj);
-    memcpy(&(size_obj[0]), &((obj->size)[0]), order * sizeof(dim_t));
-    memcpy(&(stride_obj[0]), &((obj->base->stride)[0]), order * sizeof(dim_t));
 
     //Initialize loop information
 	memset(&(curIndex[0]), 0, order * sizeof(dim_t));
-	memcpy(&(endIndex[0]), &(size_obj[0]), order * sizeof(dim_t));
 	countBuffer = 0;
 	objLinIndex = 0;
 
@@ -489,7 +502,7 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 		//Loop update
 		curIndex[updateIndex]++;
 		//If we hit the end, loop until we find the index to update
-		while(updateIndex < order && curIndex[updateIndex] == endIndex[updateIndex]){
+		while(updateIndex < order && curIndex[updateIndex] == size_obj[updateIndex]){
 			updateIndex--;
 			if(updateIndex < order)
 				curIndex[updateIndex]++;
@@ -515,7 +528,16 @@ FLA_Error FLA_Obj_attach_buffer_to_blocked_psym_tensor( void *buffer[], dim_t or
 ////////////////////////////////
 
 //Note: Only splits modes within the same symmetric group...
-FLA_Error TLA_split_sym_group(TLA_sym S, dim_t nSplit_modes, dim_t split_modes[nSplit_modes], TLA_sym* S1){
+FLA_Error TLA_split_sym_group(TLA_sym S, dim_t nSplit_modes, const dim_t split_modes[], TLA_sym* S1){
+	dim_t i;
+	dim_t sym_group;
+	dim_t symGroupOffset;
+
+	dim_t split_modes_copied;
+	dim_t index_to_fill;
+
+	dim_t nextGroupOffset;
+	dim_t nRemainingModes;
 
 	//0 modes to split, done
     if(nSplit_modes == 0){
@@ -524,7 +546,7 @@ FLA_Error TLA_split_sym_group(TLA_sym S, dim_t nSplit_modes, dim_t split_modes[n
     }
 
     //If group to split is size 1, done
-    dim_t sym_group = TLA_sym_group_of_mode(S, split_modes[0]);
+    sym_group = TLA_sym_group_of_mode(S, split_modes[0]);
     if(TLA_sym_group_size(S, sym_group) == 1){
     	*S1 = S;
 	    return FLA_SUCCESS;
@@ -533,8 +555,7 @@ FLA_Error TLA_split_sym_group(TLA_sym S, dim_t nSplit_modes, dim_t split_modes[n
     //Otherwise, do more work
     S1->order = S.order;
 
-	dim_t i;
-	dim_t symGroupOffset = TLA_sym_group_mode_offset(S, sym_group);
+	symGroupOffset = TLA_sym_group_mode_offset(S, sym_group);
 
 	//Reorder modes to indicate the split
 	//Copy all modes before the split to output
@@ -544,8 +565,8 @@ FLA_Error TLA_split_sym_group(TLA_sym S, dim_t nSplit_modes, dim_t split_modes[n
 	memcpy(&((S1->symModes)[symGroupOffset]), &(split_modes[0]), nSplit_modes * sizeof(dim_t));
 
 	//Copy the non-split modes in the sym group
-	dim_t split_modes_copied = 0;
-	dim_t index_to_fill = symGroupOffset + nSplit_modes;
+	split_modes_copied = 0;
+	index_to_fill = symGroupOffset + nSplit_modes;
 	for(i = 0; i < S.symGroupLens[sym_group]; i++){
 		if(split_modes_copied < nSplit_modes && (S.symModes[symGroupOffset + i] == split_modes[split_modes_copied])){
 			split_modes_copied++;
@@ -556,12 +577,15 @@ FLA_Error TLA_split_sym_group(TLA_sym S, dim_t nSplit_modes, dim_t split_modes[n
 	}
 
 	//Copy remaining modes in other sym groups
-	dim_t nextGroupOffset = symGroupOffset + S.symGroupLens[sym_group];
-	dim_t nRemainingModes = S.order - nextGroupOffset;
+	nextGroupOffset = symGroupOffset + S.symGroupLens[sym_group];
+	nRemainingModes = S.order - nextGroupOffset;
 	memcpy(&((S1->symModes)[nextGroupOffset]), &(S.symModes[nextGroupOffset]), (nRemainingModes) * sizeof(dim_t));
 
 	
 	//Update sym_group_info
+	//Update number of groups
+	(S1->nSymGroups) = S.nSymGroups + 1;
+
 	//Copy lengths of groups before group in question
 	memcpy(&((S1->symGroupLens)[0]), &(S.symGroupLens[0]), (sym_group) * sizeof(dim_t));
 	//Copy lengths of groups after group in question
@@ -571,25 +595,27 @@ FLA_Error TLA_split_sym_group(TLA_sym S, dim_t nSplit_modes, dim_t split_modes[n
 	S1->symGroupLens[sym_group] = nSplit_modes;
 	S1->symGroupLens[sym_group+1] = S.symGroupLens[sym_group] - nSplit_modes;
 
-	//Update number of groups
-	(S1->nSymGroups) = S.nSymGroups + 1;
 
 	return FLA_SUCCESS;
 }
 
+//Might be incorrect
 //Updates the symmetry of an object based on its offset index & passed symmetry.
 //Result should be an object with symmetry being subset of S
 FLA_Error TLA_update_sym_based_offset(TLA_sym S, FLA_Obj* A){
+    dim_t i, j;
 	//Adjust A symmetry to be same as S
     TLA_sym* Asym = &(A->sym);
     *Asym = S;
-
+    
     //Based on the offset index, break symmetry of modes in groups
     //For example (0 1 2) at [0,1,1] -> (0) (1 2)
-    dim_t i, j;
+
     for(i = 0; i < Asym->nSymGroups; i++){
         dim_t nModes_to_split = 0;
-        dim_t modes_to_split[A->order];
+        //NOTE: Switch to S.order?
+        //NOTE: move modes_to_split out of the loop?
+        dim_t modes_to_split[FLA_MAX_ORDER];
 
         dim_t symGroupModeOffset = TLA_sym_group_mode_offset(*Asym, i);
         for(j = 0; j < (Asym->symGroupLens)[i]; j++){

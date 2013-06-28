@@ -34,8 +34,8 @@
 
 
 // --- Permute routines --------------------------------------------------------
-FLA_Error FLA_Permute_helper( FLA_Obj A, dim_t permutation[], FLA_Obj B, dim_t repart_mode_index);
-FLA_Error FLA_Permute( FLA_Obj A, dim_t permutation[], FLA_Obj* B );
+FLA_Error FLA_Permute_helper( FLA_Obj A, const dim_t permutation[], FLA_Obj B, dim_t repart_mode_index);
+FLA_Error FLA_Permute( FLA_Obj A, const dim_t permutation[], FLA_Obj* B );
 
 // --- Sttsm routines --------------------------------------------------------
 FLA_Error FLA_Sttsm_single( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C, dim_t maxIndex, FLA_Obj* temps[] );
@@ -60,7 +60,10 @@ FLA_Error FLA_Ttm_scalar_permC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj be
 FLA_Error FLA_Ttm_scalar_no_permC( FLA_Obj alpha, FLA_Obj A, dim_t mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C );
 
 //Work in progress
-FLA_Error FLA_Ttm( FLA_Obj alpha, FLA_Obj A, dim_t nModes, dim_t mode[nModes], FLA_Obj beta, FLA_Obj B[nModes], FLA_Obj C );
+//FLA_Error FLA_Ttm( FLA_Obj alpha, FLA_Obj A, dim_t nModes, const dim_t mode[], FLA_Obj beta, const FLA_Obj B[], FLA_Obj C );
 
 // --- Sttsm_but_one routines
 FLA_Error FLA_Sttsm_but_one( FLA_Obj alpha, FLA_Obj A, dim_t ignore_mode, FLA_Obj beta, FLA_Obj B, FLA_Obj C );
+
+// --- Sttsm_but_some routines
+FLA_Error FLA_Sttsm_but_some( FLA_Obj alpha, FLA_Obj A, dim_t nModes_ignore, dim_t ignore_modes[], FLA_Obj beta, FLA_Obj B, FLA_Obj C );
