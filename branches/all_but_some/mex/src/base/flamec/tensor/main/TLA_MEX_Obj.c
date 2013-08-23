@@ -4,6 +4,10 @@
 void TLA_mxa_to_tensor(const mxArray * mxa, FLA_Obj* A){
     int i;
     dim_t order;
+
+    int size_field_num;
+    int data_field_num;
+
     const mxArray* size_mxa;
     const mxArray* data_mxa;
 
@@ -18,8 +22,8 @@ void TLA_mxa_to_tensor(const mxArray * mxa, FLA_Obj* A){
     }
 
     // Check that the struct has the right fields
-    int size_field_num = mxGetFieldNumber(mxa, "size");
-    int data_field_num = mxGetFieldNumber(mxa, "data");
+    size_field_num = mxGetFieldNumber(mxa, "size");
+    data_field_num = mxGetFieldNumber(mxa, "data");
 
     if ((size_field_num == -1) || (data_field_num == -1))
     {
@@ -279,6 +283,9 @@ void TLA_tensor_to_mxa(FLA_Obj A, mxArray ** mxa){
     double* data;
     double* dataBuf;
 
+    mxArray* plhs[1];
+    mxArray* prhs[2];
+
     for(i = 0; i < A.order; i++)
         size[i] = (double)A.size[i];
 
@@ -288,8 +295,7 @@ void TLA_tensor_to_mxa(FLA_Obj A, mxArray ** mxa){
 
     memcpy(&(data[0]), &(dataBuf[0]), A.base->n_elem_alloc * sizeof(double));
 
-    mxArray* plhs[1];
-    mxArray* prhs[2];
+
     prhs[0] = mxa_data;
     prhs[1] = mxa_size;
 
@@ -374,6 +380,8 @@ void TLA_blocked_psym_tensor_to_mxa(FLA_Obj A, mxArray ** mxa ){
     dim_t symGroupLens[FLA_MAX_ORDER];
     dim_t symModes[FLA_MAX_ORDER];
 
+    FLA_Obj* buffer;
+
     FLA_Paired_Sort index_pairs[FLA_MAX_ORDER];
     dim_t orderedSymModes[FLA_MAX_ORDER];
     /**
@@ -423,7 +431,7 @@ void TLA_blocked_psym_tensor_to_mxa(FLA_Obj A, mxArray ** mxa ){
     memcpy(&(symModes[0]), &(A.sym.symModes[0]), order* sizeof(dim_t));
 
 
-    FLA_Obj* buffer = (FLA_Obj*)FLA_Obj_base_buffer(A);
+    buffer = (FLA_Obj*)FLA_Obj_base_buffer(A);
     while(TRUE){
     	dim_t modeOffset = 0;
 		dim_t uniqueIndex = TRUE;
