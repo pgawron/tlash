@@ -1,45 +1,63 @@
 CC = gcc
+MEX = mex
 
-FLAME_DIR = /Users/martin/flame/lib
+FLAME_TOP_DIR = /Users/martin/flame
+MATLAB_TOP_DIR = /Applications/MATLAB_R2013a.app
+
+BLAS_CFLAGS = 
+BLAS_LDFLAGS = -framework accelerate
+
+#-----------------------------------------------------------------
+FLAME_INC_DIR = $(FLAME_TOP_DIR)/include
+FLAME_LIB_DIR = $(FLAME_TOP_DIR)/lib
 FLAME_LIB = flame
-FLAME_INCLUDE = /Users/martin/flame/include
 
-MEX_INCLUDE = /Applications/MATLAB_R2013a.app/extern/include
+MEX_INC_DIR = $(MATLAB_TOP_DIR)/extern/include
 
-UTIL_INCLUDE = $(PWD)/src/base/flamec/tensor/include
-UTIL_FILE = $(PWD)/src/base/flamec/tensor/util/base/TLA_MEX_Convert_primitives.c
+SRC_TOP_DIR = $(PWD)/src
+SRC_BASE_MAIN_DIR = $(SRC_TOP_DIR)/base/flamec/tensor/main
+SRC_BASE_INC_DIR = $(SRC_TOP_DIR)/base/flamec/tensor/include
+SRC_BASE_UTIL_BASE_DIR = $(SRC_TOP_DIR)/base/flamec/tensor/util/base
+SRC_BTAS_TOP_DIR = $(SRC_TOP_DIR)/btas
+SRC_BTAS_TTM_DIR = $(SRC_BTAS_TOP_DIR)/ttm/flamec
+SRC_BTAS_STTSM_DIR = $(SRC_BTAS_TOP_DIR)/sttsm/flamec
 
-MEX_OBJ_FILE = $(PWD)/src/base/flamec/tensor/main/TLA_MEX_Obj.c
+MEX_CONVERT_PRIMITIVES_FILE = $(SRC_BASE_UTIL_BASE_DIR)/TLA_MEX_Convert_primitives.c
+MEX_OBJ_FILE = $(SRC_BASE_MAIN_DIR)/TLA_MEX_Obj.c
+TTM_FILE = $(SRC_BTAS_TTM_DIR)/TLA_ttm.c
+STTSM_FILE = $(SRC_BTAS_STTSM_DIR)/TLA_sttsm.c
 
-TTM_FILE = $(PWD)/src/btas/ttm/flamec/TLA_ttm.c
-STTSM_FILE = $(PWD)/src/btas/sttsm/flamec/TLA_sttsm.c
+OBJ_TOP_DIR = $(PWD)/obj
+OBJ_MEX_OBJ_FILE = $(OBJ_TOP_DIR)/TLA_MEX_Obj.o
+OBJ_MEX_CONVERT_PRIMITIVES_FILE = $(OBJ_TOP_DIR)/TLA_MEX_Convert_primitives.o  
+OBJS = $(OBJ_MEX_OBJ_FILE) $(OBJ_MEX_CONVERT_PRIMITIVES_FILE)
 
-LDFLAGS = -L$(FLAME_DIR) -l$(FLAME_LIB)
-CFLAGS = -g -I$(FLAME_INCLUDE) -I$(MEX_INCLUDE) -I$(UTIL_INCLUDE)
+LDFLAGS = -L$(FLAME_LIB_DIR) -l$(FLAME_LIB) $(BLAS_LDFLAGS)
+CFLAGS = -g -I$(FLAME_INC_DIR) -I$(MEX_INC_DIR) -I$(SRC_BASE_INC_DIR) $(BLAS_CFLAGS)
 
-OBJ_PATH = $(PWD)/obj
+MEX_CFLAGS = CFLAGS='$$CFLAGS $(CFLAGS)'
+MEX_LDFLAGS = LDFLAGS='$$LDFLAGS $(LDFLAGS)'
+MEX_FLAGS = $(MEX_CFLAGS) $(MEX_LDFLAGS)
 
-OBJS = $(OBJ_PATH)/TLA_MEX_Convert_primitives.o $(OBJ_PATH)/TLA_MEX_Obj.o
+$(OBJ_MEX_OBJ_FILE) : $(MEX_OBJ_FILE)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJ_PATH)/TLA_MEX_Obj.o : $(MEX_OBJ_FILE)
-	$(CC) $(CFLAGS) -c $(MEX_OBJ_FILE) -o $(OBJ_PATH)/TLA_MEX_Obj.o
-
-$(OBJ_PATH)/TLA_MEX_Convert_primitives.o : $(UTIL_FILE)
-	$(CC) $(CFLAGS) -c $(UTIL_FILE) -o $(OBJ_PATH)/TLA_MEX_Convert_primitives.o
+$(OBJ_MEX_CONVERT_PRIMITIVES_FILE) : $(MEX_CONVERT_PRIMITIVES_FILE)
+	$(CC) $(CFLAGS) -c $< -o $@
 	
-ttm: $(OBJ_PATH)/TLA_MEX_Convert_primitives.o $(OBJ_PATH)/TLA_MEX_Obj.o
-	mex $(CFLAGS) $(TTM_FILE) $(OBJS) $(LDFLAGS) 
+ttm: $(OBJS)
+	$(MEX) $(MEX_FLAGS) $(TTM_FILE) $(OBJS) 
 
-sttsm: $(OBJ_PATH)/TLA_MEX_Convert_primitives.o $(OBJ_PATH)/TLA_MEX_Obj.o
-	mex $(CFLAGS) $(STTSM_FILE) $(OBJS) $(LDFLAGS)
+sttsm: $(OBJS)
+	$(MEX) $(MEX_FLAGS) $(STTSM_FILE) $(OBJS)
 	
-tensor: $(OBJ_PATH)/TLA_MEX_Convert_primitives.o $(OBJ_PATH)/TLA_MEX_Obj.o
-	mex $(CFLAGS) $(PWD)/src/TLA_tensor.c $(OBJS) $(LDFLAGS)
+tensor: $(OBJS)
+	$(MEX) $(MEX_FLAGS) $(SRC_TOP_DIR)/TLA_tensor.c $(OBJS)
 
-blockedtensor: $(OBJ_PATH)/TLA_MEX_Convert_primitives.o $(OBJ_PATH)/TLA_MEX_Obj.o
-	mex $(CFLAGS) $(PWD)/src/TLA_blockedtensor.c $(OBJS) $(LDFLAGS)
+blockedtensor: $(OBJS)
+	$(MEX) $(MEX_FLAGS) $(SRC_TOP_DIR)/TLA_blockedtensor.c $(OBJS)
 
-blockedpsymtensor: $(OBJ_PATH)/TLA_MEX_Convert_primitives.o $(OBJ_PATH)/TLA_MEX_Obj.o
-	mex $(CFLAGS) $(PWD)/src/TLA_blockedpsymtensor.c $(OBJS) $(LDFLAGS)
+blockedpsymtensor: $(OBJS)
+	$(MEX) $(MEX_FLAGS) $(SRC_TOP_DIR)/TLA_blockedpsymtensor.c $(OBJS)
 
 all: ttm sttsm
