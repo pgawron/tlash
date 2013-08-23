@@ -33,6 +33,7 @@
 #include "FLAME.h"
 FLA_Error FLA_Sttsm_but_some_compute( FLA_Obj alpha, FLA_Obj A, dim_t compute_ind, dim_t compute_modes[], dim_t ignore_ind, dim_t ignore_modes[], FLA_Obj beta, FLA_Obj B, FLA_Obj C, dim_t endIndex_repart, dim_t endIndex_compute, FLA_Obj* temps[] )
 {
+	dim_t loopCount;
 	//FOR
 	FLA_Obj BT, BB;
 	FLA_Obj B0, B1, B2;
@@ -46,7 +47,7 @@ FLA_Error FLA_Sttsm_but_some_compute( FLA_Obj alpha, FLA_Obj A, dim_t compute_in
 						&CB, mode, 0, FLA_TOP);
 	//Only symmetric part touched
 	//Ponder this
-	dim_t loopCount = 0;
+	loopCount = 0;
 	while(loopCount <= endIndex_compute){
 		//Check this mathc out.  I think it is correct, Mode-1 of B matches mode-n of A
 		//Mode-0 of B matches Mode-n of C
@@ -107,6 +108,7 @@ FLA_Error FLA_Sttsm_but_some_compute( FLA_Obj alpha, FLA_Obj A, dim_t compute_in
 
 FLA_Error FLA_Sttsm_but_some_repart( FLA_Obj alpha, FLA_Obj A, dim_t compute_ind, dim_t compute_modes[], dim_t ignore_ind, dim_t ignore_modes[], FLA_Obj beta, FLA_Obj B, FLA_Obj C, dim_t endIndex_repart, dim_t endIndex_compute, FLA_Obj* temps[] )
 {
+	dim_t loopCount;
 	//FOR
 	FLA_Obj AT, AB;
 	FLA_Obj A0, A1, A2;
@@ -120,7 +122,7 @@ FLA_Error FLA_Sttsm_but_some_repart( FLA_Obj alpha, FLA_Obj A, dim_t compute_ind
 						&CB, mode, 0, FLA_TOP);
 	//Only symmetric part touched
 	//Ponder this
-	dim_t loopCount = 0;
+	loopCount = 0;
 	while(loopCount <= endIndex_repart){
 		//Check this mathc out.  I think it is correct, Mode-1 of B matches mode-n of A
 		//Mode-0 of B matches Mode-n of C
@@ -217,7 +219,7 @@ void destroy_psym_but_some_temporaries(dim_t nModes_compute, dim_t compute_modes
 
 //Using psym temps
 
-FLA_Error FLA_Sttsm_but_some( FLA_Obj alpha, FLA_Obj A, dim_t nModes_ignore, dim_t ignore_modes[nModes_ignore], FLA_Obj beta, FLA_Obj B, FLA_Obj C )
+FLA_Error FLA_Sttsm_but_some( FLA_Obj alpha, FLA_Obj A, dim_t nModes_ignore, dim_t ignore_modes[], FLA_Obj beta, FLA_Obj B, FLA_Obj C )
 {
 	dim_t i;
 	FLA_Obj* temps[FLA_MAX_ORDER];

@@ -43,7 +43,7 @@
 # The nmake install target will create the install directory and all requisite
 # subdirectories if they do not already exist (in which case the user must have
 # permission to create these directories).
-INSTALL_PREFIX = c:\field\lib
+# INSTALL_PREFIX = c:\field\lib
 
 
 #
@@ -62,8 +62,8 @@ INSTALL_PREFIX = c:\field\lib
 # where <path1>, <path2>, and <path3> are library paths to add to the list
 # of paths to search when the linker attempts to locate other libraries
 # listed in the file.
-LINKARGS_FILENAME = linkargs.txt
-LINKARGS_FILEPATH = $(PWD)\$(LINKARGS_FILENAME)
+# LINKARGS_FILENAME = linkargs.txt
+# LINKARGS_FILEPATH = $(PWD)\$(LINKARGS_FILENAME)
 
 # Various log file names that capture standard output when VERBOSE is undefined.
 CC_LOG_FILE   = nmake-cc.log
@@ -84,8 +84,8 @@ TOP_BUILD_DIR_ABS = $(PWD)
 REV_STR           = r$(REVISION)
 
 # The names of the libraries.
-LIBFLAME_NAME_ONLY        = libflame
-LIBFLAME                  = $(LIBFLAME_NAME_ONLY)-$(ARCH_STR)-$(REV_STR)
+#LIBFLAME_NAME_ONLY        = libflame
+#LIBFLAME                  = $(LIBFLAME_NAME_ONLY)-$(ARCH_STR)-$(REV_STR)
 
 # Directories that reside within the top-level Windows directory.
 CNF_DIRNAME       = config
@@ -175,7 +175,7 @@ COPTIM = /Ox
 !endif
 
 CC            = icl.exe
-CMISCFLAGS    = /nologo
+#CMISCFLAGS    = /nologo
 CLANGFLAGS    =
 CPPROCFLAGS   = /I.\build /I$(INC_FLA_DIRPATH)
 CWARNFLAGS    = /w
@@ -197,7 +197,7 @@ COPTIM = /Ox
 !endif
 
 CC            = cl.exe
-CMISCFLAGS    = /nologo
+#CMISCFLAGS    = /nologo
 CLANGFLAGS    =
 CPPROCFLAGS   = /I.\build /I$(INC_FLA_DIRPATH)
 CWARNFLAGS    = /w

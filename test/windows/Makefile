@@ -70,7 +70,7 @@ LIBFLAME_HEADERS = $(INSTALL_PREFIX_INC)
 LOCAL_HEADERS    = $(SRC_PATH)
 
 # The installation paths for the static and dynamic libflame library builds.
-LIB_LIBPATH      = C:\tlash_trunk\windows\lib\x86\debug
+LIB_LIBPATH      = C:\field\lib\libflame\lib
 DLL_LIBPATH      = $(INSTALL_PREFIX_DLL)
 
 # We have to reconstruct the C compiler flags with the new include paths.
@@ -84,11 +84,11 @@ LINKER           = $(CC)
 # The linker flags. This might need to be modified depending on your build
 # environment.
 LDFLAGS          = /nologo /link \
-                   /LIBPATH:"C:\Program Files\Microsoft SDKs\Windows\v7.0A\Lib" \
-                   /LIBPATH:"C:\Program Files\Microsoft Visual Studio 10.0\VC\lib" \
+				   /LIBPATH:"C:\lib\blas\x86" \
+                   /LIBPATH:"C:\Program Files (x86)\Windows Kits\8.0\Lib\win8\um\x86" \
+                   /LIBPATH:"C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\lib" \
                    /nodefaultlib:libcmt /nodefaultlib:libc /nodefaultlib:libmmt \
                    msvcrt.lib \
-				   /LIBPATH:"C:\tlash_trunk\windows\lib\x86\debug" \
 				   libblas.lib
 
 TEST_OBJS        = $(OBJ_PATH)\test_sttsm.obj

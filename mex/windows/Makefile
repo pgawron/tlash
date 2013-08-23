@@ -61,30 +61,70 @@ MAKE_DEFS = build\defs.mk
 
 
 #
+# --- TLASH specific definitions
+
+FLAME_TOP_DIR = C:\field\lib\libflame
+FLAME_INCLUDE_DIR = $(FLAME_TOP_DIR)\include-x86-runknown
+FLAME_LIB_DIR = $(FLAME_TOP_DIR)\lib
+FLAME_LIB = libflame-x86-runknown.lib
+
+CFLAGS = $(CFLAGS) /I$(FLAME_INCLUDE_DIR)
+LDFLAGS = $(LDFLAGS) /LIBPATH:$(FLAME_LIB_DIR) $(FLAME_LIB)
+
+#
+# --- BLAS definitions
+#
+
+BLAS_LIB_DIR = C:\lib\blas\x86
+BLAS_LIB = libblas.lib
+
+LDFLAGS = $(LDFLAGS) /LIBPATH:$(BLAS_LIB_DIR) $(BLAS_LIB)
+
+#
+# --- MATLAB specific definitions
+#
+
+MEX = C:\PROGRA~2\MATLAB\R2013A\BIN\MEX.BAT
+MEX_INCLUDE_DIR = C:\Program Files (x86)\MATLAB\R2013a\extern\include
+MEX_INCLUDE_FLAGS = /I"$(MEX_INCLUDE_DIR)"
+MEX_FLAGS = COMPFLAGS="$$COMPFLAGS $(CFLAGS)" LINKFLAGS="$$LINKFLAGS $(LDFLAGS)"
+
+TTM_FILE = $(PWD)/../src/btas/ttm/flamec/TLA_ttm.c
+STTSM_FILE = $(PWD)/../src/btas/sttsm/flamec/TLA_sttsm.c
+OBJS = $(OBJ_FLA_DIRPATH)\TLA_MEX_Convert_primitives.obj $(OBJ_FLA_DIRPATH)\TLA_MEX_Obj.obj
+
+
+#
 # --- Variable modifications ---------------------------------------------------
 #
 
 LIBFLAME_OBJS = $(FLAMEC_OBJS)
-
-OBJ_PATH = $(PWD)/obj
-
-OBJS = $(OBJ_PATH)/TLA_MEX_Convert_primitives.o $(OBJ_PATH)/TLA_MEX_Obj.o
-
 
 
 #
 # --- High-level rules ---------------------------------------------------------
 #
 
+
 all: sttsm ttm
-sttsm: $(OBJ_PATH)/TLA_MEX_Convert_primitives.obj $(OBJ_PATH)/TLA_MEX_Obj.obj
-ttm: $(OBJ_PATH)/TLA_MEX_Convert_primitives.obj $(OBJ_PATH)/TLA_MEX_Obj.obj
 
-$(OBJ_PATH)/TLA_MEX_Obj.o : $(OBJ_FILE)
-	$(CC) $(CFLAGS) -c $(OBJ_FILE) -o $(OBJ_PATH)/TLA_MEX_Obj.o
+sttsm: $(OBJ_FLA_DIRPATH)\TLA_MEX_Convert_primitives.obj $(OBJ_FLA_DIRPATH)\TLA_MEX_Obj.obj
+	echo "building sttsm"
+	$(MEX) $(MEX_FLAGS) $(STTSM_FILE) $(OBJS) 
+	
+ttm: $(OBJ_FLA_DIRPATH)/TLA_MEX_Convert_primitives.obj $(OBJ_FLA_DIRPATH)/TLA_MEX_Obj.obj
+	echo "building ttm"
+	$(MEX) $(MEX_FLAGS) $(TTM_FILE) $(OBJS)
+	 
+tensor: $(OBJ_DIRPATH)/TLA_MEX_Convert_primitives.o $(OBJ_DIRPATH)/TLA_MEX_Obj.o
+	$(MEX) $(MEX_FLAGS) $(PWD)/src/TLA_tensor.c $(OBJS)
 
-$(OBJ_PATH)/TLA_MEX_Convert_primitives.o : $(UTIL_FILE)
-	$(CC) $(CFLAGS) -c $(UTIL_FILE) -o $(OBJ_PATH)/TLA_MEX_Convert_primitives.o
+blockedtensor: $(OBJ_DIRPATH)/TLA_MEX_Convert_primitives.o $(OBJ_DIRPATH)/TLA_MEX_Obj.o
+	$(MEX) $(MEX_FLAGS) $(PWD)/src/TLA_blockedtensor.c $(OBJS)
+
+blockedpsymtensor: $(OBJ_DIRPATH)/TLA_MEX_Convert_primitives.o $(OBJ_DIRPATH)/TLA_MEX_Obj.o
+	$(MEX) $(MEX_FLAGS) $(PWD)/src/TLA_blockedpsymtensor.c $(OBJS)
+	
 #
 # --- Source code (inference) rules --------------------------------------------
 #
@@ -94,144 +134,17 @@ $(OBJ_PATH)/TLA_MEX_Convert_primitives.o : $(UTIL_FILE)
 !ifdef VERBOSE
 	if not exist $(OBJ_FLA_DIRPATH) \
 	   ( $(MKDIR) $(OBJ_FLA_DIRPATH) )
-	$(CC) $(CFLAGS) /c $< /Fo$@
+	   echo $(OBJ_FLA_DIRPATH)
+	$(CC) $(MEX_INCLUDE_FLAGS) $(CFLAGS) /c $< /Fo$@ >> $(CC_LOG_FILE)
 !else
 	@if not exist $(OBJ_FLA_DIRPATH) \
 	 (  ( $(ECHO) nmake: Creating $(OBJ_FLA_DIRPATH) directory ) & \
 	    ( $(MKDIR) $(OBJ_FLA_DIRPATH) ) )
 	@$(ECHO) nmake: Compiling $<
-	@$(CC) $(CFLAGS) /c $< /Fo$@ >> $(CC_LOG_FILE)
+	@$(CC) $(MEX_INCLUDE_FLAGS) $(CFLAGS) /c $< /Fo$@ >> $(CC_LOG_FILE)
 !endif
 
-
-
-#
-# --- Library generation rules -------------------------------------------------
-#
-
-# --- Static library ---
-$(LIB_LIBFLAME_DIRPATH)\$(LIBFLAME_LIB): libflame-objs
-!ifdef VERBOSE
-	if not exist $(LIB_LIBFLAME_DIRPATH) \
-	   ( $(MKDIR) $(LIB_LIBFLAME_DIRPATH) )
-	$(COPY) $(OBJ_FLA_DIRPATH)\*.obj $(LIB_LIBFLAME_DIRPATH)
-	$(CD) $(LIB_LIBFLAME_DIRPATH)
-	$(LIB) $(LIB_OPTIONS) $(LIB_FLA_OUTPUT_ARG) $(LIB_FLA_INPUT_ARGS)
-	$(DEL) *.obj
-	$(CD) $(TOP_BUILD_DIR_ABS)
-!else
-	@if not exist $(LIB_LIBFLAME_DIRPATH) \
-	 (  ( $(ECHO) nmake: Creating $(LIB_LIBFLAME_DIRPATH) directory ) & \
-	    ( $(MKDIR) $(LIB_LIBFLAME_DIRPATH) ) )
-	@$(ECHO) nmake: Creating static library $@
-	@$(COPY) $(OBJ_FLA_DIRPATH)\*.obj $(LIB_LIBFLAME_DIRPATH) >> $(COPY_LOG_FILE)
-	@$(CD) $(LIB_LIBFLAME_DIRPATH)
-	@$(LIB) $(LIB_OPTIONS) $(LIB_FLA_OUTPUT_ARG) $(LIB_FLA_INPUT_ARGS)
-	@$(DEL) *.obj
-	@$(CD) $(TOP_BUILD_DIR_ABS)
-!endif
-
-# --- Dynamic library (object code file, import library, and export file) ---
-$(DLL_LIBFLAME_DIRPATH)\$(LIBFLAME_DLL): libflame-objs
-!ifdef VERBOSE
-	if not exist $(DLL_LIBFLAME_DIRPATH) \
-	   ( $(MKDIR) $(DLL_LIBFLAME_DIRPATH) )
-	$(COPY) $(OBJ_FLA_DIRPATH)\*.obj $(DLL_LIBFLAME_DIRPATH) >> $(COPY_LOG_FILE)
-	$(CD) $(DLL_LIBFLAME_DIRPATH)
-	$(DIR) /B *.obj > $(OBJ_LIST_FILE)
-	$(GENDLL) $(LIBFLAME) $(LIBFLAME) $(CC) $(LINKARGS_FILEPATH) $(SYM_DEF_FILEPATH) /objlist $(OBJ_LIST_FILE)
-	$(DEL) $(OBJ_LIST_FILE)
-	$(DEL) *.obj
-	$(CD) $(TOP_BUILD_DIR_ABS)
-!else
-	@if not exist $(DLL_LIBFLAME_DIRPATH) \
-	 (  ( $(ECHO) nmake: Creating $(DLL_LIBFLAME_DIRPATH) directory ) & \
-	    ( $(MKDIR) $(DLL_LIBFLAME_DIRPATH) ) )
-	@$(ECHO) nmake: Creating dynamic library $@
-	@$(COPY) $(OBJ_FLA_DIRPATH)\*.obj $(DLL_LIBFLAME_DIRPATH) >> $(COPY_LOG_FILE)
-	@$(CD) $(DLL_LIBFLAME_DIRPATH)
-	@$(DIR) /B *.obj > $(OBJ_LIST_FILE)
-	@$(GENDLL) $(LIBFLAME) $(LIBFLAME) $(CC) $(LINKARGS_FILEPATH) $(SYM_DEF_FILEPATH) /objlist $(OBJ_LIST_FILE)
-	@$(DEL) $(OBJ_LIST_FILE)
-	@$(DEL) *.obj
-	@$(CD) $(TOP_BUILD_DIR_ABS)
-!endif
-
-
-
-#
-# --- Install rules ------------------------------------------------------------
-#
-
-# --- Header files ---
-$(INSTALL_PREFIX_INC)\$(FLAME_H): $(INC_FLA_DIRPATH)\$(FLAME_H) \
-                                  $(BUILD_DIRNAME)\$(FLA_CONFIG_H)
-!ifdef VERBOSE
-	if not exist $(INSTALL_PREFIX_INC) \
-	   ( $(MKDIR) $(INSTALL_PREFIX_INC) )
-    $(COPY) $(BUILD_DIRNAME)\$(FLA_CONFIG_H) $(INSTALL_PREFIX_INC) >> $(COPY_LOG_FILE)
-    $(COPY) $(INC_FLA_DIRPATH)\*.h $(INSTALL_PREFIX_INC) >> $(COPY_LOG_FILE)
-!else
-	@if not exist $(INSTALL_PREFIX_INC) \
-	    ( $(MKDIR) $(INSTALL_PREFIX_INC) )
-    @$(ECHO) nmake: Installing libflame header files to $(INSTALL_PREFIX_INC)
-    @$(COPY) $(BUILD_DIRNAME)\$(FLA_CONFIG_H) $(INSTALL_PREFIX_INC) >> $(COPY_LOG_FILE)
-    @$(COPY) $(INC_FLA_DIRPATH)\*.h $(INSTALL_PREFIX_INC) >> $(COPY_LOG_FILE)
-!endif
-
-# --- Static library ---
-$(INSTALL_PREFIX_LIB)\$(LIBFLAME).lib: $(LIB_LIBFLAME_DIRPATH)\$(LIBFLAME).lib
-!ifdef VERBOSE
-	if not exist $(INSTALL_PREFIX_LIB) ( $(MKDIR) $(INSTALL_PREFIX_LIB) )
-	if     exist $(LIB_LIBFLAME_DIRPATH)\$(LIBFLAME).lib \
-	   ( $(COPY) $(LIB_LIBFLAME_DIRPATH)\$(LIBFLAME).lib $(INSTALL_PREFIX_LIB) >> $(COPY_LOG_FILE) )
-!else
-	@if not exist $(INSTALL_PREFIX_LIB) ( $(MKDIR) $(INSTALL_PREFIX_LIB) )
-	@if     exist $(LIB_LIBFLAME_DIRPATH)\$(LIBFLAME).lib \
-	 (  ( $(ECHO) nmake: Installing $(LIB_LIBFLAME_DIRPATH)\$(LIBFLAME).lib to $(INSTALL_PREFIX_LIB) ) & \
-	    ( $(COPY) $(LIB_LIBFLAME_DIRPATH)\$(LIBFLAME).lib $(INSTALL_PREFIX_LIB) >> $(COPY_LOG_FILE) ) )
-!endif
-
-# --- Dynamic library (object code) ---
-$(INSTALL_PREFIX_DLL)\$(LIBFLAME).dll: $(DLL_LIBFLAME_DIRPATH)\$(LIBFLAME).dll
-!ifdef VERBOSE
-	if not exist $(INSTALL_PREFIX_DLL) ( $(MKDIR) $(INSTALL_PREFIX_DLL) )
-	if     exist $(DLL_LIBFLAME_DIRPATH)\$(LIBFLAME).dll \
-	   ( $(COPY) $(DLL_LIBFLAME_DIRPATH)\$(LIBFLAME).dll $(INSTALL_PREFIX_DLL) >> $(COPY_LOG_FILE) )
-!else
-	@if not exist $(INSTALL_PREFIX_DLL) ( $(MKDIR) $(INSTALL_PREFIX_DLL) )
-	@if     exist $(DLL_LIBFLAME_DIRPATH)\$(LIBFLAME).dll \
-	 (  ( $(ECHO) nmake: Installing $(DLL_LIBFLAME_DIRPATH)\$(LIBFLAME).dll to $(INSTALL_PREFIX_DLL) ) & \
-	    ( $(COPY) $(DLL_LIBFLAME_DIRPATH)\$(LIBFLAME).dll $(INSTALL_PREFIX_DLL) >> $(COPY_LOG_FILE) ) )
-!endif
-
-# --- Dynamic library (import library) ---
-$(INSTALL_PREFIX_DLL)\$(LIBFLAME).lib: $(DLL_LIBFLAME_DIRPATH)\$(LIBFLAME).lib
-!ifdef VERBOSE
-	if not exist $(INSTALL_PREFIX_DLL) ( $(MKDIR) $(INSTALL_PREFIX_DLL) )
-	if     exist $(DLL_LIBFLAME_DIRPATH)\$(LIBFLAME).lib \
-	   ( $(COPY) $(DLL_LIBFLAME_DIRPATH)\$(LIBFLAME).lib $(INSTALL_PREFIX_DLL) >> $(COPY_LOG_FILE) )
-!else
-	@if not exist $(INSTALL_PREFIX_DLL) ( $(MKDIR) $(INSTALL_PREFIX_DLL) )
-	@if     exist $(DLL_LIBFLAME_DIRPATH)\$(LIBFLAME).lib \
-	 (  ( $(ECHO) nmake: Installing $(DLL_LIBFLAME_DIRPATH)\$(LIBFLAME).lib to $(INSTALL_PREFIX_DLL) ) & \
-	    ( $(COPY) $(DLL_LIBFLAME_DIRPATH)\$(LIBFLAME).lib $(INSTALL_PREFIX_DLL) >> $(COPY_LOG_FILE) ) )
-!endif
-
-# --- Dynamic library (export file) ---
-$(INSTALL_PREFIX_DLL)\$(LIBFLAME).exp: $(DLL_LIBFLAME_DIRPATH)\$(LIBFLAME).exp
-!ifdef VERBOSE
-	if not exist $(INSTALL_PREFIX_DLL) ( $(MKDIR) $(INSTALL_PREFIX_DLL) )
-	if     exist $(DLL_LIBFLAME_DIRPATH)\$(LIBFLAME).exp \
-	   ( $(COPY) $(DLL_LIBFLAME_DIRPATH)\$(LIBFLAME).exp $(INSTALL_PREFIX_DLL) >> $(COPY_LOG_FILE) )
-!else
-	@if not exist $(INSTALL_PREFIX_DLL) ( $(MKDIR) $(INSTALL_PREFIX_DLL) )
-	@if     exist $(DLL_LIBFLAME_DIRPATH)\$(LIBFLAME).exp \
-	 (  ( $(ECHO) nmake: Installing $(DLL_LIBFLAME_DIRPATH)\$(LIBFLAME).exp to $(INSTALL_PREFIX_DLL) ) & \
-	    ( $(COPY) $(DLL_LIBFLAME_DIRPATH)\$(LIBFLAME).exp $(INSTALL_PREFIX_DLL) >> $(COPY_LOG_FILE) ) )
-!endif
-
-
+	
 
 #
 # --- Clean rules --------------------------------------------------------------
