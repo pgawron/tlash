@@ -127,15 +127,10 @@ LIB_LIBFLAME_DIRPATH = $(LIB_DIRPATH)\$(ARCH_STR)\$(BUILD_STR)
 DLL_LIBFLAME_DIRPATH = $(DLL_DIRPATH)\$(ARCH_STR)\$(BUILD_STR)
 
 # The install subdirectories.
-INSTALL_PREFIX_LIB = $(INSTALL_PREFIX)\libflame\lib
-INSTALL_PREFIX_DLL = $(INSTALL_PREFIX)\libflame\dll
-INSTALL_PREFIX_INC = $(INSTALL_PREFIX)\libflame\include-$(ARCH_STR)-$(REV_STR)
+INSTALL_PREFIX_MEX = $(INSTALL_PREFIX)\tlash\mex
 
 # Definitions for important header files used in the install-headers rule.
 BUILD_DIRNAME      = build
-FLA_CONFIG_H       = FLA_config.h
-FLAME_H            = FLAME.h
-
 
 #
 # --- General shell definitions ------------------------------------------------
@@ -227,10 +222,9 @@ LIB_FLA_INPUT_ARGS    = *.obj
 
 # --- Dynamic library definitions ---
 
-LIBFLAME_DLL          = $(LIBFLAME).dll
-
-GENDLL                = $(TOP_BUILD_DIR_ABS)\gendll.cmd
-OBJ_LIST_FILE         = libflame-objects.txt
-
-SYM_DEF_FILEPATH      = $(TOP_BUILD_DIR_ABS)\$(BUILD_DIRNAME)\libflame-symbols.def
-
+#LIBFLAME_DLL          = $(LIBFLAME).dll
+#
+#GENDLL                = $(TOP_BUILD_DIR_ABS)\gendll.cmd
+#OBJ_LIST_FILE         = libflame-objects.txt
+#
+#SYM_DEF_FILEPATH      = $(TOP_BUILD_DIR_ABS)\$(BUILD_DIRNAME)\libflame-symbols.def

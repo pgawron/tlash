@@ -63,30 +63,21 @@ MAKE_DEFS = build\defs.mk
 #
 # --- TLASH specific definitions
 
-FLAME_TOP_DIR = C:\field\lib\libflame
-FLAME_INCLUDE_DIR = $(FLAME_TOP_DIR)\include-x86-runknown
-FLAME_LIB_DIR = $(FLAME_TOP_DIR)\lib
-FLAME_LIB = libflame-x86-runknown.lib
+CFLAGS = $(CFLAGS) /I"$(FLAME_INC_DIR)"
+LDFLAGS = $(LDFLAGS) /LIBPATH:"$(FLAME_LIB_DIR)" $(FLAME_LIB)
 
-CFLAGS = $(CFLAGS) /I$(FLAME_INCLUDE_DIR)
-LDFLAGS = $(LDFLAGS) /LIBPATH:$(FLAME_LIB_DIR) $(FLAME_LIB)
 
 #
 # --- BLAS definitions
 #
 
-BLAS_LIB_DIR = C:\lib\blas\x86
-BLAS_LIB = libblas.lib
+LDFLAGS = $(LDFLAGS) /LIBPATH:"$(BLAS_LIB_DIR)" $(BLAS_LIB)
 
-LDFLAGS = $(LDFLAGS) /LIBPATH:$(BLAS_LIB_DIR) $(BLAS_LIB)
 
 #
-# --- MATLAB specific definitions
+# --- MEX specific definitions
 #
 
-MEX = C:\PROGRA~2\MATLAB\R2013A\BIN\MEX.BAT
-MEX_INCLUDE_DIR = C:\Program Files (x86)\MATLAB\R2013a\extern\include
-MEX_INCLUDE_FLAGS = /I"$(MEX_INCLUDE_DIR)"
 MEX_FLAGS = COMPFLAGS="$$COMPFLAGS $(CFLAGS)" LINKFLAGS="$$LINKFLAGS $(LDFLAGS)"
 
 TTM_FILE = $(PWD)/../src/btas/ttm/flamec/TLA_ttm.c
@@ -109,21 +100,19 @@ LIBFLAME_OBJS = $(FLAMEC_OBJS)
 all: sttsm ttm
 
 sttsm: $(OBJ_FLA_DIRPATH)\TLA_MEX_Convert_primitives.obj $(OBJ_FLA_DIRPATH)\TLA_MEX_Obj.obj
-	echo "building sttsm"
-	$(MEX) $(MEX_FLAGS) $(STTSM_FILE) $(OBJS) 
+	"$(MEX) $(MEX_FLAGS) $(STTSM_FILE) $(OBJS)" 
 	
 ttm: $(OBJ_FLA_DIRPATH)/TLA_MEX_Convert_primitives.obj $(OBJ_FLA_DIRPATH)/TLA_MEX_Obj.obj
-	echo "building ttm"
-	$(MEX) $(MEX_FLAGS) $(TTM_FILE) $(OBJS)
+	"$(MEX) $(MEX_FLAGS) $(TTM_FILE) $(OBJS)"
 	 
 tensor: $(OBJ_DIRPATH)/TLA_MEX_Convert_primitives.o $(OBJ_DIRPATH)/TLA_MEX_Obj.o
-	$(MEX) $(MEX_FLAGS) $(PWD)/src/TLA_tensor.c $(OBJS)
+	"$(MEX) $(MEX_FLAGS) $(PWD)/src/TLA_tensor.c $(OBJS)"
 
 blockedtensor: $(OBJ_DIRPATH)/TLA_MEX_Convert_primitives.o $(OBJ_DIRPATH)/TLA_MEX_Obj.o
-	$(MEX) $(MEX_FLAGS) $(PWD)/src/TLA_blockedtensor.c $(OBJS)
+	"$(MEX) $(MEX_FLAGS) $(PWD)/src/TLA_blockedtensor.c $(OBJS)"
 
 blockedpsymtensor: $(OBJ_DIRPATH)/TLA_MEX_Convert_primitives.o $(OBJ_DIRPATH)/TLA_MEX_Obj.o
-	$(MEX) $(MEX_FLAGS) $(PWD)/src/TLA_blockedpsymtensor.c $(OBJS)
+	"$(MEX) $(MEX_FLAGS) $(PWD)/src/TLA_blockedpsymtensor.c $(OBJS)"
 	
 #
 # --- Source code (inference) rules --------------------------------------------
