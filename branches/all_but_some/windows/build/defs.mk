@@ -197,7 +197,7 @@ COPTIM = /Ox
 !endif
 
 CC            = cl.exe
-CMISCFLAGS    = /nologo
+CMISCFLAGS    = /nologo /DBLIS_FROM_LIBFLAME
 CLANGFLAGS    =
 CPPROCFLAGS   = /I.\build /I$(INC_FLA_DIRPATH)
 CWARNFLAGS    = /w
