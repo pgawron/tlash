@@ -46,17 +46,26 @@ dry_run_flag = False
 verbose_flag = False
 
 # Global constants
-config_dirname     = "config"
-source_dirname     = "src"
-object_dirname     = "obj"
-object_extension   = ".obj"
-leaf_list_path     = "build/config/leaf_list"
-revision_filename  = "revision"
-rev_varname        = "REVISION"
-pwd_varname        = "PWD"
-arch_varname       = "ARCH_STR"
-build_varname      = "BUILD_STR"
-ccompiler_varname  = "CCOMPILER_STR"
+config_dirname         = "config"
+source_dirname         = "src"
+object_dirname         = "obj"
+object_extension       = ".obj"
+leaf_list_path         = "build/config/leaf_list"
+revision_filename      = "revision"
+rev_varname            = "REVISION"
+pwd_varname            = "PWD"
+arch_varname           = "ARCH_STR"
+build_varname          = "BUILD_STR"
+ccompiler_varname      = "CCOMPILER_STR"
+matlab_top_dir_varname = "MATLAB_TOP_DIR"
+mex_inc_dir_varname    = "MEX_INC_DIR"
+mex_varname            = "MEX"
+flame_top_dir_varname  = "FLAME_TOP_DIR"
+flame_inc_dir_varname  = "FLAME_INC_DIR"
+flame_lib_dir_varname  = "FLAME_LIB_DIR"
+flame_lib_varname      = "FLAME_LIB"
+blas_lib_dir_varname   = "BLAS_LIB_DIR"
+blas_lib_varname       = "BLAS_LIB"
 
 
 # ------------------------------------------------------------------------------
@@ -78,11 +87,14 @@ def print_usage():
 	print "   - the build string (e.g. debug, release)"
 	print "   - the architecture string (e.g. x86, x64)"
 	print "   - the C compiler to use (e.g. icl, cl)"
+	print "   - the location of the MATLAB installation directory"
+	print "   - the location of the libFLAME installation directory"
+	print "   - the full path of the BLAS library"
 	print "   - a list of paths to the object files to be compiled"
 	print " The config.mk file is placed within the config subdirectory." 
 	print " "
 	print " Usage:"
-	print "   %s [options] flat_dir arch build ccompiler path\\to\\config.mk.in" % script_name
+	print "   %s [options] flat_dir arch build ccompiler path\\to\\MATLAB path\\to\\config.mk.in" % script_name
 	print " "
 	print " The following options are accepted:"
 	print " "
@@ -131,7 +143,9 @@ def main():
 	
 	# Check the number of arguments after command line option processing.
 	n_args = len( args )
-	if n_args != 5:
+	print n_args
+	print args
+	if n_args != 8:
 		print_usage() 
 
 	# Acquire the non-optional arguments.
@@ -139,7 +153,11 @@ def main():
 	arch_string      = args[1]
 	build_string     = args[2]
 	ccompiler_string = args[3]
-	input_filepath   = args[4]
+	matlab_top_dir   = args[4]
+	flame_top_dir    = args[5]
+	blas_path        = args[6]
+	input_filepath   = args[7]
+	
 
 	# Acquire the list of leaf-type directories we will descend into.
 	leaf_list = read_leaf_list()
@@ -173,6 +191,29 @@ def main():
 	# Add a variable for the C compiler string and append it to our list.
 	ccompiler_var_value = ccompiler_varname + " = " + ccompiler_string + "\n"
 	output_file_line_list.append( ccompiler_var_value )
+	
+	# Add variables for the MATLAB information and append them to our list.
+	matlab_top_dir_var_value = matlab_top_dir_varname + " = " + matlab_top_dir + "\n"
+	mex_var_value = "%s = \"$(%s)\\bin\\mex.bat\"\n" %(mex_varname, matlab_top_dir_varname)
+	output_file_line_list.append( matlab_top_dir_var_value )
+	output_file_line_list.append( mex_var_value )
+	
+	# Add variables for the libFLAME information and append them to our list.
+	flame_top_dir_var_value = flame_top_dir_varname + " = " + flame_top_dir + "\n"
+	flame_inc_dir_var_value = "%s = $(%s)\\include-%s-r$(%s)\n" %(flame_inc_dir_varname, flame_top_dir_varname, arch_string, rev_varname)
+	flame_lib_dir_var_value = "%s = $(%s)\\lib\n" %(flame_lib_dir_varname, flame_top_dir_varname)
+	flame_lib_var_value = "%s = libflame-%s-r$(%s).lib\n" %(flame_lib_varname, arch_string, rev_varname)
+	output_file_line_list.append( flame_top_dir_var_value )
+	output_file_line_list.append( flame_inc_dir_var_value )
+	output_file_line_list.append( flame_lib_dir_var_value )
+	output_file_line_list.append( flame_lib_var_value )
+		
+	# Add variables for the BLAS information and append them to our list.
+	blas_lib_dir, blas_lib_file = os.path.split(blas_path)
+	blas_lib_dir_var_value = blas_lib_dir_varname + " = " + blas_lib_dir + "\n"
+	blas_lib_var_value = blas_lib_varname + " = " + blas_lib_file + "\n"
+	output_file_line_list.append( blas_lib_dir_var_value )
+	output_file_line_list.append( blas_lib_var_value )
 	
 	# Walk the flat subdirectories for each of the leaves.
 	for leaf_spec in leaf_list:
