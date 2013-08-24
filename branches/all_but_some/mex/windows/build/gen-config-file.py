@@ -143,8 +143,6 @@ def main():
 	
 	# Check the number of arguments after command line option processing.
 	n_args = len( args )
-	print n_args
-	print args
 	if n_args != 8:
 		print_usage() 
 

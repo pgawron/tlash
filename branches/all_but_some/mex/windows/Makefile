@@ -59,29 +59,35 @@ MAKE_DEFS = build\defs.mk
 !endif
 
 
+SRC_MATLAB_DIR = $(PWD)\..\src\matlab
+MEX_CFLAGS = $(CFLAGS)
+MEX_LDFLAGS = $(LDFLAGS)
+
 
 #
 # --- TLASH specific definitions
 
+MEX_CFLAGS = $(MEX_CFLAGS) /I\"$(FLAME_INC_DIR)\"
 CFLAGS = $(CFLAGS) /I"$(FLAME_INC_DIR)"
-LDFLAGS = $(LDFLAGS) /LIBPATH:"$(FLAME_LIB_DIR)" $(FLAME_LIB)
+MEX_LDFLAGS = $(MEX_LDFLAGS) /LIBPATH:\"$(FLAME_LIB_DIR)\" $(FLAME_LIB)
 
 
 #
 # --- BLAS definitions
 #
 
-LDFLAGS = $(LDFLAGS) /LIBPATH:"$(BLAS_LIB_DIR)" $(BLAS_LIB)
+MEX_LDFLAGS = $(MEX_LDFLAGS) /LIBPATH:\"$(BLAS_LIB_DIR)\" $(BLAS_LIB)
 
 
 #
 # --- MEX specific definitions
 #
+MEX_INC_DIR = $(MATLAB_TOP_DIR)\extern\include
+MEX_INC_FLAGS = /I"$(MEX_INC_DIR)"
+MEX_FLAGS = COMPFLAGS="$$COMPFLAGS $(MEX_CFLAGS)" LINKFLAGS="$$LINKFLAGS $(MEX_LDFLAGS)"
 
-MEX_FLAGS = COMPFLAGS="$$COMPFLAGS $(CFLAGS)" LINKFLAGS="$$LINKFLAGS $(LDFLAGS)"
-
-TTM_FILE = $(PWD)/../src/btas/ttm/flamec/TLA_ttm.c
-STTSM_FILE = $(PWD)/../src/btas/sttsm/flamec/TLA_sttsm.c
+TTM_FILE = $(PWD)\..\src\btas\ttm\flamec\TLA_ttm.c
+STTSM_FILE = $(PWD)\..\src\btas\sttsm\flamec\TLA_sttsm.c
 OBJS = $(OBJ_FLA_DIRPATH)\TLA_MEX_Convert_primitives.obj $(OBJ_FLA_DIRPATH)\TLA_MEX_Obj.obj
 
 
@@ -99,20 +105,20 @@ LIBFLAME_OBJS = $(FLAMEC_OBJS)
 
 all: sttsm ttm
 
-sttsm: $(OBJ_FLA_DIRPATH)\TLA_MEX_Convert_primitives.obj $(OBJ_FLA_DIRPATH)\TLA_MEX_Obj.obj
+sttsm: $(OBJS)
 	"$(MEX) $(MEX_FLAGS) $(STTSM_FILE) $(OBJS)" 
 	
-ttm: $(OBJ_FLA_DIRPATH)/TLA_MEX_Convert_primitives.obj $(OBJ_FLA_DIRPATH)/TLA_MEX_Obj.obj
+ttm: $(OBJS)
 	"$(MEX) $(MEX_FLAGS) $(TTM_FILE) $(OBJS)"
 	 
-tensor: $(OBJ_DIRPATH)/TLA_MEX_Convert_primitives.o $(OBJ_DIRPATH)/TLA_MEX_Obj.o
-	"$(MEX) $(MEX_FLAGS) $(PWD)/src/TLA_tensor.c $(OBJS)"
+tensor: $(OBJS)
+	"$(MEX) $(MEX_FLAGS) $(SRC_MATLAB_DIR)\TLA_tensor.c $(OBJS)"
 
-blockedtensor: $(OBJ_DIRPATH)/TLA_MEX_Convert_primitives.o $(OBJ_DIRPATH)/TLA_MEX_Obj.o
-	"$(MEX) $(MEX_FLAGS) $(PWD)/src/TLA_blockedtensor.c $(OBJS)"
+blockedtensor: $(OBJS)
+	"$(MEX) $(MEX_FLAGS) $(SRC_MATLAB_DIR)\TLA_blockedtensor.c $(OBJS)"
 
-blockedpsymtensor: $(OBJ_DIRPATH)/TLA_MEX_Convert_primitives.o $(OBJ_DIRPATH)/TLA_MEX_Obj.o
-	"$(MEX) $(MEX_FLAGS) $(PWD)/src/TLA_blockedpsymtensor.c $(OBJS)"
+blockedpsymtensor: $(OBJS)
+	"$(MEX) $(MEX_FLAGS) $(SRC_MATLAB_DIR)\TLA_blockedpsymtensor.c $(OBJS)"
 	
 #
 # --- Source code (inference) rules --------------------------------------------
@@ -124,13 +130,13 @@ blockedpsymtensor: $(OBJ_DIRPATH)/TLA_MEX_Convert_primitives.o $(OBJ_DIRPATH)/TL
 	if not exist $(OBJ_FLA_DIRPATH) \
 	   ( $(MKDIR) $(OBJ_FLA_DIRPATH) )
 	   echo $(OBJ_FLA_DIRPATH)
-	$(CC) $(MEX_INCLUDE_FLAGS) $(CFLAGS) /c $< /Fo$@ >> $(CC_LOG_FILE)
+	$(CC) $(MEX_INC_FLAGS) $(CFLAGS) /c $< /Fo$@ >> $(CC_LOG_FILE)
 !else
 	@if not exist $(OBJ_FLA_DIRPATH) \
 	 (  ( $(ECHO) nmake: Creating $(OBJ_FLA_DIRPATH) directory ) & \
 	    ( $(MKDIR) $(OBJ_FLA_DIRPATH) ) )
 	@$(ECHO) nmake: Compiling $<
-	@$(CC) $(MEX_INCLUDE_FLAGS) $(CFLAGS) /c $< /Fo$@ >> $(CC_LOG_FILE)
+	@$(CC) $(MEX_INC_FLAGS) $(CFLAGS) /c $< /Fo$@ >> $(CC_LOG_FILE)
 !endif
 
 	

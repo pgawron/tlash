@@ -21,6 +21,7 @@ SRC_BASE_UTIL_BASE_DIR = $(SRC_TOP_DIR)/base/flamec/tensor/util/base
 SRC_BTAS_TOP_DIR = $(SRC_TOP_DIR)/btas
 SRC_BTAS_TTM_DIR = $(SRC_BTAS_TOP_DIR)/ttm/flamec
 SRC_BTAS_STTSM_DIR = $(SRC_BTAS_TOP_DIR)/sttsm/flamec
+SRC_MATLAB_DIR = $(SRC_TOP_DIR)/matlab
 
 MEX_CONVERT_PRIMITIVES_FILE = $(SRC_BASE_UTIL_BASE_DIR)/TLA_MEX_Convert_primitives.c
 MEX_OBJ_FILE = $(SRC_BASE_MAIN_DIR)/TLA_MEX_Obj.c
@@ -52,12 +53,12 @@ sttsm: $(OBJS)
 	$(MEX) $(MEX_FLAGS) $(STTSM_FILE) $(OBJS)
 	
 tensor: $(OBJS)
-	$(MEX) $(MEX_FLAGS) $(SRC_TOP_DIR)/TLA_tensor.c $(OBJS)
+	$(MEX) $(MEX_FLAGS) $(SRC_MATLAB_DIR)/TLA_tensor.c $(OBJS)
 
 blockedtensor: $(OBJS)
-	$(MEX) $(MEX_FLAGS) $(SRC_TOP_DIR)/TLA_blockedtensor.c $(OBJS)
+	$(MEX) $(MEX_FLAGS) $(SRC_MATLAB_DIR)/TLA_blockedtensor.c $(OBJS)
 
 blockedpsymtensor: $(OBJS)
-	$(MEX) $(MEX_FLAGS) $(SRC_TOP_DIR)/TLA_blockedpsymtensor.c $(OBJS)
+	$(MEX) $(MEX_FLAGS) $(SRC_MATLAB_DIR)/TLA_blockedpsymtensor.c $(OBJS)
 
 all: ttm sttsm

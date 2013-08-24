@@ -77,7 +77,7 @@
 	echo  Microsoft Windows.
 	echo. 
 	echo  USAGE:
-	echo     %0 [arch] [build] [cc] [MATLAB_dir] [flame_path] [blas_path]
+	echo     %0 [arch] [build] [cc] [MATLAB_dir] [flame_dir] [blas_path]
 	echo.
 	echo        arch       -- The architecture string to build.
 	echo                      Supported values: {x86,x64}
@@ -87,14 +87,14 @@
 	echo                      Supported values: {icl,cl}
 	echo        MATLAB_dir -- The directory (in quotes) where MATLAB
 	echo                      is installed (including MATLAB version)
-	echo        flame_path -- The directory (in quotes) where
+	echo        flame_dir  -- The directory (in quotes) where
 	echo                      libFLAME is installed
 	echo        blas_path  -- The full path (in quotes) where
 	echo                      BLAS library is installed
 	echo. 
 	echo  examples:
-	echo     %0 x86 debug icl "C:\Program Files (x86)\MATLAB\R2013a" "C:\field\C:\field\lib\libflame\lib\libflame-x86-runknown.lib" "C:\lib\blas\x86\libblas.lib"
-	echo     %0 x64 release cl "C:\Program Files\MATLAB\R2013a" "C:\field\C:\field\lib\libflame\lib\libflame-x64-runknown.lib" "C:\lib\blas\x64\libblas.lib"
+	echo     %0 x86 debug icl "C:\Program Files (x86)\MATLAB\R2013a" "C:\field\lib\libflame\lib" "C:\lib\blas\x86\libblas.lib"
+	echo     %0 x64 release cl "C:\Program Files\MATLAB\R2013a" "\C:\field\lib\libflame\lib" "C:\lib\blas\x64\libblas.lib"
 	echo.
 	
 	goto END
