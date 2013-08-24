@@ -30,7 +30,14 @@
 #  Austin TX 78712
 #
 
+#
+#Environment specific information
+#
 
+WIN_SDK_DIR   = C:\Program Files (x86)\Windows Kits\8.0\Lib\win8\um\x86
+VS_LIB_DIR    = C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\lib
+BLAS_LIB_DIR  = C:\Program Files (x86)\MATLAB\R2013a\extern\lib\win32\lcc
+BLAS_LIB      = libmwblas.lib
 
 #
 # --- Include environment- and build-specific definitions ----------------------
@@ -81,15 +88,17 @@ CFLAGS           = $(CMISCFLAGS) $(CLANGFLAGS) $(CPPROCFLAGS) $(CWARNFLAGS) \
 # We use the C compiler as our linker.
 LINKER           = $(CC)
 
+
+
 # The linker flags. This might need to be modified depending on your build
 # environment.
 LDFLAGS          = /nologo /link \
-				   /LIBPATH:"C:\lib\blas\x86" \
-                   /LIBPATH:"C:\Program Files (x86)\Windows Kits\8.0\Lib\win8\um\x86" \
-                   /LIBPATH:"C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\lib" \
+				   /LIBPATH:"$(WIN_SDK_DIR)" \
+                   /LIBPATH:"$(VS_LIB_DIR)" \
                    /nodefaultlib:libcmt /nodefaultlib:libc /nodefaultlib:libmmt \
                    msvcrt.lib \
-				   libblas.lib
+                   /LIBPATH:"$(BLAS_LIB_DIR)" \
+				   $(BLAS_LIB)
 
 TEST_OBJS        = $(OBJ_PATH)\test_sttsm.obj
 
